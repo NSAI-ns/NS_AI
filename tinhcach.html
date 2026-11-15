@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NS AI - Bước 4: Trắc nghiệm Tính cách Holland RIASEC</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-beam"></div>
+<div class="stars"></div>
+
+<!-- TOPBAR NAVIGATION -->
+<header class="topbar">
+  <a class="brand" href="index.html">
+    <span>NS</span> NS AI
+  </a>
+
+  <nav>
+    <a href="index.html">Trang chủ</a>
+    <div class="nav-dropdown">
+      <button class="nav-dropdown-trigger">📊 Đánh giá năng lực ▾</button>
+      <div class="nav-dropdown-menu">
+        <a href="thongtin.html">📝 Bước 1: Thông tin</a>
+        <a href="diemso.html">📊 Bước 2: Điểm số</a>
+        <a href="sothich.html">❤️ Bước 3: Sở thích</a>
+        <a class="active" href="tinhcach.html">🧠 Bước 4: Tính cách</a>
+        <a href="muctieu.html">🎯 Bước 5: Mục tiêu</a>
+      </div>
+    </div>
+    <a href="truonghoc.html">Trường học</a>
+    <a href="ketqua.html">Kết quả</a>
+    <a href="chatbot.html">Chatbot</a>
+
+    <button class="session-reset" onclick="resetAllData()">
+      ↻ Phiên mới
+    </button>
+  </nav>
+</header>
+
+<main class="page">
+
+<section class="glass form-card wide">
+
+  <p class="eyebrow">BƯỚC 4 · CƠ SỞ KHOA HỌC TÂM LÝ</p>
+  <h1>Trắc nghiệm xu hướng tính cách &amp; Định hướng nghề nghiệp Holland (RIASEC)</h1>
+  
+  <p class="muted">
+    Ứng dụng <strong>Mô hình Định hướng Nghề nghiệp Quốc tế Holland (RIASEC)</strong> đo lường 6 nhóm đặc trưng: 
+    <strong>R</strong> (Kỹ thuật - Thực tế), <strong>I</strong> (Nghiên cứu - Logic), <strong>A</strong> (Nghệ thuật - Sáng tạo), 
+    <strong>S</strong> (Xã hội - Giao tiếp), <strong>E</strong> (Quản lý - Kinh doanh), <strong>C</strong> (Nghiệp vụ - Chi tiết). 
+    Kết quả giúp bạn khám phá <strong>Mã Holland 3 chữ cái</strong> nổi trội nhất và môi trường học tập, nghề nghiệp lý tưởng phù hợp với bản thân.
+  </p>
+
+  <!-- DÒNG THÔNG BÁO GHI NHẬN ĐIỂM SỐ TỪ BƯỚC TRƯỚC -->
+  <div id="scoreNotifBanner" class="score-context-banner" style="display: none;">
+    <span style="font-size: 22px;">💡</span>
+    <span><strong>Hệ thống đã ghi nhận dữ liệu học lực của bạn.</strong> Bài trắc nghiệm Holland RIASEC sẽ kết nối điểm mạnh tư duy với các nhóm ngành đào tạo đại học thực tế!</span>
+  </div>
+
+  <!-- CHUYỂN ĐỔI CHẾ ĐỘ TEST (MODE SWITCHER) -->
+  <div class="riasec-mode-switcher">
+    <button type="button" class="riasec-mode-btn active" id="btnModeQuick" onclick="switchTestMode('quick')">
+      <span>⚡ Bài test nhanh (18 câu - 2 phút)</span>
+      <span class="mode-badge">Khuyên dùng</span>
+    </button>
+    <button type="button" class="riasec-mode-btn" id="btnModeFull" onclick="switchTestMode('full')">
+      <span>🔬 Bài test chuyên sâu (36 câu)</span>
+      <span class="mode-badge">Độ chính xác cao</span>
+    </button>
+  </div>
+
+  <!-- THANH TIẾN TRÌNH TRẢ LỜI CÂU HỎI (STICKY PROGRESS BAR) -->
+  <div class="riasec-progress-box">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+      <span style="font-size: 13.5px; font-weight: 700; color: #cbd5e1; display: flex; align-items: center; gap: 6px;">
+        <span>📊</span> <span id="progressTitle">Tiến trình làm bài test nhanh:</span>
+      </span>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span id="progressText" style="font-size: 13px; font-weight: 700; color: #fbbf24;">
+          Đã làm: 0/18 câu hỏi (0%)
+        </span>
+        <button type="button" onclick="resetPersonalityAnswers()" class="btn secondary" style="font-size: 12px; padding: 4px 10px; border-radius: 6px; cursor: pointer;" title="Xóa toàn bộ câu trả lời hiện tại để làm lại từ đầu">
+          ↻ Làm lại từ đầu
+        </button>
+      </div>
+    </div>
+    <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow: hidden;">
+      <div id="progressBarFill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #6366f1, #10b981); border-radius: 999px; transition: width 0.35s ease;"></div>
+    </div>
+  </div>
+
+  <!-- DANH SÁCH CÂU HỎI TRẮC NGHIỆM RIASEC -->
+  <div id="questionsContainer" style="margin-bottom: 28px;"></div>
+
+  <!-- NÚT HÀNH ĐỘNG XEM KẾT QUẢ -->
+  <div class="actions" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+    <a href="sothich.html" class="btn secondary">
+      ← Quay lại Bước 3 (Sở thích)
+    </a>
+    <button type="button" class="btn primary" onclick="finishRIASECTest()">
+      📊 Xem kết quả phân tích &amp; Mã Holland ➡️
+    </button>
+  </div>
+
+  <!-- KHU VỰC HIỂN THỊ KẾT QUẢ PHÂN TÍCH RIASEC TRỰC QUAN -->
+  <section id="riasecResultsSection" class="riasec-result-section" style="display: none;">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <p class="eyebrow" style="color: #38bdf8;">KẾT QUẢ ĐÁNH GIÁ TÍNH CÁCH NGHỀ NGHIỆP HOLLAND</p>
+      <div style="display: inline-flex; align-items: center; gap: 12px; margin: 10px 0 14px; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); padding: 8px 24px; border-radius: 999px;">
+        <span style="font-size: 14px; color: #cbd5e1; font-weight: 600;">MÃ HOLLAND NỔI TRỘI:</span>
+        <span id="resHollandCode" style="font-size: 26px; font-weight: 800; color: #6ee7b7; letter-spacing: 0.08em;">RIA</span>
+      </div>
+      <h2 id="resHollandTitle" style="color: #fff; font-size: 22px; margin: 0 0 8px;">Nhóm Kỹ thuật · Nghiên cứu · Nghệ thuật</h2>
+      <p id="resHollandDesc" class="muted" style="max-width: 720px; margin: 0 auto; font-size: 14.5px; line-height: 1.6;">
+        Thế mạnh nổi trội của bạn thể hiện ở sự khéo léo kỹ thuật, tư duy nghiên cứu logic và khả năng sáng tạo thẩm mỹ.
+      </p>
+    </div>
+
+    <!-- RADAR CHART 6 ĐỈNH RIASEC -->
+    <div class="riasec-radar-container">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 540px; margin-bottom: 12px;">
+        <span style="font-size: 14px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 6px;">
+          <span>🧭</span> Biểu đồ Radar 6 trục năng lực Holland RIASEC:
+        </span>
+        <span id="radarMaxScoreText" style="font-size: 12px; color: #94a3b8;">Thang điểm tối đa: 15đ</span>
+      </div>
+      <canvas id="riasecRadarCanvas" width="560" height="460"></canvas>
+    </div>
+
+    <!-- THẺ GIẢI MÃ TOP 3 NHÓM TÍNH CÁCH NỔI TRỘI -->
+    <div>
+      <h3 style="font-size: 18px; color: #fff; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+        <span>🔍</span> Giải mã Top 3 Nhóm Tính cách &amp; Xu hướng Nghề nghiệp phù hợp:
+      </h3>
+      <div id="top3DecodeCards" class="riasec-top3-grid"></div>
+    </div>
+
+    <!-- CỤM NÚT HÀNH ĐỘNG NỔI BẬT TIẾP THEO -->
+    <div class="actions" style="justify-content: center; margin-top: 32px; gap: 16px; flex-wrap: wrap;">
+      <a href="muctieu.html" class="btn primary" style="font-size: 15px; padding: 12px 24px; box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);">
+        Tiếp tục sang Bước 5: Mục tiêu 🎯 ➡️
+      </a>
+      <button type="button" class="btn secondary" onclick="resetPersonalityAnswers()" style="font-size: 14px; padding: 12px 20px;">
+        🔄 Làm lại trắc nghiệm
+      </button>
+    </div>
+  </section>
+
+</section>
+
+</main>
+
+<script src="main.js"></script>
+
+<script>
+// ========================================================
+// NGÂN HÀNG 36 CÂU HỎI TRẮC NGHIỆM HOLLAND RIASEC (CHUẨN HOÁ)
+// ========================================================
+const RIASEC_BANK = {
+  meta: {
+    scale: {
+      1: { score: 1, label: 'Rất không thích', emoji: '😠' },
+      2: { score: 2, label: 'Không thích', emoji: '🙁' },
+      3: { score: 3, label: 'Bình thường', emoji: '😐' },
+      4: { score: 4, label: 'Thích', emoji: '🙂' },
+      5: { score: 5, label: 'Rất thích', emoji: '🤩' }
+    }
+  },
+  questions: [
+    // --- NHÓM R: KỸ THUẬT - THỰC TẾ ---
+    { id: 'R1', group: 'R', groupName: 'Kỹ thuật - Thực tế', text: 'Tự tay tháo lắp, sửa chữa các thiết bị điện gia dụng, xe đạp hoặc máy tính khi gặp sự cố hỏng hóc.', isQuick: true },
+    { id: 'R2', group: 'R', groupName: 'Kỹ thuật - Thực tế', text: 'Tham gia chế tạo mô hình kỹ thuật STEM, robot, mạch vi điều khiển hoặc lập trình phần cứng điều khiển.', isQuick: true },
+    { id: 'R3', group: 'R', groupName: 'Kỹ thuật - Thực tế', text: 'Thích các hoạt động thực hành ngoài trời, trồng cây, làm vườn hoặc lao động chân tay đòi hỏi sự khéo léo.', isQuick: true },
+    { id: 'R4', group: 'R', groupName: 'Kỹ thuật - Thực tế', text: 'Vận hành và tìm hiểu nguyên lý hoạt động của các loại máy móc cơ khí, thiết bị công nghiệp hoặc động cơ ô tô.', isQuick: false },
+    { id: 'R5', group: 'R', groupName: 'Kỹ thuật - Thực tế', text: 'Tự thiết kế và chế tác các vật dụng thủ công từ gỗ, kim loại, ống nước hoặc vật liệu tái chế.', isQuick: false },
+    { id: 'R6', group: 'R', groupName: 'Kỹ thuật - Thực tế', text: 'Làm việc với các công cụ đo đạc chính xác, bản vẽ kỹ thuật kiến trúc hoặc sơ đồ mạch điện.', isQuick: false },
+
+    // --- NHÓM I: NGHIÊN CỨU - TƯ DUY LOGIC ---
+    { id: 'I1', group: 'I', groupName: 'Nghiên cứu - Logic', text: 'Say mê tìm hiểu, giải quyết các bài toán hóc búa, câu đố tư duy logic hoặc giải thuật lập trình phức tạp.', isQuick: true },
+    { id: 'I2', group: 'I', groupName: 'Nghiên cứu - Logic', text: 'Tự tìm đọc các bài báo khoa học, khám phá quy luật vũ trụ, công nghệ mới (AI, lượng tử, sinh học).', isQuick: true },
+    { id: 'I3', group: 'I', groupName: 'Nghiên cứu - Logic', text: 'Thích tiến hành các thí nghiệm thực hành môn Hóa học, Vật lý, Sinh học để kiểm chứng lý thuyết.', isQuick: true },
+    { id: 'I4', group: 'I', groupName: 'Nghiên cứu - Logic', text: 'Thu thập và phân tích dữ liệu, đồ thị thống kê để tìm ra bản chất nguyên nhân của một hiện tượng thực tế.', isQuick: false },
+    { id: 'I5', group: 'I', groupName: 'Nghiên cứu - Logic', text: 'Dành thời gian nghiên cứu độc lập một đề tài học tập chuyên sâu, đặt ra các giả thuyết và tìm cách chứng minh.', isQuick: false },
+    { id: 'I6', group: 'I', groupName: 'Nghiên cứu - Logic', text: 'Quan sát, phân tích hành vi con người hoặc quy luật tự nhiên và đúc kết thành các nguyên lý khoa học.', isQuick: false },
+
+    // --- NHÓM A: NGHỆ THUẬT - SÁNG TẠO ---
+    { id: 'A1', group: 'A', groupName: 'Nghệ thuật - Sáng tạo', text: 'Thiết kế ấn phẩm truyền thông, slide thuyết trình Canva, poster sự kiện hoặc vẽ tranh minh họa sáng tạo.', isQuick: true },
+    { id: 'A2', group: 'A', groupName: 'Nghệ thuật - Sáng tạo', text: 'Viết truyện ngắn, thơ, sáng tác kịch bản phim, viết bài cảm nhận hoặc sáng tạo nội dung văn học.', isQuick: true },
+    { id: 'A3', group: 'A', groupName: 'Nghệ thuật - Sáng tạo', text: 'Quay dựng, chỉnh sửa video clip TikTok/YouTube, lồng tiếng, thiết kế hiệu ứng âm thanh và hình ảnh.', isQuick: true },
+    { id: 'A4', group: 'A', groupName: 'Nghệ thuật - Sáng tạo', text: 'Chơi nhạc cụ (guitar, piano...), ca hát, sáng tác giai điệu hoặc tham gia dàn dựng tiết mục văn nghệ lớp.', isQuick: false },
+    { id: 'A5', group: 'A', groupName: 'Nghệ thuật - Sáng tạo', text: 'Thích tự do thể hiện phong cách cá nhân qua thời trang, trang trí phòng ốc, sắp đặt không gian thẩm mỹ.', isQuick: false },
+    { id: 'A6', group: 'A', groupName: 'Nghệ thuật - Sáng tạo', text: 'Thích những công việc tự do, giàu tính biểu đạt, không bị gò bó bởi quy tắc cứng nhắc hay khuôn mẫu lặp lại.', isQuick: false },
+
+    // --- NHÓM S: XÃ HỘI - GIAO TIẾP & GIÚP ĐỠ ---
+    { id: 'S1', group: 'S', groupName: 'Xã hội - Giao tiếp', text: 'Tích cực tham gia các chiến dịch tình nguyện, hoạt động thiện nguyện, hỗ trợ cộng đồng và người khó khăn.', isQuick: true },
+    { id: 'S2', group: 'S', groupName: 'Xã hội - Giao tiếp', text: 'Lắng nghe bạn bè tâm sự, thấu cảm và đưa ra lời khuyên động viên, hỗ trợ tâm lý khi bạn gặp bế tắc.', isQuick: true },
+    { id: 'S3', group: 'S', groupName: 'Xã hội - Giao tiếp', text: 'Hướng dẫn, giảng bài cho bạn bè trong lớp khi bạn chưa hiểu bài học hoặc hỗ trợ nhóm học tập cùng tiến.', isQuick: true },
+    { id: 'S4', group: 'S', groupName: 'Xã hội - Giao tiếp', text: 'Tự tin nói trước đám đông, làm người dẫn chương trình (MC) hoặc điều phối các buổi sinh hoạt tập thể.', isQuick: false },
+    { id: 'S5', group: 'S', groupName: 'Xã hội - Giao tiếp', text: 'Thích làm việc trong môi trường tập thể, chăm sóc sức khỏe, kết nối và gắn kết mọi người lại với nhau.', isQuick: false },
+    { id: 'S6', group: 'S', groupName: 'Xã hội - Giao tiếp', text: 'Dễ dàng nhận biết cảm xúc của người khác và mong muốn đóng góp xây dựng xã hội hòa thuận, nhân ái hơn.', isQuick: false },
+
+    // --- NHÓM E: QUẢN LÝ - KINH DOANH & LÃNH ĐẠO ---
+    { id: 'E1', group: 'E', groupName: 'Quản lý - Lãnh đạo', text: 'Đảm nhận vai trò lớp trưởng, nhóm trưởng, phân công công việc và đốc thúc các bạn hoàn thành mục tiêu.', isQuick: true },
+    { id: 'E2', group: 'E', groupName: 'Quản lý - Lãnh đạo', text: 'Lên ý tưởng kinh doanh, bán hàng gây quỹ hoặc lập kế hoạch tổ chức gian hàng hội chợ của lớp/trường.', isQuick: true },
+    { id: 'E3', group: 'E', groupName: 'Quản lý - Lãnh đạo', text: 'Thuyết phục, đàm phán và truyền cảm hứng để mọi người đồng thuận với quan điểm hoặc dự án của mình.', isQuick: true },
+    { id: 'E4', group: 'E', groupName: 'Quản lý - Lãnh đạo', text: 'Tham gia các cuộc thi tranh biện (Debate), hùng biện hoặc bảo vệ ý kiến trước hội đồng phản biện.', isQuick: false },
+    { id: 'E5', group: 'E', groupName: 'Quản lý - Lãnh đạo', text: 'Sẵn sàng chấp nhận thử thách, mạo hiểm có tính toán để nắm bắt cơ hội mới và đạt thành quả vượt trội.', isQuick: false },
+    { id: 'E6', group: 'E', groupName: 'Quản lý - Lãnh đạo', text: 'Quan tâm đến thị trường tài chính, chứng khoán, xu hướng kinh tế và chiến lược xây dựng thương hiệu cá nhân.', isQuick: false },
+
+    // --- NHÓM C: NGHIỆP VỤ - TỔ CHỨC & CHI TIẾT ---
+    { id: 'C1', group: 'C', groupName: 'Nghiệp vụ - Chi tiết', text: 'Lập bảng tính Excel / Google Sheets quản lý quỹ lớp, thống kê thu chi chi tiết, rõ ràng và chuẩn xác.', isQuick: true },
+    { id: 'C2', group: 'C', groupName: 'Nghiệp vụ - Chi tiết', text: 'Thiết lập thời khóa biểu cá nhân, sắp xếp góc học tập và tài liệu học tập ngăn nắp, khoa học, dễ tìm.', isQuick: true },
+    { id: 'C3', group: 'C', groupName: 'Nghiệp vụ - Chi tiết', text: 'Thích làm việc theo quy trình chuẩn, rõ ràng, có hướng dẫn từng bước cụ thể và đảm bảo tính kỷ luật cao.', isQuick: true },
+    { id: 'C4', group: 'C', groupName: 'Nghiệp vụ - Chi tiết', text: 'Cẩn thận rà soát lỗi chính tả, câu chữ trong bài viết hoặc kiểm tra tính chính xác của các con số, số liệu.', isQuick: false },
+    { id: 'C5', group: 'C', groupName: 'Nghiệp vụ - Chi tiết', text: 'Hoàn thành công việc đúng thời hạn cam kết, lưu trữ hồ sơ, ghi chép nhật ký công việc đầy đủ, ngăn nắp.', isQuick: false },
+    { id: 'C6', group: 'C', groupName: 'Nghiệp vụ - Chi tiết', text: 'Cảm thấy an tâm và làm việc hiệu quả nhất khi môi trường có sự ổn định, rõ ràng về quyền hạn và trách nhiệm.', isQuick: false }
+  ],
+  explanations: {
+    R: {
+      code: 'R',
+      name: 'Kỹ thuật - Thực tế (Realistic)',
+      badge: '🛠️ Người thực thi',
+      traits: 'Thực tế, khéo léo, yêu thích hành động cụ thể, làm việc trực tiếp với máy móc, công cụ và công nghệ phần cứng.',
+      strengths: 'Tư duy không gian tốt, thao tác tay chân chuẩn xác, bền bỉ, tập trung cao vào kết quả thực tế.',
+      idealEnvironment: 'Phòng lab kỹ thuật, trung tâm chế tạo robot, xưởng tự động hóa, công trường kỹ thuật cao.',
+      topMajors: ['Kỹ thuật Cơ điện tử & Robot', 'Kỹ thuật Điều khiển & Tự động hóa', 'Công nghệ Ô tô', 'Kỹ thuật Xây dựng', 'Kỹ thuật Máy tính']
+    },
+    I: {
+      code: 'I',
+      name: 'Nghiên cứu - Tư duy logic (Investigative)',
+      badge: '🔬 Nhà tư tưởng',
+      traits: 'Tò mò, tư duy phân tích sâu sắc, độc lập, yêu thích khoa học, tìm tòi quy luật bản chất qua dữ liệu.',
+      strengths: 'Tư duy phản biện sắc bén, khả năng phân tích dữ liệu lớn, giải quyết vấn đề kỹ thuật hóc búa, kiên trì nghiên cứu.',
+      idealEnvironment: 'Viện nghiên cứu, trung tâm R&D, phòng lab y sinh, doanh nghiệp AI & Khoa học Dữ liệu.',
+      topMajors: ['Khoa học Dữ liệu & Trí tuệ Nhân tạo', 'Khoa học Máy tính', 'Bác sĩ Y khoa / Dược học', 'Công nghệ Sinh học', 'Vật lý Ứng dụng']
+    },
+    A: {
+      code: 'A',
+      name: 'Nghệ thuật - Sáng tạo (Artistic)',
+      badge: '🎨 Nhà sáng tạo',
+      traits: 'Giàu trí tưởng tượng, cảm thụ thẩm mỹ tinh tế, tự do biểu đạt, không thích sự rập khuôn hay gò bó quy tắc.',
+      strengths: 'Sáng tạo đột phá, tư duy thị giác và ngôn ngữ truyền thông, truyền cảm hứng nghệ thuật và đổi mới sáng tạo.',
+      idealEnvironment: 'Agency sáng tạo, studio thiết kế đồ họa & UI-UX, tòa soạn báo chí, hãng sản xuất truyền thông số.',
+      topMajors: ['Thiết kế Đồ họa / UI-UX', 'Truyền thông Đa phương tiện', 'Kiến trúc & Nội thất', 'Sáng tạo Nội dung Số', 'Điện ảnh & Đạo diễn']
+    },
+    S: {
+      code: 'S',
+      name: 'Xã hội - Giao tiếp & Giúp đỡ (Social)',
+      badge: '🤝 Người đồng hành',
+      traits: 'Giàu lòng trắc ẩn, thấu cảm, hướng về con người, thích giảng giải, chăm sóc và giúp đỡ người khác phát triển.',
+      strengths: 'Lắng nghe chân thành, giao tiếp truyền cảm hứng, gắn kết tập thể và hòa giải mâu thuẫn khéo léo.',
+      idealEnvironment: 'Trường học, bệnh viện, trung tâm tư vấn tâm lý, tổ chức phi chính phủ (NGO), doanh nghiệp cộng đồng.',
+      topMajors: ['Sư phạm & Quản lý Giáo dục', 'Y khoa / Điều dưỡng', 'Tâm lý học Học đường', 'Quan hệ Công chúng (PR)', 'Quản trị Nhân sự']
+    },
+    E: {
+      code: 'E',
+      name: 'Quản lý - Kinh doanh & Lãnh đạo (Enterprising)',
+      badge: '🚀 Nhà lãnh đạo',
+      traits: 'Năng động, tự tin, quyết đoán, giàu tham vọng, thích dẫn dắt, thuyết phục và chinh phục các mục tiêu lớn.',
+      strengths: 'Lãnh đạo đội ngũ, đàm phán thương mại sắc bén, tư duy chiến lược và nhạy bén cơ hội thị trường.',
+      idealEnvironment: 'Doanh nghiệp khởi nghiệp, tập đoàn đa quốc gia, sàn giao dịch tài chính, cơ quan quản lý điều hành.',
+      topMajors: ['Quản trị Kinh doanh', 'Kinh doanh Quốc tế', 'Marketing & Thương mại Điện tử', 'Tài chính - Ngân hàng / Fintech', 'Luật Kinh tế']
+    },
+    C: {
+      code: 'C',
+      name: 'Nghiệp vụ - Tổ chức & Chi tiết (Conventional)',
+      badge: '📋 Người tổ chức',
+      traits: 'Ngăn nắp, cẩn trọng, kỷ luật cao, yêu thích số liệu rõ ràng, quy trình chuẩn mực và độ chính xác tuyệt đối.',
+      strengths: 'Quản lý số liệu và thời gian xuất sắc, độ tỉ mỉ cao, kiểm soát rủi ro và tuân thủ nguyên tắc nghiêm ngặt.',
+      idealEnvironment: 'Văn phòng kiểm toán, ngân hàng, cơ quan tài chính, ban kế hoạch và trung tâm thông tin số.',
+      topMajors: ['Kế toán & Kiểm toán', 'Tài chính Doanh nghiệp', 'Phân tích Thống kê Rủi ro', 'Hệ thống Thông tin Quản lý', 'Quản trị Văn phòng']
+    }
+  }
+};
+
+// ========================================================
+// TRẠNG THÁI HIỆN TẠI (STATE)
+// ========================================================
+let currentTestMode = 'quick'; // 'quick' (18 câu) hoặc 'full' (36 câu)
+let currentAnswers = {}; // { 'R1': 4, 'R2': 5, ... }
+
+// Kiểm tra hiển thị banner điểm số từ bước trước
+(function checkScoresBanner() {
+  try {
+    const scores = typeof read === 'function' ? read('scores') : null;
+    if (scores && typeof scores === 'object') {
+      const validScores = Object.values(scores).filter(v => typeof v === 'number' && !isNaN(v) && v > 0);
+      if (validScores.length >= 3) {
+        const banner = document.getElementById('scoreNotifBanner');
+        if (banner) banner.style.display = 'flex';
+      }
+    }
+  } catch (err) {}
+})();
+
+// Khôi phục câu trả lời tạm thời từ LocalStorage Draft
+function restoreDraftOrSaved() {
+  try {
+    const draftStr = localStorage.getItem('ns_personality_draft');
+    if (draftStr) {
+      const draft = JSON.parse(draftStr);
+      if (draft && draft.answers) {
+        currentAnswers = draft.answers;
+        if (draft.mode === 'full' || draft.mode === 'quick') {
+          currentTestMode = draft.mode;
+        }
+      }
+    } else {
+      // Nếu không có draft nhưng đã lưu mbtiData trước đó
+      const savedData = typeof read === 'function' ? read('mbtiData') : null;
+      if (savedData && savedData.riasec && savedData.riasec.scores) {
+        // Có kết quả cũ -> tự động vẽ lại kết quả
+        renderResultsView(savedData);
+      }
+    }
+  } catch (e) {
+    console.error('Error restoring RIASEC draft:', e);
+  }
+}
+
+// Lấy danh sách câu hỏi theo chế độ hiện tại
+function getActiveQuestions() {
+  if (currentTestMode === 'quick') {
+    return RIASEC_BANK.questions.filter(q => q.isQuick);
+  }
+  return RIASEC_BANK.questions;
+}
+
+// Chuyển đổi chế độ Test (Quick vs Full)
+function switchTestMode(mode) {
+  if (mode === currentTestMode) return;
+  currentTestMode = mode;
+
+  // Cập nhật giao diện nút switcher
+  document.getElementById('btnModeQuick').classList.toggle('active', mode === 'quick');
+  document.getElementById('btnModeFull').classList.toggle('active', mode === 'full');
+  document.getElementById('progressTitle').textContent = mode === 'quick' ? 'Tiến trình làm bài test nhanh:' : 'Tiến trình làm bài test chuyên sâu:';
+
+  // Lưu chế độ vào draft
+  saveDraft();
+
+  // Render lại câu hỏi
+  renderQuestions();
+  updateProgressBar();
+}
+
+// Render toàn bộ câu hỏi
+function renderQuestions() {
+  const container = document.getElementById('questionsContainer');
+  const activeQuestions = getActiveQuestions();
+  const total = activeQuestions.length;
+
+  let html = '';
+  activeQuestions.forEach((q, index) => {
+    const val = currentAnswers[q.id];
+    const isAnswered = val !== undefined && val !== null;
+    const groupCode = q.group;
+
+    html += `
+      <div class="riasec-q-card ${isAnswered ? 'answered' : ''}" id="riasecCard${index}">
+        <div class="riasec-q-header">
+          <span class="riasec-group-tag group-${groupCode}">
+            ${groupCode === 'R' ? '🛠️' : groupCode === 'I' ? '🔬' : groupCode === 'A' ? '🎨' : groupCode === 'S' ? '🤝' : groupCode === 'E' ? '🚀' : '📋'}
+            Nhóm ${groupCode} · ${q.groupName}
+          </span>
+          <span class="riasec-q-num">Câu ${index + 1} / ${total}</span>
+        </div>
+        <div class="riasec-q-title">${q.text}</div>
+
+        <div class="riasec-scale-row">
+          ${[1, 2, 3, 4, 5].map(score => {
+            const sc = RIASEC_BANK.meta.scale[score];
+            const isSel = val === score;
+            return `
+              <div class="scale-pill-btn ${isSel ? 'selected' : ''}" 
+                   id="scaleBtn_${q.id}_${score}"
+                   onclick="selectScaleAnswer('${q.id}', ${score}, ${index})">
+                <span class="emoji-icon">${sc.emoji}</span>
+                <span>${sc.label}</span>
+                <span class="scale-score-badge">(${score}đ)</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+// Xử lý khi người dùng bấm chọn 1 mức điểm trên thang đo 5 bậc
+function selectScaleAnswer(questionId, score, index) {
+  currentAnswers[questionId] = score;
+
+  // Cập nhật trạng thái hiển thị của các nút trong câu
+  [1, 2, 3, 4, 5].forEach(s => {
+    const btn = document.getElementById(`scaleBtn_${questionId}_${s}`);
+    if (btn) btn.classList.toggle('selected', s === score);
+  });
+
+  const card = document.getElementById(`riasecCard${index}`);
+  if (card) card.classList.add('answered');
+
+  // Lưu draft
+  saveDraft();
+  updateProgressBar();
+
+  // Tự động cuộn mượt nhẹ nhàng đến câu tiếp theo sau 220ms
+  const activeQuestions = getActiveQuestions();
+  if (index + 1 < activeQuestions.length) {
+    setTimeout(() => {
+      const nextCard = document.getElementById(`riasecCard${index + 1}`);
+      if (nextCard) {
+        nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 220);
+  }
+}
+
+// Lưu bản nháp vào LocalStorage
+function saveDraft() {
+  try {
+    const draft = {
+      mode: currentTestMode,
+      answers: currentAnswers,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('ns_personality_draft', JSON.stringify(draft));
+  } catch (e) {}
+}
+
+// Cập nhật thanh tiến trình
+function updateProgressBar() {
+  const activeQuestions = getActiveQuestions();
+  const total = activeQuestions.length;
+  let answered = 0;
+
+  activeQuestions.forEach(q => {
+    if (currentAnswers[q.id] !== undefined && currentAnswers[q.id] !== null) {
+      answered++;
+    }
+  });
+
+  const pct = Math.round((answered / total) * 100);
+  const fillEl = document.getElementById('progressBarFill');
+  const txtEl = document.getElementById('progressText');
+
+  if (fillEl) fillEl.style.width = pct + '%';
+  if (txtEl) {
+    txtEl.textContent = `Đã làm: ${answered}/${total} câu hỏi (${pct}%)`;
+    txtEl.style.color = pct === 100 ? '#34d399' : (pct >= 50 ? '#818cf8' : '#fbbf24');
+  }
+}
+
+// Xóa câu trả lời làm lại từ đầu
+function resetPersonalityAnswers() {
+  if (!confirm('Bạn có muốn đặt lại toàn bộ câu trả lời trắc nghiệm Holland RIASEC để làm lại từ đầu không?')) return;
+  currentAnswers = {};
+  localStorage.removeItem('ns_personality_draft');
+  
+  if (typeof save === 'function') {
+    save('personalityAnswers', []);
+    save('mbtiType', null);
+    save('mbtiData', null);
+    save('riasecScores', null);
+    save('riasecTopCode', null);
+  }
+
+  // Ẩn vùng kết quả nếu có
+  const resSection = document.getElementById('riasecResultsSection');
+  if (resSection) resSection.style.display = 'none';
+
+  renderQuestions();
+  updateProgressBar();
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (typeof showToast === 'function') {
+    showToast('Đã xóa dữ liệu trắc nghiệm. Bạn có thể bắt đầu làm lại.', 'info');
+  }
+}
+
+// ========================================================
+// TÍNH TOÁN KẾT QUẢ & MÃ HOLLAND RIASEC
+// ========================================================
+function finishRIASECTest() {
+  const activeQuestions = getActiveQuestions();
+  const total = activeQuestions.length;
+
+  // Kiểm tra câu nào chưa trả lời
+  for (let i = 0; i < total; i++) {
+    const q = activeQuestions[i];
+    if (currentAnswers[q.id] === undefined || currentAnswers[q.id] === null) {
+      if (typeof showToast === 'function') {
+        showToast(`Bạn hãy trả lời câu hỏi số ${i + 1} (${q.groupName}) nhé!`, 'error');
+      } else {
+        alert(`Bạn hãy trả lời câu hỏi số ${i + 1} (${q.groupName}) nhé!`);
+      }
+      const targetCard = document.getElementById(`riasecCard${i}`);
+      if (targetCard) {
+        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+  }
+
+  // Tính tổng điểm 6 nhóm RIASEC
+  const scores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+  const answerArray = [];
+
+  activeQuestions.forEach(q => {
+    const s = currentAnswers[q.id] || 3;
+    scores[q.group] = (scores[q.group] || 0) + s;
+    answerArray.push(s);
+  });
+
+  // Sắp xếp điểm giảm dần
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const top3 = sorted.slice(0, 3).map(item => item[0]);
+  const topCode = top3.join('');
+
+  // Tên đầy đủ
+  const groupNames = top3.map(l => RIASEC_BANK.explanations[l].name.split(' - ')[0]).join(' · ');
+  const fullName = `Nhóm ${groupNames} (${topCode})`;
+  const topDesc = `Bạn có xu hướng vượt trội ở 3 nhóm: ${top3.map(l => RIASEC_BANK.explanations[l].name).join(', ')}.`;
+
+  const mbtiData = {
+    type: topCode,
+    title: fullName,
+    desc: topDesc,
+    riasec: {
+      scores: scores,
+      sorted: sorted,
+      top3: top3,
+      topCode: topCode,
+      name: fullName,
+      desc: topDesc
+    }
+  };
+
+  // Lưu chuẩn vào LocalStorage
+  if (typeof save === 'function') {
+    save('personalityAnswers', answerArray);
+    save('mbtiType', topCode);
+    save('mbtiData', mbtiData);
+    save('riasecScores', scores);
+    save('riasecTopCode', topCode);
+  } else {
+    localStorage.setItem('ns_personalityAnswers', JSON.stringify(answerArray));
+    localStorage.setItem('ns_mbtiType', topCode);
+    localStorage.setItem('ns_mbtiData', JSON.stringify(mbtiData));
+    localStorage.setItem('ns_riasecScores', JSON.stringify(scores));
+    localStorage.setItem('ns_riasecTopCode', topCode);
+  }
+
+  // Hiển thị giao diện kết quả trực quan
+  renderResultsView(mbtiData);
+
+  if (typeof showToast === 'function') {
+    showToast(`Đã phân tích xong! Mã Holland của bạn là ${topCode}`, 'success');
+  }
+
+  // Cuộn mượt đến phần kết quả
+  const resSection = document.getElementById('riasecResultsSection');
+  if (resSection) {
+    resSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// Hiển thị phần kết quả (Radar Chart + Top 3 Thẻ giải mã)
+function renderResultsView(mbtiData) {
+  if (!mbtiData || !mbtiData.riasec) return;
+
+  const resSection = document.getElementById('riasecResultsSection');
+  if (!resSection) return;
+  resSection.style.display = 'block';
+
+  const riasec = mbtiData.riasec;
+  const topCode = riasec.topCode || 'RIA';
+  const scores = riasec.scores || { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+  const top3 = riasec.top3 || ['R', 'I', 'A'];
+
+  // Điền tiêu đề & badge
+  document.getElementById('resHollandCode').textContent = topCode;
+  document.getElementById('resHollandTitle').textContent = riasec.name || `Nhóm Holland: ${topCode}`;
+  document.getElementById('resHollandDesc').textContent = riasec.desc || '';
+
+  // Điền max score text
+  const maxPossible = currentTestMode === 'quick' ? 15 : 30;
+  const maxTxt = document.getElementById('radarMaxScoreText');
+  if (maxTxt) maxTxt.textContent = `Thang điểm tối đa: ${maxPossible}đ/nhóm (${currentTestMode === 'quick' ? '18 câu' : '36 câu'})`;
+
+  // Vẽ biểu đồ Radar Canvas
+  drawRiasecRadar('riasecRadarCanvas', scores, maxPossible);
+
+  // Render thẻ giải mã Top 3
+  const cardsContainer = document.getElementById('top3DecodeCards');
+  if (cardsContainer) {
+    const rankLabels = ['#1 Nổi trội nhất', '#2 Xu hướng thứ hai', '#3 Bổ trợ quan trọng'];
+    let cHtml = '';
+    top3.forEach((code, idx) => {
+      const exp = RIASEC_BANK.explanations[code];
+      if (!exp) return;
+      const score = scores[code] || 0;
+      const pct = Math.round((score / maxPossible) * 100);
+
+      cHtml += `
+        <div class="decode-card rank-${idx + 1}">
+          <span class="decode-badge-rank">${rankLabels[idx]}</span>
+          <div class="decode-title">
+            <span>${exp.badge}</span>
+            <span class="decode-score">${score}đ <small style="font-size:11px; opacity:0.8;">(${pct}%)</small></span>
+          </div>
+          <div style="font-weight: 700; color: #f8fafc; font-size: 15px;">${exp.name}</div>
+          <div class="decode-prop"><strong>✨ Điểm mạnh:</strong> ${exp.strengths}</div>
+          <div class="decode-prop"><strong>🏢 Môi trường lý tưởng:</strong> ${exp.idealEnvironment}</div>
+          <div class="decode-prop">
+            <strong>🎓 Top ngành nghề tiêu biểu:</strong>
+            <div class="decode-majors-wrap">
+              ${exp.topMajors.map(m => `<span class="major-pill">${m}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    cardsContainer.innerHTML = cHtml;
+  }
+}
+
+// ========================================================
+// VẼ RADAR CHART 6 ĐỈNH HOLLAND RIASEC TRÊN HTML5 CANVAS
+// ========================================================
+function drawRiasecRadar(canvasId, scores, maxScore) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  // Hỗ trợ màn hình sắc nét Retina / High DPI
+  const dpr = window.devicePixelRatio || 1;
+  const displayWidth = 540;
+  const displayHeight = 440;
+  canvas.width = displayWidth * dpr;
+  canvas.height = displayHeight * dpr;
+  canvas.style.width = displayWidth + 'px';
+  canvas.style.height = displayHeight + 'px';
+  ctx.scale(dpr, dpr);
+
+  const cx = displayWidth / 2;
+  const cy = displayHeight / 2 + 10;
+  const radius = Math.min(displayWidth, displayHeight) * 0.35;
+
+  ctx.clearRect(0, 0, displayWidth, displayHeight);
+
+  // 6 trục: R, I, A, S, E, C
+  const axes = [
+    { code: 'R', name: 'R · Kỹ thuật', color: '#38bdf8' },
+    { code: 'I', name: 'I · Nghiên cứu', color: '#c084fc' },
+    { code: 'A', name: 'A · Sáng tạo', color: '#f472b6' },
+    { code: 'S', name: 'S · Xã hội', color: '#34d399' },
+    { code: 'E', name: 'E · Quản lý', color: '#fbbf24' },
+    { code: 'C', name: 'C · Nghiệp vụ', color: '#cbd5e1' }
+  ];
+
+  const totalAxes = axes.length;
+  const angleStep = (Math.PI * 2) / totalAxes;
+  const startAngle = -Math.PI / 2; // R ở đỉnh trên cùng
+
+  // 1. Vẽ các đường lưới đa giác đồng tâm (20%, 40%, 60%, 80%, 100%)
+  const gridLevels = [0.2, 0.4, 0.6, 0.8, 1.0];
+  gridLevels.forEach((level, lIdx) => {
+    ctx.beginPath();
+    for (let i = 0; i < totalAxes; i++) {
+      const angle = startAngle + i * angleStep;
+      const x = cx + Math.cos(angle) * (radius * level);
+      const y = cy + Math.sin(angle) * (radius * level);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = lIdx === gridLevels.length - 1 ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.07)';
+    ctx.lineWidth = lIdx === gridLevels.length - 1 ? 1.5 : 1;
+    ctx.stroke();
+
+    if (lIdx === gridLevels.length - 1) {
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
+      ctx.fill();
+    }
+  });
+
+  // 2. Vẽ 6 trục xuyên tâm từ tâm ra đỉnh
+  axes.forEach((axis, i) => {
+    const angle = startAngle + i * angleStep;
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Nhãn tên trục & điểm số
+    const labelRadius = radius + 32;
+    const lx = cx + Math.cos(angle) * labelRadius;
+    const ly = cy + Math.sin(angle) * labelRadius;
+
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Badge tên nhóm
+    ctx.font = 'bold 12.5px Inter, system-ui, sans-serif';
+    ctx.fillStyle = axis.color;
+    ctx.fillText(axis.name, lx, ly - 7);
+
+    // Điểm số & %
+    const scoreVal = scores[axis.code] || 0;
+    const pct = Math.round((scoreVal / maxScore) * 100);
+    ctx.font = '11.5px Inter, system-ui, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(`${scoreVal}đ (${pct}%)`, lx, ly + 9);
+    ctx.restore();
+  });
+
+  // 3. Vẽ đa giác dữ liệu của người dùng
+  const dataPoints = [];
+  axes.forEach((axis, i) => {
+    const angle = startAngle + i * angleStep;
+    const val = scores[axis.code] || 0;
+    const ratio = Math.max(0.1, Math.min(1.0, val / maxScore));
+    const r = radius * ratio;
+    dataPoints.push({
+      x: cx + Math.cos(angle) * r,
+      y: cy + Math.sin(angle) * r,
+      color: axis.color,
+      score: val
+    });
+  });
+
+  if (dataPoints.length > 0) {
+    ctx.beginPath();
+    dataPoints.forEach((pt, i) => {
+      if (i === 0) ctx.moveTo(pt.x, pt.y);
+      else ctx.lineTo(pt.x, pt.y);
+    });
+    ctx.closePath();
+
+    // Tô màu gradient cực quang
+    const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, radius);
+    grad.addColorStop(0, 'rgba(99, 102, 241, 0.6)');
+    grad.addColorStop(0.7, 'rgba(16, 185, 129, 0.45)');
+    grad.addColorStop(1, 'rgba(6, 182, 212, 0.2)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Viền phát sáng rực rỡ
+    ctx.strokeStyle = '#818cf8';
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = 'rgba(99, 102, 241, 0.8)';
+    ctx.shadowBlur = 12;
+    ctx.stroke();
+    ctx.shadowBlur = 0; // reset shadow
+
+    // 4. Vẽ các điểm đỉnh phát sáng (Glowing Vertices)
+    dataPoints.forEach(pt => {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.strokeStyle = pt.color;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    });
+  }
+}
+
+// Khởi tạo trang khi tải xong DOM
+document.addEventListener('DOMContentLoaded', () => {
+  restoreDraftOrSaved();
+  renderQuestions();
+  updateProgressBar();
+});
+</script>
+
+</body>
+</html>

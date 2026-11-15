@@ -1,0 +1,1004 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>NS AI</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-beam"></div>
+<div class="stars"></div>
+
+<header class="topbar">
+
+    <a class="brand" href="index.html">
+        <span>NS</span> NS AI
+    </a>
+
+    <nav>
+
+        <a href="index.html">Trang chủ</a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-trigger">📊 Đánh giá năng lực ▾</button>
+          <div class="nav-dropdown-menu">
+            <a href="thongtin.html">📝 Bước 1: Thông tin</a>
+            <a href="diemso.html">📊 Bước 2: Điểm số</a>
+            <a href="sothich.html">❤️ Bước 3: Sở thích</a>
+            <a href="tinhcach.html">🧠 Bước 4: Tính cách</a>
+            <a class="active" href="muctieu.html">🎯 Bước 5: Mục tiêu</a>
+          </div>
+        </div>
+        <a href="truonghoc.html">Trường học</a>
+        <a href="ketqua.html">Kết quả</a>
+        <a href="chatbot.html">Trợ lí ảo</a>
+
+        <button class="session-reset" onclick="resetAllData()">
+            ↻ Phiên mới
+        </button>
+
+    </nav>
+
+</header>
+
+
+<main class="page">
+
+<section class="glass form-card wide">
+
+    <p class="eyebrow">BƯỚC 5 · CAREER GOALS &amp; ADMISSION</p>
+
+    <h1>Xác định mục tiêu &amp; Phương thức xét tuyển</h1>
+
+    <p class="muted">
+        Hãy chia sẻ định hướng ngành học mơ ước và phương thức xét tuyển ưu tiên (THPT, học bạ, đánh giá năng lực...). NS AI sẽ kết hợp toàn diện với điểm số, sở thích và tính cách để tạo lộ trình trúng tuyển phù hợp nhất cho bạn!
+    </p>
+
+    <div class="notice" style="border-left:4px solid #38bdf8; background: rgba(56,189,248,0.08); margin-bottom: 18px;">
+        <strong>💡 Bước này là tùy chọn — bạn không bắt buộc phải điền</strong>
+        <p style="margin:6px 0 0;">
+            Chưa biết mình muốn học ngành gì? Không sao cả — đó chính là lý do bạn đang ở đây.
+            Bạn có thể bỏ trống toàn bộ phần này và bấm <b>“Xem kết quả”</b>:
+        </p>
+        <ul style="margin:8px 0 0 18px; padding:0; font-size:13px; line-height:1.7;">
+            <li>NS AI sẽ <b>gợi ý ngành dựa trên điểm số, sở thích và xu hướng tính cách</b> của bạn — không cần mục tiêu trước.</li>
+            <li>Phần <b>đối chiếu điểm chuẩn</b> vẫn hoạt động, nhưng NS AI sẽ tự chọn một trường tiêu biểu của ngành phù hợp nhất để so sánh, và ghi rõ đó là trường tạm đối chiếu.</li>
+            <li>Phần <b>chiến lược 3 nhóm nguyện vọng</b> vẫn được lập đầy đủ để bạn có sẵn các phương án.</li>
+            <li>Khi nào có định hướng, bạn chỉ cần quay lại trang này điền thêm — kết quả sẽ tự cập nhật.</li>
+        </ul>
+    </div>
+
+
+    <!-- ================= MỤC TIÊU ================= -->
+
+    <div class="goal-profile">
+
+        <h2>🎯 Mục tiêu hiện tại <span style="font-size:12px;font-weight:600;color:#38bdf8;border:1px solid rgba(56,189,248,.4);border-radius:999px;padding:2px 10px;vertical-align:middle;">tùy chọn</span></h2>
+
+        <p class="muted">
+            Những thông tin này giúp NS AI hiểu rõ hơn
+            về định hướng tương lai của bạn. Bỏ trống vẫn xem được kết quả.
+        </p>
+
+
+        <label>
+            🏫 Trường bạn mong muốn
+
+            <input
+                type="text"
+                id="dreamSchool"
+                placeholder="Ví dụ: Đại học Bách khoa Hà Nội"
+            >
+        </label>
+
+        <!-- Danh sách trường đã đánh dấu sao ⭐ từ Tra cứu trường học -->
+        <div id="bookmarkedSchoolsContainer" style="margin-top: -6px; margin-bottom: 12px;"></div>
+
+
+        <label>
+            🎓 Ngành bạn mong muốn
+
+            <input
+                type="text"
+                id="dreamMajor"
+                placeholder="Ví dụ: Công nghệ thông tin"
+            >
+        </label>
+
+
+        <label>
+            💼 Nghề nghiệp bạn mơ ước
+
+            <input
+                type="text"
+                id="dreamCareer"
+                placeholder="Ví dụ: Kỹ sư AI, Bác sĩ, Giáo viên..."
+            >
+        </label>
+
+
+        <!-- ================= NƠI HỌC ================= -->
+
+        <label>
+            📍 Bạn muốn học ở đâu?
+
+            <input
+                type="text"
+                id="searchProvince"
+                placeholder="🔎 Tìm tỉnh / thành phố..."
+                autocomplete="off"
+            >
+
+            <select id="studyLocation">
+                <option value="">-- Chọn tỉnh / thành phố --</option>
+
+                <option>Hà Nội</option>
+                <option>Cao Bằng</option>
+                <option>Tuyên Quang</option>
+                <option>Điện Biên</option>
+                <option>Lai Châu</option>
+                <option>Sơn La</option>
+                <option>Lào Cai</option>
+                <option>Thái Nguyên</option>
+                <option>Lạng Sơn</option>
+                <option>Quảng Ninh</option>
+                <option>Bắc Ninh</option>
+                <option>Phú Thọ</option>
+                <option>Hải Phòng</option>
+                <option>Hưng Yên</option>
+                <option>Ninh Bình</option>
+                <option>Thanh Hóa</option>
+                <option>Nghệ An</option>
+                <option>Hà Tĩnh</option>
+                <option>Quảng Trị</option>
+                <option>Huế</option>
+                <option>Đà Nẵng</option>
+                <option>Quảng Ngãi</option>
+                <option>Gia Lai</option>
+                <option>Khánh Hòa</option>
+                <option>Đắk Lắk</option>
+                <option>Lâm Đồng</option>
+                <option>Đồng Nai</option>
+                <option>TP. Hồ Chí Minh</option>
+                <option>Tây Ninh</option>
+                <option>Đồng Tháp</option>
+                <option>Vĩnh Long</option>
+                <option>An Giang</option>
+                <option>Cần Thơ</option>
+                <option>Cà Mau</option>
+                <option>Chưa xác định</option>
+
+            </select>
+
+        </label>
+
+
+        <!-- ================= DU HỌC ================= -->
+
+        <label>
+            🌍 Bạn có mong muốn du học không?
+
+            <select id="studyAbroad">
+
+                <option value="Không">Không</option>
+
+                <option value="Có">Có</option>
+
+                <option value="Chưa xác định">
+                    Chưa xác định
+                </option>
+
+            </select>
+
+        </label>
+
+
+        <!-- ================= ƯỚC MƠ ================= -->
+
+        <label>
+            🌟 Ước mơ / mục tiêu tương lai
+
+            <textarea
+                id="dreamGoal"
+                rows="4"
+                placeholder="Ví dụ: Em muốn trở thành kỹ sư AI và học tại một trường đại học lớn..."
+            ></textarea>
+
+        </label>
+
+    </div>
+
+
+    <!-- ================= THÔNG BÁO ================= -->
+
+    <div id="goalInfo" class="notice">
+
+        <strong>
+            🎯 Định hướng cá nhân
+        </strong>
+
+        <p>
+            Hãy điền mục tiêu, ngành học hoặc nghề nghiệp
+            mà bạn đang quan tâm. NS AI sẽ sử dụng thông tin
+            này để hỗ trợ phân tích.
+        </p>
+
+    </div>
+
+
+    <!-- ================= PHƯƠNG THỨC XÉT TUYỂN ƯU TIÊN ================= -->
+
+    <h2>
+        📋 Phương thức xét tuyển ưu tiên
+    </h2>
+
+    <p class="muted">
+        Chọn các phương thức tuyển sinh đại học bạn dự kiến sử dụng để NS AI tư vấn chiến lược xét tuyển phù hợp nhất:
+    </p>
+
+    <div id="admissionMethods" class="chips" style="margin-bottom: 24px;">
+        <button type="button" class="chip" data-method="thpt">
+            📝 Điểm thi tốt nghiệp THPT 2025+
+        </button>
+        <button type="button" class="chip" data-method="hocba">
+            📚 Xét học bạ THPT (5-6 học kỳ)
+        </button>
+        <button type="button" class="chip" data-method="dgnl">
+            🎯 Đánh giá năng lực (ĐHQG Hà Nội / ĐHQG TP.HCM)
+        </button>
+        <button type="button" class="chip" data-method="dgtd">
+            🧠 Đánh giá tư duy (ĐH Bách Khoa Hà Nội)
+        </button>
+        <button type="button" class="chip" data-method="ielts">
+            🌐 Chứng chỉ quốc tế (IELTS / SAT / ACT)
+        </button>
+        <button type="button" class="chip" data-method="tuyenthang">
+            🏅 Tuyển thẳng &amp; Ưu tiên xét tuyển theo quy chế
+        </button>
+        <button type="button" class="chip" data-method="duhoc" id="chipStudyAbroad" style="border-color: rgba(56, 189, 248, 0.4);">
+            ✈️ Đi du học (Study Abroad)
+        </button>
+    </div>
+
+    <!-- ================= KHU VỰC CHI TIẾT DU HỌC (CONDITIONAL UI) ================= -->
+    <div id="studyAbroadSection" class="glass" style="display: none; margin-bottom: 24px; padding: 22px; border-radius: 14px; border: 1.5px solid rgba(56, 189, 248, 0.35); background: rgba(15, 23, 42, 0.65); box-shadow: 0 8px 32px rgba(0,0,0,0.25);">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <span style="font-size: 28px;">✈️</span>
+            <div>
+                <h3 style="margin: 0; color: #38bdf8; font-size: 1.15rem; font-weight: 700;">Định hướng Lộ trình Du học Quốc tế</h3>
+                <p style="margin: 3px 0 0; color: #94a3b8; font-size: 0.85rem;">NS AI đồng hành xây dựng hồ sơ học thuật, chứng chỉ chuẩn hóa & chiến lược học bổng toàn cầu</p>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px;">
+            <div>
+                <label style="display: block; font-weight: 600; color: #e2e8f0; margin-bottom: 6px; font-size: 0.9rem;">
+                    🌐 Quốc gia mục tiêu ưu tiên:
+                </label>
+                <select id="studyAbroadCountry" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(30,41,59,0.85); color: #fff;">
+                    <option value="">-- Chọn quốc gia mục tiêu --</option>
+                    <option value="Mỹ">🇺🇸 Mỹ (Hoa Kỳ) - Đa dạng học bổng & cơ hội nghiên cứu</option>
+                    <option value="Úc">🇦🇺 Úc (Australia) - Định cư & chính sách việc làm mở</option>
+                    <option value="Canada">🇨🇦 Canada - Học phí hợp lý & môi trường an toàn</option>
+                    <option value="Anh">🇬🇧 Anh Quốc (UK) - Chương trình chuyên sâu tinh hoa</option>
+                    <option value="Nhật Bản">🇯🇵 Nhật Bản - Cơ hội việc làm kỹ thuật & công nghệ</option>
+                    <option value="Hàn Quốc">🇰🇷 Hàn Quốc - Công nghệ số, truyền thông & học bổng GKS</option>
+                    <option value="Đức">🇩🇪 Đức - Miễn học phí công lập & kỹ thuật hàng đầu</option>
+                    <option value="Singapore">🇸🇬 Singapore - Trung tâm tài chính & công nghệ châu Á</option>
+                    <option value="Khác">🌍 Quốc gia khác</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="display: block; font-weight: 600; color: #e2e8f0; margin-bottom: 6px; font-size: 0.9rem;">
+                    📜 Chứng chỉ ngoại ngữ dự kiến / hiện có:
+                </label>
+                <input type="text" id="studyAbroadCert" placeholder="Ví dụ: IELTS 6.5+, SAT 1350+, JLPT N2, TOPIK 4..." style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(30,41,59,0.85); color: #fff;">
+            </div>
+        </div>
+
+        <!-- LỘ TRÌNH GỢI Ý THEO QUỐC GIA -->
+        <div id="studyAbroadRoadmap" style="background: rgba(56, 189, 248, 0.08); border-left: 4px solid #38bdf8; padding: 14px 18px; border-radius: 8px; margin-top: 10px;">
+            <div style="font-weight: 700; color: #7dd3fc; margin-bottom: 6px; font-size: 0.92rem;">💡 Gợi ý lộ trình chuẩn bị hồ sơ du học từ NS AI:</div>
+            <ul id="studyAbroadTips" style="margin: 0; padding-left: 20px; color: #cbd5e1; font-size: 0.88rem; line-height: 1.6;">
+                <li><strong>Học lực (GPA):</strong> Duy trì GPA THPT từ 8.0/10 trở lên (đặc biệt các môn toán, khoa học hoặc chuyên ngành dự kiến).</li>
+                <li><strong>Chứng chỉ chuẩn hóa:</strong> Lên kế hoạch thi IELTS (tối thiểu 6.5) hoặc TOEFL/SAT trước học kỳ 1 lớp 12.</li>
+                <li><strong>Hoạt động ngoại khóa:</strong> Tham gia 2-3 dự án cộng đồng hoặc nghiên cứu khoa học (KHKT, CLB học thuật) thể hiện vai trò lãnh đạo.</li>
+                <li><strong>Bài luận cá nhân (Personal Statement):</strong> Làm nổi bật bản sắc, động lực cá nhân và lý do chọn ngành nghề/quốc gia.</li>
+            </ul>
+        </div>
+    </div>
+
+
+    <!-- ================= ĐÁNH GIÁ ================= -->
+
+    <section id="goalEvaluation" class="glass">
+
+        <p class="eyebrow">
+            NS AI CHECK
+        </p>
+
+        <h2>
+            Đánh giá mục tiêu
+        </h2>
+
+        <p id="evaluationText" class="muted">
+            Hãy nhập mục tiêu để xem thông tin và gợi ý.
+        </p>
+
+    </section>
+
+
+    <!-- ================= BUTTON ================= -->
+
+    <div class="actions">
+
+        <a
+            class="btn secondary"
+            href="tinhcach.html"
+        >
+            ← Quay lại Bước 4 (Tính cách)
+        </a>
+
+        <button
+            class="btn primary"
+            type="button"
+            onclick="saveGoals()"
+        >
+            🚀 Hoàn thành &amp; Xem kết quả phân tích →
+        </button>
+
+        <a class="btn secondary" href="ketqua.html">
+            📊 Chưa có mục tiêu? Xem kết quả luôn →
+        </a>
+
+    </div>
+
+</section>
+
+</main>
+
+
+<script src="main.js"></script>
+
+<script>
+
+/* =========================================
+   TÌM KIẾM TỈNH / THÀNH
+========================================= */
+
+const searchProvince =
+    document.getElementById("searchProvince");
+
+const studyLocation =
+    document.getElementById("studyLocation");
+
+const provinces =
+    Array.from(studyLocation.options).map(option => ({
+        value: option.value,
+        text: option.text
+    }));
+
+
+searchProvince.addEventListener("input", function () {
+
+    const keyword = this.value
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+    studyLocation.innerHTML = "";
+
+    const filtered = provinces.filter(province => {
+
+        const text = province.text
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+
+        return text.includes(keyword);
+
+    });
+
+
+    filtered.forEach(province => {
+
+        const option =
+            document.createElement("option");
+
+        option.value = province.value;
+        option.textContent = province.text;
+
+        studyLocation.appendChild(option);
+
+    });
+
+
+    if (filtered.length === 0) {
+
+        const option =
+            document.createElement("option");
+
+        option.textContent =
+            "Không tìm thấy tỉnh/thành phố";
+
+        option.disabled = true;
+
+        studyLocation.appendChild(option);
+
+    }
+
+});
+
+
+/* =========================================
+   KHÔI PHỤC DỮ LIỆU ĐÃ LƯU
+========================================= */
+
+const oldGoals = read("goals") || {};
+
+
+document.getElementById("dreamSchool").value =
+    oldGoals.dreamSchool || "";
+
+document.getElementById("dreamMajor").value =
+    oldGoals.dreamMajor || "";
+
+document.getElementById("dreamCareer").value =
+    oldGoals.dreamCareer || "";
+
+document.getElementById("dreamGoal").value =
+    oldGoals.dreamGoal || "";
+
+document.getElementById("studyAbroad").value =
+    oldGoals.studyAbroad || "Không";
+
+if (oldGoals.studyLocation) {
+
+    document.getElementById("studyLocation").value =
+        oldGoals.studyLocation;
+
+}
+
+
+/* =========================================
+   NGÀNH QUAN TÂM & PHƯƠNG THỨC XÉT TUYỂN
+========================================= */
+
+const savedMajors = oldGoals.selected || [];
+const savedMethods = oldGoals.admissionMethods || [];
+const savedAbroadDetail = oldGoals.studyAbroadDetail || {};
+
+/* =========================================
+   LỘ TRÌNH & ĐIỀU HƯỚNG DU HỌC (CONDITIONAL UI)
+========================================= */
+
+function toggleStudyAbroadUI(show) {
+    const section = document.getElementById("studyAbroadSection");
+    const chip = document.getElementById("chipStudyAbroad");
+    const select = document.getElementById("studyAbroad");
+
+    if (show) {
+        if (section) section.style.display = "block";
+        if (chip) chip.classList.add("selected");
+        if (select && select.value !== "Có") select.value = "Có";
+    } else {
+        if (section) section.style.display = "none";
+        if (chip) chip.classList.remove("selected");
+        if (select && select.value === "Có") select.value = "Không";
+    }
+    updateStudyAbroadRoadmap();
+    updateEvaluation();
+}
+
+function updateStudyAbroadRoadmap() {
+    const country = document.getElementById("studyAbroadCountry") ? document.getElementById("studyAbroadCountry").value : "";
+    const tipsList = document.getElementById("studyAbroadTips");
+    if (!tipsList) return;
+
+    const roadmaps = {
+        "Mỹ": [
+            "<strong>Học lực (GPA):</strong> Duy trì GPA THPT từ 8.5/10 trở lên, ưu tiên các môn học nâng cao (AP/Honors nếu có).",
+            "<strong>Bài thi chuẩn hóa:</strong> Mục tiêu SAT 1400+ hoặc ACT 30+, kết hợp IELTS 7.0-7.5+ / TOEFL iBT 100+.",
+            "<strong>Hoạt động ngoại khóa:</strong> Cần hồ sơ hoạt động có chiều sâu, thể hiện tinh thần lãnh đạo (leadership) và cam kết cộng đồng bền bỉ.",
+            "<strong>Hồ sơ tuyển sinh:</strong> Chuẩn bị bài luận chính (Common App Essay), 2-3 thư giới thiệu từ giáo viên, nộp kỳ Early Decision/Action (tháng 11) hoặc Regular (tháng 1)."
+        ],
+        "Úc": [
+            "<strong>Học thuật:</strong> Xét tuyển thẳng bằng điểm thi tốt nghiệp THPT hoặc điểm học bạ lớp 12 (thường yêu cầu GPA từ 8.0 trở lên vào nhóm Group of Eight).",
+            "<strong>Ngoại ngữ:</strong> IELTS Academic từ 6.5 trở lên (không kỹ năng nào dưới 6.0) hoặc PTE Academic 58+.",
+            "<strong>Tài chính & Visa:</strong> Chuẩn bị hồ sơ chứng minh tài chính gia đình và viết bài luận GTE/GST đáp ứng tiêu chuẩn visa du học Úc (Subclass 500).",
+            "<strong>Cơ hội:</strong> Chính sách visa ở lại làm việc sau tốt nghiệp (Post-Study Work Visa 485) từ 2 - 4 năm tùy bang."
+        ],
+        "Canada": [
+            "<strong>Học thuật:</strong> Điểm trung bình THPT 3 năm (GPA) từ 8.0/10 trở lên; các ngành Kỹ thuật/STEM yêu cầu điểm Toán và Lý/Hóa vững.",
+            "<strong>Ngoại ngữ:</strong> IELTS 6.5 (không band nào dưới 6.0) hoặc Duolingo English Test (tùy trường).",
+            "<strong>Visa du học:</strong> Nộp hồ sơ xin Study Permit sớm trước kỳ nhập học 4-6 tháng.",
+            "<strong>Điểm cộng:</strong> Học phí cạnh tranh hơn Mỹ, môi trường an toàn và giấy phép làm việc sau tốt nghiệp (PGWP) lên tới 3 năm."
+        ],
+        "Anh": [
+            "<strong>Lộ trình học tập:</strong> Học sinh tốt nghiệp THPT Việt Nam thường học qua chương trình Foundation Year (Dự bị ĐH 1 năm) hoặc xét thẳng nếu có bằng quốc tế (A-Levels / IB).",
+            "<strong>Chứng chỉ:</strong> IELTS UKVI từ 6.0 - 6.5 trở lên.",
+            "<strong>Hồ sơ qua UCAS:</strong> Đăng ký tối đa 5 khóa học qua cổng UCAS, chuẩn bị Personal Statement nhấn mạnh đam mê chuyên môn sâu.",
+            "<strong>Thời hạn:</strong> Hạn nộp hồ sơ UCAS vào tháng 1 hàng năm (đối với Oxford/Cambridge và Y khoa là tháng 10 năm trước)."
+        ],
+        "Nhật Bản": [
+            "<strong>Ngôn ngữ:</strong> Đạt trình độ tiếng Nhật JLPT N3 - N2 trước khi bay (hoặc học tiếng tại trường Nhật ngữ 1-2 năm).",
+            "<strong>Kỳ thi EJU:</strong> Kỳ thi du học sinh Nhật Bản EJU (Toán, Khoa học tự nhiên/xã hội, Tiếng Nhật) nếu muốn vào các trường ĐH công lập danh tiếng.",
+            "<strong>Chương trình tiếng Anh (SGU):</strong> Nếu chọn học bằng tiếng Anh, cần IELTS 6.5+ và SAT, không bắt buộc tiếng Nhật đầu vào.",
+            "<strong>Cơ hội:</strong> Học phí vừa phải, nhiều học bổng MEXT và cơ hội việc làm rộng mở tại Nhật sau khi tốt nghiệp."
+        ],
+        "Hàn Quốc": [
+            "<strong>Ngôn ngữ:</strong> Đạt TOPIK 3 trở lên (để vào thẳng chuyên ngành) hoặc học khóa tiếng Hàn (D-4-1) trước tại các trường ĐH Hàn Quốc.",
+            "<strong>Học bạ:</strong> Điểm trung bình THPT GPA từ 7.0 - 7.5 trở lên.",
+            "<strong>Học bổng:</strong> Cơ hội săn học bổng Chính phủ Hàn Quốc (GKS) toàn phần hoặc học bổng giảm 30% - 100% học phí theo điểm TOPIK.",
+            "<strong>Thế mạnh:</strong> Ngành Công nghệ thông tin, Thiết kế truyền thông, Quản trị kinh doanh và Kỹ thuật bán dẫn."
+        ],
+        "Đức": [
+            "<strong>Điều kiện tuyển sinh:</strong> Tham gia kỳ thi ĐH tại Việt Nam đạt chuẩn quy định của DAAD, sau đó học 1 năm Studienkolleg (Dự bị ĐH) tại Đức và thi Feststellungsprüfung (FSP).",
+            "<strong>Thẩm tra APS & TestAS:</strong> Bắt buộc phải có chứng chỉ kiểm tra học vấn APS và thi đánh giá năng lực TestAS.",
+            "<strong>Ngoại ngữ:</strong> Tiếng Đức B1/B2 (chương trình tiếng Đức) hoặc IELTS 6.5+ (chương trình tiếng Anh).",
+            "<strong>Đặc quyền:</strong> Hầu hết các trường đại học công lập tại Đức MIỄN 100% HỌC PHÍ cho sinh viên quốc tế."
+        ],
+        "Singapore": [
+            "<strong>Đại học công lập (NUS, NTU, SMU):</strong> Yêu cầu điểm tốt nghiệp THPT xuất sắc (thường 9.0+), IELTS 6.5 - 7.0+ và bài thi đầu vào / phỏng vấn chuyên sâu.",
+            "<strong>Học bổng:</strong> Nhiều chương trình học bổng toàn phần danh giá (ASEAN Scholarship, Singapore Scholarship).",
+            "<strong>Đại học quốc tế liên kết (SIM, JCU, Curtin):</strong> Yêu cầu linh hoạt hơn (IELTS 6.0+, GPA 7.0+), bằng cấp quốc tế chuẩn Anh/Úc.",
+            "<strong>Vị thế:</strong> Trung tâm kinh tế, tài chính và công nghệ cao hàng đầu khu vực, khoảng cách địa lý gần Việt Nam."
+        ]
+    };
+
+    const tips = roadmaps[country] || [
+        "<strong>Học lực (GPA):</strong> Duy trì GPA THPT từ 8.0/10 trở lên (đặc biệt các môn toán, khoa học hoặc chuyên ngành dự kiến).",
+        "<strong>Chứng chỉ chuẩn hóa:</strong> Lên kế hoạch thi IELTS (tối thiểu 6.5) hoặc TOEFL/SAT trước học kỳ 1 lớp 12.",
+        "<strong>Hoạt động ngoại khóa:</strong> Tham gia 2-3 dự án cộng đồng hoặc nghiên cứu khoa học (KHKT, CLB học thuật) thể hiện vai trò lãnh đạo.",
+        "<strong>Bài luận cá nhân (Personal Statement):</strong> Làm nổi bật bản sắc, động lực cá nhân và lý do chọn ngành nghề/quốc gia."
+    ];
+
+    tipsList.innerHTML = tips.map(t => `<li>${t}</li>`).join('');
+}
+
+document.querySelectorAll("#majors .chip").forEach(chip => {
+    if (savedMajors.includes(chip.textContent.trim())) {
+        chip.classList.add("selected");
+    }
+    chip.addEventListener("click", function () {
+        this.classList.toggle("selected");
+        updateEvaluation();
+    });
+});
+
+document.querySelectorAll("#admissionMethods .chip").forEach(chip => {
+    const val = chip.dataset.method || chip.textContent.trim();
+    if (savedMethods.includes(val) || savedMethods.includes(chip.textContent.trim()) || (val === "duhoc" && (oldGoals.studyAbroad === "Có" || savedAbroadDetail.enabled))) {
+        chip.classList.add("selected");
+    }
+    chip.addEventListener("click", function () {
+        this.classList.toggle("selected");
+        if (this.dataset.method === "duhoc" || this.id === "chipStudyAbroad") {
+            toggleStudyAbroadUI(this.classList.contains("selected"));
+        }
+        updateEvaluation();
+    });
+});
+
+const countrySelectEl = document.getElementById("studyAbroadCountry");
+const certInputEl = document.getElementById("studyAbroadCert");
+
+// Khởi tạo khôi phục trạng thái du học từ LocalStorage
+if (savedMethods.includes("duhoc") || oldGoals.studyAbroad === "Có" || Boolean(savedAbroadDetail.enabled)) {
+    toggleStudyAbroadUI(true);
+    if (savedAbroadDetail.country && countrySelectEl) {
+        countrySelectEl.value = savedAbroadDetail.country;
+    }
+    if (savedAbroadDetail.languageCert && certInputEl) {
+        certInputEl.value = savedAbroadDetail.languageCert;
+    }
+    updateStudyAbroadRoadmap();
+}
+
+if (countrySelectEl) {
+    countrySelectEl.addEventListener("change", function () {
+        updateStudyAbroadRoadmap();
+        updateEvaluation();
+    });
+}
+
+if (certInputEl) {
+    certInputEl.addEventListener("input", function () {
+        updateEvaluation();
+    });
+}
+
+
+/* =========================================
+   ĐÁNH GIÁ MỤC TIÊU
+========================================= */
+
+function updateEvaluation() {
+
+    const school =
+        document.getElementById("dreamSchool").value.trim();
+
+    const major =
+        document.getElementById("dreamMajor").value.trim();
+
+    const career =
+        document.getElementById("dreamCareer").value.trim();
+
+    const location =
+        document.getElementById("studyLocation").value;
+
+    const abroad =
+        document.getElementById("studyAbroad").value;
+
+    const dream =
+        document.getElementById("dreamGoal").value.trim();
+
+
+    const evaluation =
+        document.getElementById("evaluationText");
+
+
+    const goalInfo =
+        document.getElementById("goalInfo");
+
+
+    let content = "";
+
+
+    if (!school &&
+        !major &&
+        !career &&
+        !location &&
+        !dream &&
+        abroad !== "Có" &&
+        !document.getElementById("chipStudyAbroad")?.classList.contains("selected")) {
+
+        content = `
+            <b>🎯 Bắt đầu xây dựng mục tiêu</b>
+            <br><br>
+            Hãy nhập một vài thông tin về trường,
+            ngành học, nghề nghiệp hoặc ước mơ của bạn.
+        `;
+
+    } else {
+
+        content = `
+            <b>🎯 Hồ sơ mục tiêu của bạn</b>
+            <br><br>
+        `;
+
+
+        if (school) {
+
+            content +=
+                `🏫 Trường mong muốn: <b>${school}</b><br>`;
+
+        }
+
+
+        if (major) {
+
+            content +=
+                `🎓 Ngành mong muốn: <b>${major}</b><br>`;
+
+        }
+
+
+        if (career) {
+
+            content +=
+                `💼 Nghề nghiệp: <b>${career}</b><br>`;
+
+        }
+
+
+        if (location) {
+
+            content +=
+                `📍 Nơi học: <b>${location}</b><br>`;
+
+        }
+
+
+        content +=
+            `<br>🌍 Du học: <b>${abroad}</b>`;
+
+        const isAbroadActive = abroad === "Có" || document.getElementById("chipStudyAbroad")?.classList.contains("selected");
+        if (isAbroadActive) {
+            const countryVal = document.getElementById("studyAbroadCountry") ? document.getElementById("studyAbroadCountry").value : "";
+            const certVal = document.getElementById("studyAbroadCert") ? document.getElementById("studyAbroadCert").value.trim() : "";
+            if (countryVal) content += `<br>✈️ Quốc gia mục tiêu: <b>${countryVal}</b>`;
+            if (certVal) content += `<br>📜 Chứng chỉ ngoại ngữ: <b>${certVal}</b>`;
+        }
+
+
+        if (dream) {
+
+            content += `
+                <br><br>
+                🌟 Ước mơ:
+                <b>${dream}</b>
+            `;
+
+        }
+
+        const selectedMethods = [
+            ...document.querySelectorAll("#admissionMethods .chip.selected")
+        ].map(c => c.textContent.trim().replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF]\s*/, ''));
+        if (selectedMethods.length) {
+            content += `<br><br>📋 Phương thức xét tuyển: <b>${selectedMethods.join(' · ')}</b>`;
+        }
+
+    }
+
+
+    evaluation.innerHTML = content;
+
+
+    goalInfo.innerHTML = `
+
+        <strong>
+            🎯 NS AI đang ghi nhận mục tiêu của bạn
+        </strong>
+
+        <p>
+            Hệ thống sẽ kết hợp mục tiêu với
+            điểm số, sở thích và tính cách
+            để hỗ trợ định hướng ngành nghề.
+        </p>
+
+    `;
+
+}
+
+
+/* =========================================
+   DANH SÁCH TRƯỜNG ĐÃ LƯU (BOOKMARK INTEGRATION)
+========================================= */
+
+function getBookmarkedSchools() {
+    try {
+        const raw = localStorage.getItem('ns_bookmarked_schools');
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        const result = [];
+        parsed.forEach(item => {
+            let name = '';
+            if (typeof item === 'string') name = item.trim();
+            else if (item && typeof item === 'object') name = (item.name || item.title || item.code || '').trim();
+            if (name && !result.includes(name)) result.push(name);
+        });
+        return result;
+    } catch (e) {
+        return [];
+    }
+}
+
+function renderBookmarkedSchools() {
+    const container = document.getElementById("bookmarkedSchoolsContainer");
+    if (!container) return;
+
+    const bookmarks = getBookmarkedSchools();
+    const currentSchool = (document.getElementById("dreamSchool") ? document.getElementById("dreamSchool").value : "").trim();
+
+    if (bookmarks.length === 0) {
+        container.innerHTML = `
+            <div style="margin-top: 6px; padding: 8px 12px; background: rgba(56, 189, 248, 0.05); border: 1px dashed rgba(56, 189, 248, 0.25); border-radius: 8px; font-size: 0.82rem; color: #94a3b8; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                <span>🔍 Chưa có trường nào được lưu vào danh sách quan tâm.</span>
+                <a href="truonghoc.html" style="color: #38bdf8; text-decoration: underline; font-weight: 600; font-size: 0.82rem;">
+                    Khám phá và lưu trường vào danh sách nguyện vọng tại [Tra cứu trường học →]
+                </a>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = `
+        <div style="margin-top: 8px; padding: 10px 14px; background: rgba(245, 158, 11, 0.07); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 10px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+                <span style="font-size: 0.85rem; color: #fbbf24; font-weight: 600;">⭐ Các trường bạn đã quan tâm tại trang Tra cứu:</span>
+                <a href="truonghoc.html" style="font-size: 0.8rem; color: #38bdf8; text-decoration: none;">🔍 Tra cứu thêm trường →</a>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                ${bookmarks.map(name => {
+                    const isSelected = currentSchool && currentSchool.toLowerCase() === name.toLowerCase();
+                    return `
+                        <button type="button" class="chip-bookmark" data-school="${name.replace(/"/g, '&quot;')}" onclick="selectBookmarkedSchool('${name.replace(/'/g, "\\'")}')" style="background: ${isSelected ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(234, 88, 12, 0.3))' : 'rgba(30, 41, 59, 0.85)'}; border: 1px solid ${isSelected ? '#f59e0b' : 'rgba(245, 158, 11, 0.3)'}; color: ${isSelected ? '#fef08a' : '#e2e8f0'}; padding: 5px 12px; border-radius: 20px; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                            <span>${isSelected ? '✅' : '⭐'}</span>
+                            <span style="font-weight: ${isSelected ? '700' : '500'};">${name}</span>
+                        </button>
+                    `;
+                }).join('')}
+            </div>
+            <p style="margin: 6px 0 0; font-size: 0.75rem; color: #94a3b8;">💡 Bấm vào một trường ở trên để tự động chọn làm trường mục tiêu mơ ước.</p>
+        </div>
+    `;
+}
+
+function selectBookmarkedSchool(schoolName) {
+    const input = document.getElementById("dreamSchool");
+    if (!input) return;
+    input.value = schoolName;
+    updateEvaluation();
+
+    // Tự động lưu vào ns_goals
+    try {
+        const goals = (typeof read === 'function' ? read('goals') : null) || {};
+        goals.dreamSchool = schoolName;
+        goals.noGoal = false;
+        if (typeof save === 'function') {
+            save('goals', goals);
+        } else {
+            localStorage.setItem('ns_goals', JSON.stringify(goals));
+        }
+        if (typeof showToast === 'function') {
+            showToast(`Đã chọn "${schoolName}" làm trường mục tiêu!`, 'success');
+        }
+    } catch (e) {}
+
+    renderBookmarkedSchools();
+}
+
+
+/* =========================================
+   CẬP NHẬT KHI NHẬP
+========================================= */
+
+[
+    "dreamSchool",
+    "dreamMajor",
+    "dreamCareer",
+    "dreamGoal"
+].forEach(id => {
+
+    document
+        .getElementById(id)
+        .addEventListener(
+            "input",
+            function() {
+                updateEvaluation();
+                if (id === "dreamSchool") {
+                    renderBookmarkedSchools();
+                }
+            }
+        );
+
+});
+
+
+document
+    .getElementById("studyLocation")
+    .addEventListener(
+        "change",
+        updateEvaluation
+    );
+
+
+document
+    .getElementById("studyAbroad")
+    .addEventListener(
+        "change",
+        function() {
+            toggleStudyAbroadUI(this.value === "Có");
+        }
+    );
+
+
+/* =========================================
+   LƯU MỤC TIÊU
+========================================= */
+
+function saveGoals() {
+
+    const selectedMajors = [
+        ...document.querySelectorAll("#majors .chip.selected")
+    ].map(chip => chip.textContent.trim());
+
+    const selectedMethods = [
+        ...document.querySelectorAll("#admissionMethods .chip.selected")
+    ].map(chip => chip.dataset.method || chip.textContent.trim());
+
+    const isAbroadSelected = selectedMethods.includes("duhoc") || document.getElementById("studyAbroad").value === "Có";
+    const abroadCountry = document.getElementById("studyAbroadCountry") ? document.getElementById("studyAbroadCountry").value : "";
+    const abroadCert = document.getElementById("studyAbroadCert") ? document.getElementById("studyAbroadCert").value.trim() : "";
+
+    const data = {
+
+        dreamSchool:
+            document
+                .getElementById("dreamSchool")
+                .value
+                .trim(),
+
+        dreamMajor:
+            document
+                .getElementById("dreamMajor")
+                .value
+                .trim(),
+
+        dreamCareer:
+            document
+                .getElementById("dreamCareer")
+                .value
+                .trim(),
+
+        studyLocation:
+            document
+                .getElementById("studyLocation")
+                .value,
+
+        studyAbroad:
+            isAbroadSelected ? "Có" : document.getElementById("studyAbroad").value,
+
+        dreamGoal:
+            document
+                .getElementById("dreamGoal")
+                .value
+                .trim(),
+
+        admissionMethods:
+            selectedMethods,
+
+        studyAbroadDetail: {
+            enabled: isAbroadSelected,
+            country: abroadCountry,
+            languageCert: abroadCert
+        },
+
+        selected:
+            selectedMajors.length ? selectedMajors : (oldGoals.selected || []),
+
+        other:
+            document.getElementById("other")
+                ? document.getElementById("other").value.trim()
+                : (oldGoals.other || "")
+
+    };
+
+    // MỤC TIÊU LÀ TÙY CHỌN — học sinh chưa biết mình muốn gì vẫn được xem kết quả.
+    // Khi bỏ trống, ghi rõ cờ noGoal để trang Kết quả và chatbot biết mà xử lý khác đi.
+    const hasAnyGoal = Boolean(
+        data.dreamMajor ||
+        data.dreamSchool ||
+        data.dreamCareer ||
+        data.dreamGoal ||
+        (data.admissionMethods && data.admissionMethods.length) ||
+        (data.selected && data.selected.length) ||
+        data.other ||
+        (data.studyAbroadDetail && data.studyAbroadDetail.enabled)
+    );
+    data.noGoal = !hasAnyGoal;
+
+    save("goals", data);
+
+    if (!hasAnyGoal) {
+        showToast('Bạn chưa nhập mục tiêu — NS AI sẽ gợi ý ngành dựa trên điểm số, sở thích và tính cách.', 'info');
+    }
+
+
+    window.location.href =
+        "ketqua.html";
+
+}
+
+
+/* =========================================
+   KHỞI TẠO
+========================================= */
+
+updateEvaluation();
+renderBookmarkedSchools();
+
+</script>
+
+</body>
+</html>
