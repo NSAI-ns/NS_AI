@@ -10,6 +10,39 @@
 
 <link rel="stylesheet" href="style.css">
 
+<style>
+/* ==========================================================================
+   CSS CHO CHỐT CHẶN AN TOÀN TÂM LÝ & EMERGENCY SUPPORT CARD
+   ========================================================================== */
+.emergency-safety-card {
+  transition: all 0.25s ease-in-out;
+  animation: pulseSafetyCard 3s infinite alternate;
+}
+@keyframes pulseSafetyCard {
+  0% {
+    box-shadow: 0 8px 30px rgba(239, 68, 68, 0.25);
+    border-color: rgba(248, 113, 113, 0.5);
+  }
+  100% {
+    box-shadow: 0 12px 42px rgba(239, 68, 68, 0.45);
+    border-color: rgba(248, 113, 113, 0.85);
+  }
+}
+.emergency-safety-card a:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+.emergency-safety-card button:hover {
+  filter: brightness(1.18);
+  transform: translateY(-1px);
+}
+@media (max-width: 640px) {
+  .emergency-safety-card {
+    padding: 14px 14px !important;
+  }
+}
+</style>
+
 </head>
 
 <body>
@@ -316,68 +349,73 @@
 
 <script>
 
-const p = getProfile();
+const p = (typeof getProfile === "function") ? getProfile() : { info: {}, scores: {}, hobbies: {}, goals: {} };
 
-// Cập nhật lời chào ban đầu theo tên học sinh (nếu có)
+// Cập nhật lời chào ban đầu theo tên học sinh và hồ sơ tiêm nhập (nếu có)
 const initGreetingEl = document.getElementById("initialBotGreeting");
 if (initGreetingEl && typeof getInitialGreetingMessage === "function") {
+    const rawGreeting = getInitialGreetingMessage();
+    const formattedGreeting = (typeof formatMsg === "function") ? formatMsg(rawGreeting) : rawGreeting;
     initGreetingEl.innerHTML = `
-        ${getInitialGreetingMessage()}
+        ${formattedGreeting}
         <div class="msg-tools">
             <button type="button" class="btn-read-msg" title="Đọc bằng giọng nói" onclick="speakMessage(this)">🔊 Nghe đọc</button>
         </div>
     `;
 }
 
-const analysis = analyzeCareer();
+const analysis = (typeof analyzeCareer === "function") ? analyzeCareer() : { results: [] };
 
 const top = analysis.results && analysis.results.length
     ? analysis.results[0]
     : null;
 
+// Lấy hồ sơ đã được tiêm nhập tự động (Context-Aware Injected Profile)
+const injected = (typeof loadInjectedUserProfile === "function") ? loadInjectedUserProfile() : null;
 
-document.getElementById("personalProfile").innerHTML = `
-
-    <b>Hồ sơ đang dùng:</b>
-
-    ${p.info.province || "Chưa chọn tỉnh"}
-
-    ·
-
-    ${
-        p.info.grade
-        ? "Lớp " + p.info.grade
-        : "Chưa chọn lớp"
+let profileDisplay = `<b>Hồ sơ đang dùng:</b> `;
+if (injected && injected.hasProfile) {
+    const parts = [];
+    if (injected.name && injected.name !== "bạn" && injected.name !== "Học sinh") {
+        parts.push(`<strong>${injected.name}</strong>`);
     }
-
-    ·
-
-    ${
-        p.scoreCount
-        ? p.scoreCount + " môn đã nhập"
-        : "Chưa nhập điểm"
+    if (injected.province) parts.push(injected.province);
+    if (injected.grade) {
+        parts.push(injected.grade.toString().includes("Lớp") ? injected.grade : `Lớp ${injected.grade}`);
     }
-
-    ·
-
-    xu hướng ${p.personality || "chưa xác định"}.
-
-    ${
-        (p.customPersonalityAnswers && p.customPersonalityAnswers.length)
-        ? ` · ✨ <strong>${p.customPersonalityAnswers.length} phản xạ tự nhập</strong>`
-        : ""
+    if (injected.bestCombo) {
+        parts.push(`Tổ hợp cao nhất: <strong>${injected.bestCombo.code} (${injected.bestCombo.score}đ)</strong>`);
+    } else if (injected.scoreCount) {
+        parts.push(`${injected.scoreCount} môn đã nhập`);
     }
-
-    ${
-        top
-        ? `
-            Bạn phù hợp nhất với ngành:
-            <strong>${top.name}</strong>.
-          `
-        : ""
+    if (injected.hollandCode) {
+        parts.push(`Mã Holland: <strong>${injected.hollandCode}</strong>`);
+    } else if (p.personality && p.personality !== "chưa xác định") {
+        parts.push(`xu hướng ${p.personality}`);
     }
+    if (injected.goals && injected.goals.isStudyAbroad) {
+        parts.push(`✈️ <strong>Du học${injected.goals.studyAbroadCountry ? ` (${injected.goals.studyAbroadCountry})` : ""}</strong>`);
+    } else if (injected.goals && injected.goals.dreamMajor) {
+        parts.push(`🎯 <strong>${injected.goals.dreamMajor}</strong>`);
+    }
+    if (top) {
+        parts.push(`Ngành thế mạnh: <strong>${top.name}</strong>`);
+    }
+    profileDisplay += parts.join(" · ");
+} else {
+    profileDisplay += `
+        ${p.info.province || "Chưa chọn tỉnh"} · 
+        ${p.info.grade ? "Lớp " + p.info.grade : "Chưa chọn lớp"} · 
+        ${p.scoreCount ? p.scoreCount + " môn đã nhập" : "Chưa nhập điểm"} · 
+        xu hướng ${p.personality || "chưa xác định"}.
+        ${top ? ` Bạn phù hợp nhất với ngành: <strong>${top.name}</strong>.` : ""}
+    `;
+}
 
-`;
+const profileEl = document.getElementById("personalProfile");
+if (profileEl) {
+    profileEl.innerHTML = profileDisplay;
+}
 
 </script>
 

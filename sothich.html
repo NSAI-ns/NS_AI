@@ -3,12 +3,11 @@
 
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>NS AI</title>
+<title>NS AI - Bước 3: Khám phá Sở thích & Đam mê</title>
 
 <link rel="stylesheet" href="style.css">
-
 </head>
 
 <body>
@@ -17,43 +16,34 @@
 <div class="bg-beam"></div>
 <div class="stars"></div>
 
+<!-- TOPBAR NAVIGATION -->
 <header class="topbar">
+  <a class="brand" href="index.html">
+    <span>NS</span> NS AI
+  </a>
 
-<a class="brand" href="index.html">
-<span>NS</span> NS AI
-</a>
+  <nav>
+    <a href="index.html">Trang chủ</a>
 
-<nav>
+    <div class="nav-dropdown">
+      <button class="nav-dropdown-trigger">📊 Đánh giá năng lực ▾</button>
+      <div class="nav-dropdown-menu">
+        <a href="thongtin.html">📝 Bước 1: Thông tin</a>
+        <a href="diemso.html">📊 Bước 2: Điểm số</a>
+        <a class="active" href="sothich.html">❤️ Bước 3: Sở thích</a>
+        <a href="tinhcach.html">🧠 Bước 4: Tính cách</a>
+        <a href="muctieu.html">🎯 Bước 5: Mục tiêu</a>
+      </div>
+    </div>
 
-<a href="index.html">Trang chủ</a>
+    <a href="truonghoc.html">Trường học</a>
+    <a href="ketqua.html">Kết quả</a>
+    <a href="chatbot.html">Chatbot</a>
 
-<div class="nav-dropdown">
-  <button class="nav-dropdown-trigger">📊 Đánh giá năng lực ▾</button>
-  <div class="nav-dropdown-menu">
-    <a href="thongtin.html">📝 Bước 1: Thông tin</a>
-    <a href="diemso.html">📊 Bước 2: Điểm số</a>
-    <a class="active" href="sothich.html">❤️ Bước 3: Sở thích</a>
-    <a href="tinhcach.html">🧠 Bước 4: Tính cách</a>
-    <a href="muctieu.html">🎯 Bước 5: Mục tiêu</a>
-  </div>
-</div>
-
-<a href="truonghoc.html">Trường học</a>
-
-<a href="ketqua.html">Kết quả</a>
-
-<a href="chatbot.html">Chatbot</a>
-
-<button
-class="session-reset"
-onclick="resetAllData()">
-
-↻ Phiên mới
-
-</button>
-
-</nav>
-
+    <button class="session-reset" onclick="resetAllData()">
+      ↻ Phiên mới
+    </button>
+  </nav>
 </header>
 
 
@@ -61,65 +51,211 @@ onclick="resetAllData()">
 
 <section class="glass form-card wide">
 
-<p class="eyebrow">BƯỚC 3</p>
+  <p class="eyebrow">BƯỚC 3 · KHÁM PHÁ BẢN SẮC CÁ NHÂN</p>
+  <h1>Khám phá sở thích, đam mê &amp; Phong cách làm việc</h1>
+  
+  <p class="muted">
+    Hãy chọn từ <strong>3 đến 10 sở thích</strong> bạn cảm thấy hứng thú nhất. Hệ thống sẽ tự động tổng hợp 
+    <strong>Top 3 đam mê cốt lõi</strong> và vẽ <strong>Bản đồ Đam mê (Passion Map)</strong> để đối chiếu chéo với 
+    điểm số GDPT 2018 và trắc nghiệm Holland RIASEC.
+  </p>
 
-<h1>Khám phá sở thích & đam mê</h1>
-
-<p class="muted">
-Hãy chọn tất cả những lĩnh vực bạn yêu thích hoặc thấy hào hứng. Càng chọn chi tiết, NS AI càng phân tích độ tương thích ngành nghề chính xác hơn!
-</p>
-
-<!-- THANH TÌM KIẾM NHANH & ĐẾM SỐ LƯỢNG ĐÃ CHỌN -->
-<div class="hobby-search-box">
-    <input
+  <!-- THANH TÌM KIẾM NHANH (DEBOUNCE 250MS) & ĐẾM SỐ LƯỢNG -->
+  <div class="hobby-search-box">
+    <div style="position: relative; flex: 1; min-width: 260px;">
+      <input
         type="text"
         id="hobbySearch"
-        placeholder="🔎 Tìm nhanh sở thích (ví dụ: game, vẽ, lập trình, nhạc, toán, kinh doanh, thể thao...)"
+        placeholder="🔎 Tìm nhanh sở thích (ví dụ: AI, lập trình, vẽ, kinh doanh, y tế, video, robot, ngoại ngữ...)"
         autocomplete="off"
-    >
-    <span id="selectedCount" class="selected-badge">Đã chọn: 0 sở thích</span>
-</div>
+      >
+      <button type="button" id="clearSearchBtn" onclick="clearSearch()" style="display: none; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; font-size: 16px; cursor: pointer;">✕</button>
+    </div>
+    <span id="selectedCount" class="selected-badge">Đã chọn: 0/10 sở thích (Khuyên chọn từ 3)</span>
+  </div>
 
-<!-- CÁC TAB DANH MỤC LỌC NHANH -->
-<div class="hobby-category-tabs">
-    <button type="button" class="tab-btn active" data-cat="all" onclick="setCategory('all')">Tất cả (50)</button>
-    <button type="button" class="tab-btn" data-cat="tech" onclick="setCategory('tech')">💻 Công nghệ & Kỹ thuật (8)</button>
-    <button type="button" class="tab-btn" data-cat="science" onclick="setCategory('science')">🔬 Khoa học & Y tế (7)</button>
-    <button type="button" class="tab-btn" data-cat="art" onclick="setCategory('art')">🎨 Nghệ thuật & Sáng tạo (8)</button>
-    <button type="button" class="tab-btn" data-cat="business" onclick="setCategory('business')">💼 Kinh doanh & Quản lý (7)</button>
-    <button type="button" class="tab-btn" data-cat="social" onclick="setCategory('social')">🗣️ Xã hội & Ngôn ngữ (8)</button>
-    <button type="button" class="tab-btn" data-cat="sport" onclick="setCategory('sport')">⚽ Thể thao & Vận động (6)</button>
-    <button type="button" class="tab-btn" data-cat="life" onclick="setCategory('life')">🌿 Đời sống & Trải nghiệm (6)</button>
-</div>
+  <!-- CÁC TAB DANH MỤC LỌC 8 NHÓM LĨNH VỰC -->
+  <div class="hobby-category-tabs">
+    <button type="button" class="tab-btn active" data-cat="all" onclick="setCategory('all')">Tất cả (60)</button>
+    <button type="button" class="tab-btn" data-cat="tech" onclick="setCategory('tech')">💻 Công nghệ (8)</button>
+    <button type="button" class="tab-btn" data-cat="art" onclick="setCategory('art')">🎨 Sáng tạo (8)</button>
+    <button type="button" class="tab-btn" data-cat="business" onclick="setCategory('business')">💰 Kinh doanh (8)</button>
+    <button type="button" class="tab-btn" data-cat="science" onclick="setCategory('science')">🔬 Khoa học (8)</button>
+    <button type="button" class="tab-btn" data-cat="social" onclick="setCategory('social')">🤝 Xã hội (7)</button>
+    <button type="button" class="tab-btn" data-cat="engineering" onclick="setCategory('engineering')">⚙️ Kỹ thuật (8)</button>
+    <button type="button" class="tab-btn" data-cat="law" onclick="setCategory('law')">⚖️ Luật - Quản lý (6)</button>
+    <button type="button" class="tab-btn" data-cat="global" onclick="setCategory('global')">🌍 Quốc tế (7)</button>
+  </div>
 
-<!-- KHUNG HIỂN THỊ CÁC THẺ SỞ THÍCH -->
-<div id="chips" class="chips"></div>
+  <!-- KHỐI TOP 3 ĐAM MÊ CỐT LÕI (HIGHLIGHTED TOP 3) -->
+  <div class="top3-passions-panel">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+      <span style="font-size: 14px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+        <span>🔥</span> Top 3 Đam Mê Cốt Lõi Của Bạn:
+      </span>
+      <span style="font-size: 12px; color: #94a3b8;">
+        (3 sở thích đầu tiên bạn chọn sẽ được ưu tiên làm trọng số phân tích nghề)
+      </span>
+    </div>
+    <div class="top3-passions-slots" id="top3Slots">
+      <div class="top3-slot" id="slot1">
+        <span class="chip-rank-badge rank-1">🥇 Top 1</span>
+        <span style="color: #64748b; font-size: 13px;">Chưa chọn đam mê số 1</span>
+      </div>
+      <div class="top3-slot" id="slot2">
+        <span class="chip-rank-badge rank-2">🥈 Top 2</span>
+        <span style="color: #64748b; font-size: 13px;">Chưa chọn đam mê số 2</span>
+      </div>
+      <div class="top3-slot" id="slot3">
+        <span class="chip-rank-badge rank-3">🥉 Top 3</span>
+        <span style="color: #64748b; font-size: 13px;">Chưa chọn đam mê số 3</span>
+      </div>
+    </div>
+  </div>
 
+  <!-- KHUNG HIỂN THỊ CÁC THẺ SỞ THÍCH -->
+  <div id="chips" class="chips"></div>
 
-<label style="margin-top: 18px;">
-Sở thích / đam mê đặc thù khác (nếu có)
-<textarea
-id="custom"
-rows="3"
-placeholder="Ví dụ: sưu tầm mô hình Gundam, chụp ảnh máy film vintage, làm bánh Pháp, nghiên cứu thiên văn..."></textarea>
-</label>
+  <!-- Ô NHẬP SỞ THÍCH ĐẶC THÙ RIÊNG DẠNG CHIPS TAGS -->
+  <div class="custom-hobbies-section">
+    <label style="font-size: 14px; font-weight: 700; color: #e2e8f0; display: block; margin-bottom: 4px;">
+      ✍️ Thêm sở thích hoặc đam mê đặc thù riêng của bạn (nếu chưa có trong danh sách trên):
+    </label>
+    <p style="font-size: 12.5px; color: #94a3b8; margin: 0 0 10px;">
+      Ví dụ: Chụp ảnh máy film vintage, Sưu tầm mô hình Gundam, Nghiên cứu văn hóa cổ đại, Chế tác thủ công da bò...
+    </p>
+    <div class="custom-hobby-input-wrap">
+      <input
+        type="text"
+        id="customHobbyInput"
+        placeholder="Nhập sở thích riêng rồi nhấn Enter hoặc bấm '+ Thêm'..."
+        autocomplete="off"
+        onkeydown="handleCustomInputKey(event)"
+      >
+      <button type="button" class="btn secondary" onclick="addCustomHobby()" style="white-space: nowrap; padding: 0 20px;">
+        + Thêm
+      </button>
+    </div>
+    <div id="customChipsList" class="custom-hobby-chips-list"></div>
+  </div>
 
+  <!-- KHỐI BẢN ĐỒ ĐAM MÊ (PASSION MAP) -->
+  <div class="passion-map-container" id="passionMapContainer" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+      <span style="font-size: 14.5px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 8px;">
+        <span>🗺️</span> Bản đồ Đam mê của bạn (Passion Map):
+      </span>
+      <span style="font-size: 12px; color: #a5b4fc;" id="passionSummaryText">Tự động phân bổ theo các nhóm lĩnh vực đã chọn</span>
+    </div>
+    <div class="passion-bar-wrap" id="passionBarWrap"></div>
+    <div class="passion-legend-grid" id="passionLegendGrid"></div>
+  </div>
 
-<div class="actions">
+  <!-- MODULE 3 CÂU HỎI PHONG CÁCH & MÔI TRƯỜNG LÀM VIỆC MONG MUỐN -->
+  <div class="workstyle-section">
+    <div style="margin-bottom: 12px;">
+      <span style="font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
+        <span>🎯</span> Phong cách &amp; Môi trường làm việc mong muốn
+      </span>
+      <p style="font-size: 13px; color: #94a3b8; margin: 4px 0 0;">
+        Giúp AI định vị chính xác môi trường làm việc phù hợp nhất sau khi tốt nghiệp đại học:
+      </p>
+    </div>
 
-<a href="diemso.html" class="btn secondary">
-← Quay lại Bước 2 (Điểm số)
-</a>
+    <!-- CÂU 1: LÀM VIỆC NHÓM -->
+    <div class="workstyle-group">
+      <div class="workstyle-group-label">
+        <span>👥 1. Bạn làm việc hiệu quả nhất trong hình thức nào?</span>
+      </div>
+      <div class="workstyle-options-grid">
+        <div class="workstyle-pill-card" id="ws_team_independent" onclick="selectWorkStyle('team', 'independent')">
+          <span style="font-size: 20px;">👤</span>
+          <div>
+            <strong>Làm việc độc lập</strong>
+            <div style="font-size: 11.5px; color: #94a3b8;">Tự chủ tiến độ, tập trung sâu</div>
+          </div>
+        </div>
+        <div class="workstyle-pill-card" id="ws_team_team" onclick="selectWorkStyle('team', 'team')">
+          <span style="font-size: 20px;">👥</span>
+          <div>
+            <strong>Làm việc theo nhóm</strong>
+            <div style="font-size: 11.5px; color: #94a3b8;">Thảo luận, phối hợp tập thể</div>
+          </div>
+        </div>
+        <div class="workstyle-pill-card" id="ws_team_flexible" onclick="selectWorkStyle('team', 'flexible')">
+          <span style="font-size: 20px;">🔄</span>
+          <div>
+            <strong>Kết hợp linh hoạt</strong>
+            <div style="font-size: 11.5px; color: #94a3b8;">Vừa độc lập vừa nhóm</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<button
-class="btn primary"
-onclick="saveHobbies()">
+    <!-- CÂU 2: NHỊP ĐỘ MÔI TRƯỜNG -->
+    <div class="workstyle-group">
+      <div class="workstyle-group-label">
+        <span>🏢 2. Bạn thích nhịp độ làm việc như thế nào?</span>
+      </div>
+      <div class="workstyle-options-grid">
+        <div class="workstyle-pill-card" id="ws_pace_stable" onclick="selectWorkStyle('pace', 'stable')">
+          <span style="font-size: 20px;">📋</span>
+          <div>
+            <strong>Ổn định, quy củ</strong>
+            <div style="font-size: 11.5px; color: #94a3b8;">Môi trường an toàn, chuẩn mực</div>
+          </div>
+        </div>
+        <div class="workstyle-pill-card" id="ws_pace_dynamic" onclick="selectWorkStyle('pace', 'dynamic')">
+          <span style="font-size: 20px;">🚀</span>
+          <div>
+            <strong>Năng động, linh hoạt</strong>
+            <div style="font-size: 11.5px; color: #94a3b8;">Thách thức mới, di chuyển nhiều</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-Lưu &amp; tiếp tục sang Bước 4 (Tính cách) →
+    <!-- CÂU 3: ĐỐI TƯỢNG TƯƠNG TÁC -->
+    <div class="workstyle-group">
+      <div class="workstyle-group-label">
+        <span>💡 3. Trọng tâm tương tác hàng ngày bạn yêu thích nhất?</span>
+      </div>
+      <div class="workstyle-options-grid">
+        <div class="workstyle-pill-card" id="ws_focus_people" onclick="selectWorkStyle('focus', 'people')">
+          <span style="font-size: 20px;">🤝</span>
+          <div>
+            <strong>Con người &amp; Xã hội</strong>
+            <div style="font-size: 11.5px; color: #94a3b8;">Giao tiếp, chăm sóc, truyền cảm hứng</div>
+          </div>
+        </div>
+        <div class="workstyle-pill-card" id="ws_focus_data_ideas" onclick="selectWorkStyle('focus', 'data_ideas')">
+          <span style="font-size: 20px;">💡</span>
+          <div>
+            <strong>Dữ liệu &amp; Ý tưởng</strong>
+            <div style="font-size: 11.5px; color: #94a3b8;">Số liệu, nghiên cứu, chiến lược</div>
+          </div>
+        </div>
+        <div class="workstyle-pill-card" id="ws_focus_tools_machines" onclick="selectWorkStyle('focus', 'tools_machines')">
+          <span style="font-size: 20px;">⚙️</span>
+          <div>
+            <strong>Máy móc &amp; Công cụ</strong>
+            <div style="font-size: 11.5px; color: #94a3b8;">Kỹ thuật, công nghệ, chế tác thực tế</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-</button>
+  <!-- NÚT HÀNH ĐỘNG -->
+  <div class="actions">
+    <a href="diemso.html" class="btn secondary">
+      ← Quay lại Bước 2 (Điểm số)
+    </a>
 
-</div>
+    <button type="button" class="btn primary" onclick="saveHobbies()">
+      Lưu &amp; tiếp tục sang Bước 4 (Tính cách) ➡️
+    </button>
+  </div>
 
 </section>
 
@@ -129,92 +265,138 @@ Lưu &amp; tiếp tục sang Bước 4 (Tính cách) →
 <script src="main.js"></script>
 
 <script>
+// ========================================================
+// 8 NHÓM LĨNH VỰC SỞ THÍCH (60 THẺ CHUẨN HOÁ DÀNH CHO THPT)
+// ========================================================
+const DOMAIN_METADATA = {
+  tech: { name: 'Công nghệ & AI', color: '#38bdf8', icon: '💻' },
+  art: { name: 'Sáng tạo & Nghệ thuật', color: '#f472b6', icon: '🎨' },
+  business: { name: 'Kinh doanh & Khởi nghiệp', color: '#fbbf24', icon: '💰' },
+  science: { name: 'Khoa học & Y sinh', color: '#34d399', icon: '🔬' },
+  social: { name: 'Xã hội & Giáo dục', color: '#a78bfa', icon: '🤝' },
+  engineering: { name: 'Kỹ thuật & Cơ khí', color: '#f97316', icon: '⚙️' },
+  law: { name: 'Luật & Quản lý', color: '#94a3b8', icon: '⚖️' },
+  global: { name: 'Quốc tế & Ngôn ngữ', color: '#06b6d4', icon: '🌍' }
+};
 
-// DANH SÁCH 50 SỞ THÍCH LỚN & ĐA DẠNG DÀNH CHO HỌC SINH THPT
 const hobbiesList = [
-  // Nhóm 1: Công nghệ & Kỹ thuật (8 mục)
-  { name: '💻 Lập trình & Phát triển phần mềm', cat: 'tech' },
-  { name: '🤖 Trí tuệ nhân tạo (AI) & Dữ liệu', cat: 'tech' },
-  { name: '🌐 Thiết kế Website & Ứng dụng di động', cat: 'tech' },
-  { name: '🎮 Trò chơi điện tử (Gaming & Esports)', cat: 'tech' },
-  { name: '🔒 An toàn thông tin & An ninh mạng', cat: 'tech' },
-  { name: '⚙️ Cơ khí, Ô tô & Chế tạo máy móc', cat: 'tech' },
-  { name: '📡 Điện tử, Vi mạch & Phần cứng máy tính', cat: 'tech' },
-  { name: '🏗️ Kiến trúc & Kỹ thuật xây dựng', cat: 'tech' },
+  // 1. Công nghệ & Trí tuệ nhân tạo (8 thẻ)
+  { name: '💻 Lập trình & Code phần mềm', cat: 'tech' },
+  { name: '🤖 Trí tuệ nhân tạo (AI) & Học máy', cat: 'tech' },
+  { name: '📱 Thiết kế Web & Ứng dụng di động', cat: 'tech' },
+  { name: '🎮 Làm game & Thể thao điện tử (Esports)', cat: 'tech' },
+  { name: '🛡️ An toàn thông tin & An ninh mạng', cat: 'tech' },
+  { name: '🔌 Điện tử vi mạch & Phần cứng máy tính', cat: 'tech' },
+  { name: '📊 Khoa học dữ liệu & Big Data', cat: 'tech' },
+  { name: '🌐 Khám phá Blockchain & Công nghệ Web3', cat: 'tech' },
 
-  // Nhóm 2: Khoa học & Y tế (7 mục)
-  { name: '🩺 Y học, Y tế & Khám chữa bệnh', cat: 'science' },
-  { name: '💊 Dược học, Thảo dược & Hóa dược', cat: 'science' },
-  { name: '🔬 Nghiên cứu khoa học (Lý, Hóa, Sinh)', cat: 'science' },
-  { name: '🧮 Toán học & Tư duy logic', cat: 'science' },
-  { name: '🌿 Môi trường, Sinh thái & Khí hậu', cat: 'science' },
-  { name: '🐾 Chăm sóc động vật & Thú cưng', cat: 'science' },
-  { name: '🔭 Thiên văn học & Khám phá vũ trụ', cat: 'science' },
+  // 2. Nghệ thuật & Sáng tạo nội dung (8 thẻ)
+  { name: '🖌️ Hội họa & Vẽ tranh kỹ thuật số (Digital Art)', cat: 'art' },
+  { name: '🎨 Thiết kế đồ họa & Đa phương tiện (Canva/Photoshop)', cat: 'art' },
+  { name: '📸 Nhiếp ảnh & Chụp ảnh nghệ thuật', cat: 'art' },
+  { name: '🎬 Quay dựng video TikTok / YouTube', cat: 'art' },
+  { name: '👗 Thiết kế thời trang & Phong cách sống', cat: 'art' },
+  { name: '🎤 Ca hát & Sáng tác âm nhạc', cat: 'art' },
+  { name: '🎸 Chơi nhạc cụ (Guitar / Piano / Trống)', cat: 'art' },
+  { name: '✍️ Viết lách & Sáng tác truyện, thơ', cat: 'art' },
 
-  // Nhóm 3: Nghệ thuật & Sáng tạo (8 mục)
-  { name: '🎨 Hội họa, Vẽ tranh & Mỹ thuật số', cat: 'art' },
-  { name: '🖥️ Thiết kế đồ họa & Đa phương tiện', cat: 'art' },
-  { name: '📸 Nhiếp ảnh, Quay phim & Dựng video', cat: 'art' },
-  { name: '👗 Thiết kế thời trang & Làm đẹp', cat: 'art' },
-  { name: '🛋️ Thiết kế nội thất & Không gian sống', cat: 'art' },
-  { name: '🎤 Ca hát, Thanh nhạc & Biểu diễn', cat: 'art' },
-  { name: '🎸 Chơi nhạc cụ & Sáng tác âm nhạc', cat: 'art' },
-  { name: '💃 Nhảy hiện đại & Vũ đạo nghệ thuật', cat: 'art' },
+  // 3. Kinh doanh & Khởi nghiệp (8 thẻ)
+  { name: '🚀 Khởi nghiệp & Quản trị kinh doanh', cat: 'business' },
+  { name: '📈 Đầu tư chứng khoán & Tài chính cá nhân', cat: 'business' },
+  { name: '🛒 Bán hàng Online & Thương mại điện tử', cat: 'business' },
+  { name: '📢 Marketing số & Chiến dịch quảng cáo', cat: 'business' },
+  { name: '👑 Quản lý đội nhóm & Kỹ năng lãnh đạo', cat: 'business' },
+  { name: '📦 Quản trị chuỗi cung ứng & Logistics', cat: 'business' },
+  { name: '📊 Nghiên cứu thị trường & Hành vi tiêu dùng', cat: 'business' },
+  { name: '💳 Quản lý chi tiêu & Kế hoạch ngân sách cá nhân', cat: 'business' },
 
-  // Nhóm 4: Kinh doanh & Quản lý (7 mục)
-  { name: '💼 Khởi nghiệp & Quản trị kinh doanh', cat: 'business' },
-  { name: '📈 Đầu tư, Chứng khoán & Tài chính', cat: 'business' },
-  { name: '🛍️ Bán hàng, E-Commerce & Thương mại', cat: 'business' },
-  { name: '📣 Marketing, Quảng cáo & Tiếp thị số', cat: 'business' },
-  { name: '🏢 Quản lý đội nhóm & Kỹ năng lãnh đạo', cat: 'business' },
-  { name: '📦 Logistics & Quản trị chuỗi cung ứng', cat: 'business' },
-  { name: '📊 Kế toán, Kiểm toán & Thuế tài chính', cat: 'business' },
+  // 4. Khoa học, Y sinh & Môi trường (8 thẻ)
+  { name: '🩺 Y học & Chăm sóc sức khỏe con người', cat: 'science' },
+  { name: '💊 Dược học & Nghiên cứu hóa dược', cat: 'science' },
+  { name: '🧪 Thí nghiệm khoa học (Lý, Hóa, Sinh)', cat: 'science' },
+  { name: '📐 Toán học ứng dụng & Tư duy logic', cat: 'science' },
+  { name: '🌱 Bảo vệ môi trường & Năng lượng xanh', cat: 'science' },
+  { name: '🧬 Công nghệ sinh học & Kỹ thuật gene', cat: 'science' },
+  { name: '🐾 Chăm sóc động vật & Bác sĩ thú cưng', cat: 'science' },
+  { name: '🔭 Khám phá vũ trụ & Thiên văn học', cat: 'science' },
 
-  // Nhóm 5: Xã hội & Ngôn ngữ (8 mục)
-  { name: '🌍 Học ngoại ngữ & Giao lưu văn hóa quốc tế', cat: 'social' },
-  { name: '🗣️ Thuyết trình, Diễn thuyết & MC dẫn chương trình', cat: 'social' },
-  { name: '⚖️ Pháp luật, Tranh biện & Công lý xã hội', cat: 'social' },
-  { name: '🧑‍🏫 Giảng dạy, Đào tạo & Truyền cảm hứng', cat: 'social' },
-  { name: '🧠 Tâm lý học & Thấu hiểu cảm xúc con người', cat: 'social' },
-  { name: '✍️ Viết lách, Báo chí & Sáng tạo nội dung số', cat: 'social' },
-  { name: '💖 Hoạt động tình nguyện & Phát triển cộng đồng', cat: 'social' },
-  { name: '📜 Lịch sử, Triết học & Nghiên cứu xã hội', cat: 'social' },
+  // 5. Giao tiếp, Giáo dục & Cộng đồng (7 thẻ)
+  { name: '🎙️ Thuyết trình & MC dẫn chương trình', cat: 'social' },
+  { name: '📚 Giảng dạy, Gia sư & Đào tạo kiến thức', cat: 'social' },
+  { name: '❤️ Hoạt động tình nguyện & Thiện nguyện xã hội', cat: 'social' },
+  { name: '🧠 Tâm lý học & Lắng nghe cảm xúc con người', cat: 'social' },
+  { name: '🌱 Tư vấn định hướng & Phát triển con người', cat: 'social' },
+  { name: '🎉 Tổ chức sự kiện & Kết nối tập thể', cat: 'social' },
+  { name: '🕊️ Công tác xã hội & Thúc đẩy bình đẳng giới', cat: 'social' },
 
-  // Nhóm 6: Thể thao & Vận động (6 mục)
-  { name: '⚽ Thể thao đồng đội (Bóng đá, Bóng rổ, Bóng chuyền)', cat: 'sport' },
-  { name: '🏸 Thể thao cá nhân (Cầu lông, Bơi lội, Điền kinh)', cat: 'sport' },
-  { name: '🏋️ Tập Gym, Thể hình & Fitness', cat: 'sport' },
-  { name: '🥋 Võ thuật & Kỹ năng tự vệ', cat: 'sport' },
-  { name: '🧘 Yoga, Thiền định & Sức khỏe tinh thần', cat: 'sport' },
-  { name: '♟️ Cờ vua, Cờ tướng & Thể thao trí tuệ', cat: 'sport' },
+  // 6. Kỹ thuật, Cơ khí & Xây dựng (8 thẻ)
+  { name: '🤖 Chế tạo mô hình STEM & Robot tự hành', cat: 'engineering' },
+  { name: '🚗 Cơ khí, Động cơ & Kỹ thuật ô tô', cat: 'engineering' },
+  { name: '🕹️ Tự động hóa & Hệ thống điều khiển thông minh', cat: 'engineering' },
+  { name: '🏛️ Kiến trúc công trình & Thiết kế không gian', cat: 'engineering' },
+  { name: '🔧 Sửa chữa thiết bị điện gia dụng & Máy móc', cat: 'engineering' },
+  { name: '🏗️ Kỹ thuật xây dựng & Kết cấu công trình', cat: 'engineering' },
+  { name: '🖨️ In 3D & Chế tác vật liệu mới', cat: 'engineering' },
+  { name: '🛰️ Hàng không vũ trụ & Thiết bị bay Drone', cat: 'engineering' },
 
-  // Nhóm 7: Đời sống & Trải nghiệm (6 mục)
-  { name: '✈️ Du lịch, Đi phượt & Trải nghiệm khám phá', cat: 'life' },
-  { name: '🍳 Nấu ăn & Nghệ thuật ẩm thực', cat: 'life' },
-  { name: '☕ Pha chế đồ uống & Thưởng thức cà phê', cat: 'life' },
-  { name: '🏨 Quản trị dịch vụ khách sạn & Nhà hàng', cat: 'life' },
-  { name: '🏕️ Cắm trại & Dã ngoại ngoài trời', cat: 'life' },
-  { name: '🎲 Trò chơi bàn cờ (Board Game) & Chiến thuật nhóm', cat: 'life' }
+  // 7. Luật pháp, Quản lý & Hành chính (6 thẻ)
+  { name: '🗣️ Tranh biện (Debate) & Hùng biện xã hội', cat: 'law' },
+  { name: '⚖️ Pháp luật, Tư pháp & Công lý xã hội', cat: 'law' },
+  { name: '📜 Phân tích chính sách công & Quản lý nhà nước', cat: 'law' },
+  { name: '📑 Sắp xếp hồ sơ & Tổ chức công việc quy chuẩn', cat: 'law' },
+  { name: '💰 Kế toán - Kiểm toán & Thuế doanh nghiệp', cat: 'law' },
+  { name: '👥 Quản trị văn phòng & Nhân sự (HR)', cat: 'law' },
+
+  // 8. Ngoại ngữ, Du lịch & Quốc tế (7 thẻ)
+  { name: '🗣️ Học ngoại ngữ (Anh, Nhật, Hàn, Trung, Đức, Pháp)', cat: 'global' },
+  { name: '✈️ Giao lưu văn hóa quốc tế & Săn học bổng du học', cat: 'global' },
+  { name: '🗺️ Du lịch trải nghiệm & Khám phá địa lý các vùng đất', cat: 'global' },
+  { name: '📖 Biên phiên dịch & Nghiên cứu ngôn ngữ học', cat: 'global' },
+  { name: '🏨 Quản trị dịch vụ khách sạn & Nhà hàng cao cấp', cat: 'global' },
+  { name: '🏛️ Tìm hiểu lịch sử & Nền văn minh thế giới', cat: 'global' },
+  { name: '🍜 Nghệ thuật ẩm thực quốc tế & Pha chế sáng tạo', cat: 'global' }
 ];
 
-// Khôi phục dữ liệu đã lưu
-const savedData = read('hobbies') || { selected: [], custom: '' };
+// ========================================================
+// TRẠNG THÁI HIỆN TẠI (STATE)
+// ========================================================
+let selectedHobbies = []; // Mảng thứ tự chọn (3 mục đầu tiên là Top 1, 2, 3)
+let customHobbies = [];   // Danh sách các sở thích tự nhập
 let currentCategory = 'all';
 let currentSearch = '';
+let searchDebounceTimer = null;
 
-const selectedSet = new Set(savedData.selected || []);
+let workStyle = {
+  team: 'flexible',
+  pace: 'dynamic',
+  focus: 'data_ideas'
+};
 
-const chipsBox = document.getElementById('chips');
-const searchInput = document.getElementById('hobbySearch');
-const countBadge = document.getElementById('selectedCount');
-const customInput = document.getElementById('custom');
+// Khôi phục dữ liệu đã lưu từ LocalStorage
+function restoreSavedHobbies() {
+  const saved = typeof read === 'function' ? read('hobbies') : null;
+  if (!saved) return;
 
-customInput.value = savedData.custom || '';
+  if (Array.isArray(saved.selected)) {
+    selectedHobbies = [...saved.selected];
+  }
 
-function updateCount() {
-  countBadge.textContent = `Đã chọn: ${selectedSet.size} sở thích`;
+  // Khôi phục custom hobbies
+  if (Array.isArray(saved.customList)) {
+    customHobbies = [...saved.customList];
+  } else if (typeof saved.custom === 'string' && saved.custom.trim()) {
+    customHobbies = saved.custom.split(',').map(s => s.trim()).filter(Boolean);
+  }
+
+  // Khôi phục phong cách làm việc
+  if (saved.workStyle && typeof saved.workStyle === 'object') {
+    if (saved.workStyle.team) workStyle.team = saved.workStyle.team;
+    if (saved.workStyle.pace) workStyle.pace = saved.workStyle.pace;
+    if (saved.workStyle.focus) workStyle.focus = saved.workStyle.focus;
+  }
 }
 
+// Chuẩn hóa chuỗi tìm kiếm bỏ dấu tiếng Việt
 function normalizeStr(str) {
   return (str || '')
     .toLowerCase()
@@ -223,81 +405,340 @@ function normalizeStr(str) {
     .replace(/đ/g, 'd');
 }
 
+// Cập nhật số lượng đã chọn & Top 3 slots
+function updateSelectionUI() {
+  const countBadge = document.getElementById('selectedCount');
+  const count = selectedHobbies.length;
+
+  if (countBadge) {
+    countBadge.textContent = `Đã chọn: ${count}/10 sở thích (Khuyên chọn từ 3)`;
+    if (count >= 3 && count <= 10) {
+      countBadge.style.color = '#34d399';
+      countBadge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+      countBadge.style.background = 'rgba(16, 185, 129, 0.15)';
+    } else {
+      countBadge.style.color = '#a5b4fc';
+      countBadge.style.borderColor = 'rgba(99, 102, 241, 0.3)';
+      countBadge.style.background = 'rgba(99, 102, 241, 0.15)';
+    }
+  }
+
+  // Cập nhật Top 3 Slots
+  const ranks = ['🥇 Top 1', '🥈 Top 2', '🥉 Top 3'];
+  const rankColors = ['rank-1', 'rank-2', 'rank-3'];
+  for (let i = 1; i <= 3; i++) {
+    const slotEl = document.getElementById(`slot${i}`);
+    if (slotEl) {
+      const item = selectedHobbies[i - 1];
+      if (item) {
+        slotEl.className = 'top3-slot filled';
+        slotEl.innerHTML = `
+          <span class="chip-rank-badge ${rankColors[i - 1]}">${ranks[i - 1]}</span>
+          <span style="color: #fff; font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item}</span>
+        `;
+      } else {
+        slotEl.className = 'top3-slot';
+        slotEl.innerHTML = `
+          <span class="chip-rank-badge ${rankColors[i - 1]}">${ranks[i - 1]}</span>
+          <span style="color: #64748b; font-size: 13px;">Chưa chọn đam mê số ${i}</span>
+        `;
+      }
+    }
+  }
+
+  // Cập nhật Bản đồ Đam mê (Passion Map)
+  renderPassionMap();
+}
+
+// Bật/tắt chọn thẻ sở thích
+function toggleHobby(name) {
+  const idx = selectedHobbies.indexOf(name);
+  if (idx >= 0) {
+    selectedHobbies.splice(idx, 1);
+  } else {
+    if (selectedHobbies.length >= 10) {
+      if (typeof showToast === 'function') {
+        showToast('⚠️ Bạn đã chọn tối đa 10 sở thích! Vui lòng bỏ bớt một sở thích nếu muốn chọn thêm.', 'warning');
+      } else {
+        alert('⚠️ Bạn đã chọn tối đa 10 sở thích! Vui lòng bỏ bớt một sở thích nếu muốn chọn thêm.');
+      }
+      return;
+    }
+    selectedHobbies.push(name);
+  }
+
+  renderChips();
+  updateSelectionUI();
+}
+
+// Render toàn bộ chips sở thích
 function renderChips() {
+  const chipsBox = document.getElementById('chips');
+  if (!chipsBox) return;
   chipsBox.innerHTML = '';
 
   const keyword = normalizeStr(currentSearch);
 
   const filtered = hobbiesList.filter(item => {
-    // Lọc theo danh mục
     const matchCat = (currentCategory === 'all') || (item.cat === currentCategory);
-    // Lọc theo từ khóa tìm kiếm
     const matchSearch = !keyword || normalizeStr(item.name).includes(keyword);
     return matchCat && matchSearch;
   });
 
   if (filtered.length === 0) {
-    chipsBox.innerHTML = '<div style="color:#aeb4d0; padding:15px; font-style:italic;">Không tìm thấy sở thích nào khớp với từ khóa tìm kiếm. Bạn có thể nhập thêm vào ô "Sở thích khác" bên dưới!</div>';
+    chipsBox.innerHTML = `
+      <div style="color: #94a3b8; padding: 20px; font-style: italic; width: 100%; text-align: center;">
+        🔍 Không tìm thấy sở thích nào khớp với "${currentSearch}". Bạn có thể nhập thêm vào ô "✍️ Thêm sở thích riêng" ở bên dưới nhé!
+      </div>
+    `;
     return;
   }
 
   filtered.forEach(item => {
+    const isSelected = selectedHobbies.includes(item.name);
+    const rankIndex = selectedHobbies.indexOf(item.name); // 0, 1, 2 tương ứng Top 1, 2, 3
+    const isTop1 = rankIndex === 0;
+    const isTop2 = rankIndex === 1;
+    const isTop3 = rankIndex === 2;
+
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'chip ' + (selectedSet.has(item.name) ? 'selected' : '');
-    btn.textContent = item.name;
+    btn.className = 'chip ' + (isSelected ? 'selected ' : '') + (isTop1 ? 'top-1 ' : '') + (isTop2 ? 'top-2 ' : '') + (isTop3 ? 'top-3 ' : '');
+
+    let badgeHtml = '';
+    if (isTop1) badgeHtml = '<span class="chip-rank-badge rank-1">🥇 Top 1</span>';
+    else if (isTop2) badgeHtml = '<span class="chip-rank-badge rank-2">🥈 Top 2</span>';
+    else if (isTop3) badgeHtml = '<span class="chip-rank-badge rank-3">🥉 Top 3</span>';
+
+    btn.innerHTML = `${badgeHtml} <span>${item.name}</span>`;
 
     btn.onclick = () => {
-      if (selectedSet.has(item.name)) {
-        selectedSet.delete(item.name);
-        btn.classList.remove('selected');
-      } else {
-        selectedSet.add(item.name);
-        btn.classList.add('selected');
-      }
-      updateCount();
+      toggleHobby(item.name);
     };
 
     chipsBox.appendChild(btn);
   });
 }
 
+// Đổi Tab danh mục lọc
 function setCategory(cat) {
   currentCategory = cat;
   document.querySelectorAll('.hobby-category-tabs .tab-btn').forEach(btn => {
-    if (btn.dataset.cat === cat) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
+    btn.classList.toggle('active', btn.dataset.cat === cat);
   });
   renderChips();
 }
 
+// Xử lý ô tìm kiếm nhanh Debounce 250ms
+const searchInput = document.getElementById('hobbySearch');
+const clearSearchBtn = document.getElementById('clearSearchBtn');
+
 searchInput.addEventListener('input', function() {
-  currentSearch = this.value.trim();
-  renderChips();
+  const val = this.value;
+  clearSearchBtn.style.display = val ? 'block' : 'none';
+
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => {
+    currentSearch = val.trim();
+    renderChips();
+  }, 250);
 });
 
-function saveHobbies() {
-  const data = {
-    selected: Array.from(selectedSet),
-    custom: customInput.value.trim()
-  };
+function clearSearch() {
+  searchInput.value = '';
+  currentSearch = '';
+  clearSearchBtn.style.display = 'none';
+  renderChips();
+}
 
-  if (data.selected.length === 0 && !data.custom) {
-    showToast('Vui lòng chọn ít nhất 1 lĩnh vực sở thích hoặc nhập mô tả sở thích riêng của bạn!', 'error');
+// ========================================================
+// QUẢN LÝ SỞ THÍCH RIÊNG (CUSTOM HOBBIES)
+// ========================================================
+function handleCustomInputKey(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addCustomHobby();
+  }
+}
+
+function addCustomHobby() {
+  const input = document.getElementById('customHobbyInput');
+  if (!input) return;
+  const val = input.value.trim();
+  if (!val) return;
+
+  if (customHobbies.includes(val)) {
+    if (typeof showToast === 'function') showToast('Sở thích này đã có trong danh sách của bạn!', 'info');
+    input.value = '';
     return;
   }
 
-  save('hobbies', data);
-  location.href = 'tinhcach.html';
+  customHobbies.push(val);
+  input.value = '';
+  renderCustomChips();
+
+  if (typeof showToast === 'function') {
+    showToast(`Đã thêm sở thích riêng: "${val}"`, 'success');
+  }
 }
 
-// Khởi chạy
-updateCount();
-renderChips();
+function removeCustomHobby(index) {
+  customHobbies.splice(index, 1);
+  renderCustomChips();
+}
 
+function renderCustomChips() {
+  const container = document.getElementById('customChipsList');
+  if (!container) return;
+
+  if (customHobbies.length === 0) {
+    container.innerHTML = '<span style="font-size: 12.5px; color: #64748b; font-style: italic;">Chưa có sở thích riêng nào được thêm.</span>';
+    return;
+  }
+
+  container.innerHTML = customHobbies.map((item, idx) => `
+    <span class="custom-chip-tag">
+      <span>🏷️ ${item}</span>
+      <button type="button" class="custom-chip-delete" onclick="removeCustomHobby(${idx})" title="Xóa sở thích này">✕</button>
+    </span>
+  `).join('');
+}
+
+// ========================================================
+// BẢN ĐỒ ĐAM MÊ (PASSION MAP)
+// ========================================================
+function renderPassionMap() {
+  const mapContainer = document.getElementById('passionMapContainer');
+  const barWrap = document.getElementById('passionBarWrap');
+  const legendGrid = document.getElementById('passionLegendGrid');
+  const summaryText = document.getElementById('passionSummaryText');
+
+  if (!mapContainer || !barWrap || !legendGrid) return;
+
+  if (selectedHobbies.length === 0) {
+    mapContainer.style.display = 'none';
+    return;
+  }
+
+  mapContainer.style.display = 'block';
+
+  // Đếm phân bổ theo danh mục
+  const counts = {};
+  selectedHobbies.forEach(name => {
+    const item = hobbiesList.find(h => h.name === name);
+    const cat = item ? item.cat : 'tech';
+    counts[cat] = (counts[cat] || 0) + 1;
+  });
+
+  const total = selectedHobbies.length;
+  let barHtml = '';
+  let legendHtml = '';
+
+  Object.entries(counts).forEach(([cat, count]) => {
+    const meta = DOMAIN_METADATA[cat] || { name: cat, color: '#6366f1', icon: '📌' };
+    const pct = Math.round((count / total) * 100);
+
+    barHtml += `
+      <div class="passion-bar-segment" style="width: ${pct}%; background: ${meta.color};" title="${meta.icon} ${meta.name}: ${count} thẻ (${pct}%)"></div>
+    `;
+
+    legendHtml += `
+      <div class="passion-legend-item">
+        <span class="passion-legend-dot" style="background: ${meta.color};"></span>
+        <span>${meta.icon} <strong>${meta.name}</strong>: ${count} (${pct}%)</span>
+      </div>
+    `;
+  });
+
+  barWrap.innerHTML = barHtml;
+  legendGrid.innerHTML = legendHtml;
+  if (summaryText) {
+    summaryText.textContent = `Tổng hợp từ ${total} sở thích đã chọn`;
+  }
+}
+
+// ========================================================
+// PHONG CÁCH LÀM VIỆC (WORK STYLE)
+// ========================================================
+function selectWorkStyle(group, val) {
+  workStyle[group] = val;
+  updateWorkStyleUI();
+}
+
+function updateWorkStyleUI() {
+  // Team
+  ['independent', 'team', 'flexible'].forEach(v => {
+    const el = document.getElementById(`ws_team_${v}`);
+    if (el) el.classList.toggle('selected', workStyle.team === v);
+  });
+  // Pace
+  ['stable', 'dynamic'].forEach(v => {
+    const el = document.getElementById(`ws_pace_${v}`);
+    if (el) el.classList.toggle('selected', workStyle.pace === v);
+  });
+  // Focus
+  ['people', 'data_ideas', 'tools_machines'].forEach(v => {
+    const el = document.getElementById(`ws_focus_${v}`);
+    if (el) el.classList.toggle('selected', workStyle.focus === v);
+  });
+}
+
+// ========================================================
+// LƯU HỒ SƠ & CHUYỂN BƯỚC
+// ========================================================
+function saveHobbies() {
+  if (selectedHobbies.length === 0 && customHobbies.length === 0) {
+    if (typeof showToast === 'function') {
+      showToast('Vui lòng chọn ít nhất 1 sở thích (khuyên chọn từ 3 đến 10) để AI có dữ liệu phân tích!', 'error');
+    } else {
+      alert('Vui lòng chọn ít nhất 1 sở thích để tiếp tục!');
+    }
+    return;
+  }
+
+  // Tính tỷ lệ phân bổ
+  const distribution = {};
+  const total = selectedHobbies.length || 1;
+  selectedHobbies.forEach(name => {
+    const item = hobbiesList.find(h => h.name === name);
+    const cat = item ? item.cat : 'tech';
+    distribution[cat] = Math.round(((distribution[cat] || 0) + 1) / total * 100);
+  });
+
+  const top3 = selectedHobbies.slice(0, 3);
+
+  const payload = {
+    selected: selectedHobbies,
+    top3: top3,
+    custom: customHobbies.join(', '),
+    customList: customHobbies,
+    workStyle: workStyle,
+    distribution: distribution
+  };
+
+  if (typeof save === 'function') {
+    save('hobbies', payload);
+  } else {
+    localStorage.setItem('ns_hobbies', JSON.stringify(payload));
+  }
+
+  if (typeof showToast === 'function') {
+    showToast('Đã lưu dữ liệu sở thích & phong cách làm việc thành công!', 'success');
+  }
+
+  setTimeout(() => {
+    location.href = 'tinhcach.html';
+  }, 180);
+}
+
+// Khởi chạy khi tải trang
+document.addEventListener('DOMContentLoaded', () => {
+  restoreSavedHobbies();
+  updateSelectionUI();
+  renderChips();
+  renderCustomChips();
+  updateWorkStyleUI();
+});
 </script>
 
 </body>

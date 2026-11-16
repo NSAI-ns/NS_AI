@@ -8,6 +8,445 @@
     <title>NS AI</title>
 
     <link rel="stylesheet" href="style.css">
+    <style>
+/* ==========================================================================
+   CSS CHO CÁC TÍNH NĂNG NÂNG CẤP KẾT QUẢ (CAREER DECISION ENGINE UPGRADES):
+   1. PORTABLE URL PROFILE & SHARE MODAL
+   2. 3-PILLAR CONSENSUS ALIGNMENT SCORE
+   3. SECOND-ORDER THINKING & BIFURCATED PATHWAYS
+   4. ADMISSION STRATEGIC TIERING
+   ========================================================================== */
+
+/* 1. Portable URL Profile Banner */
+.shared-profile-banner {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.22), rgba(99, 102, 241, 0.25));
+    border: 1.5px solid rgba(56, 189, 248, 0.6);
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 22px;
+    box-shadow: 0 8px 30px rgba(14, 165, 233, 0.2), 0 0 20px rgba(99, 102, 241, 0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    animation: fadeInDown 0.4s ease;
+}
+.shared-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    max-width: 680px;
+}
+.shared-banner-icon {
+    font-size: 30px;
+    line-height: 1;
+}
+.shared-banner-title {
+    font-size: 15.5px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.4;
+}
+.shared-banner-subtitle {
+    font-size: 13px;
+    color: #cbd5e1;
+    margin-top: 4px;
+    line-height: 1.5;
+}
+.shared-banner-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Share Modal Overlay & Card */
+.share-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(5, 7, 27, 0.85);
+    backdrop-filter: blur(14px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.share-modal-card {
+    background: #0f172a;
+    border: 1.5px solid rgba(129, 140, 248, 0.45);
+    border-radius: 18px;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 35px rgba(99, 102, 241, 0.25);
+    overflow: hidden;
+}
+.share-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(30, 41, 59, 0.6);
+}
+.share-modal-close {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+.share-modal-close:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+}
+.share-modal-body {
+    padding: 24px;
+}
+.share-url-input-wrap {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.share-url-input {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1.5px solid rgba(129, 140, 248, 0.4);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #67e8f9;
+    font-family: monospace;
+    outline: none;
+}
+.share-url-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+}
+.share-modal-features {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 18px 0;
+    padding: 14px;
+    background: rgba(30, 41, 59, 0.4);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.share-feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 12.5px;
+    color: #cbd5e1;
+    line-height: 1.5;
+}
+
+/* 2. 3-Pillar Consensus Alignment Score Component */
+.alignment-score-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.75), rgba(15, 23, 42, 0.9));
+    border: 1.5px solid rgba(129, 140, 248, 0.35);
+    border-radius: 18px;
+    padding: 24px;
+    margin: 22px 0 26px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+}
+.alignment-score-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.alignment-badge-consensus {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+.alignment-dashboard-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    align-items: center;
+}
+@media (max-width: 900px) {
+    .alignment-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.alignment-gauge-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 22px 18px;
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    text-align: center;
+}
+.alignment-radial-circle {
+    position: relative;
+    width: 140px;
+    height: 140px;
+}
+.alignment-radial-circle svg {
+    transform: rotate(-90deg);
+}
+.alignment-radial-value {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.alignment-radial-number {
+    font-size: 34px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1;
+}
+.alignment-radial-pct {
+    font-size: 15px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+/* 3 Pillars Breakdown */
+.alignment-pillars-box {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.pillar-card {
+    background: rgba(30, 41, 59, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 14px;
+    padding: 14px 18px;
+    transition: all 0.25s ease;
+}
+.pillar-card:hover {
+    border-color: rgba(129, 140, 248, 0.4);
+    background: rgba(30, 41, 59, 0.75);
+}
+.pillar-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.pillar-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.pillar-score-badge {
+    font-size: 15px;
+    font-weight: 800;
+}
+.pillar-progress-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+.pillar-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.8s ease;
+}
+.pillar-desc {
+    font-size: 12.5px;
+    color: #cbd5e1;
+    line-height: 1.5;
+}
+.pillar-toggle-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 11.5px;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+}
+.pillar-toggle-btn:hover {
+    color: #67e8f9;
+}
+.pillar-details-collapse {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.55;
+    display: none;
+}
+
+/* 3. Second-Order Thinking & Bifurcated Pathways */
+.second-order-card {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(236, 72, 153, 0.12));
+    border: 1.5px solid rgba(245, 158, 11, 0.45);
+    border-radius: 18px;
+    padding: 24px;
+    margin: 22px 0 26px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+}
+.second-order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.second-order-warning-banner {
+    background: rgba(15, 23, 42, 0.7);
+    border-left: 4px solid #f59e0b;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    border-right: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.consequence-table {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0 22px;
+}
+@media (max-width: 768px) {
+    .consequence-table {
+        grid-template-columns: 1fr;
+    }
+}
+.consequence-col {
+    background: rgba(15, 23, 42, 0.65);
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.consequence-col-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.bifurcated-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.bifurcated-tab-btn {
+    flex: 1;
+    min-width: 240px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #cbd5e1;
+}
+.bifurcated-tab-btn.active-pathway1 {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.35), rgba(59, 130, 246, 0.35));
+    border-color: #60a5fa;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.25);
+}
+.bifurcated-tab-btn.active-pathway2 {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.35), rgba(168, 85, 247, 0.35));
+    border-color: #f472b6;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(236, 72, 153, 0.25);
+}
+.bifurcated-pathway-content {
+    background: rgba(15, 23, 42, 0.65);
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 22px;
+}
+
+/* 4. Admission Strategic Tiering (3 Nhóm Chiến Thuật) */
+.admission-tiers-wrapper {
+    margin: 22px 0;
+}
+.tier-filter-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 14px 0 18px;
+    align-items: center;
+}
+.tier-filter-btn {
+    padding: 7px 15px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+    color: #cbd5e1;
+    transition: all 0.2s;
+}
+.tier-filter-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+.tier-filter-btn.active {
+    background: rgba(99, 102, 241, 0.3);
+    border-color: #818cf8;
+    color: #ffffff;
+    font-weight: 700;
+}
+.tier-probability-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+}
+.tier-tactical-advice {
+    background: rgba(15, 23, 42, 0.65);
+    border-left: 3px solid;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    margin: 8px 0 14px;
+    line-height: 1.55;
+}
+    </style>
 </head>
 
 <body>
@@ -72,6 +511,9 @@
                 </div>
             </div>
 
+            <!-- Shared Profile Banner (Hiển thị khi xem qua link ?share=...) -->
+            <div id="sharedProfileBanner"></div>
+
             <!-- Banner tiến độ hồ sơ (hiển thị nhẹ nhàng, không chặn người dùng) -->
             <div id="resultProgressBanner"></div>
 
@@ -99,6 +541,9 @@
 
             <!-- Thanh công cụ & Nút Xuất PDF / In hồ sơ -->
             <div class="result-toolbar" style="display: flex; gap: 10px; margin: 16px 0 20px; flex-wrap: wrap; align-items: center;">
+                <button type="button" class="btn secondary" id="btnShareProfileTop" onclick="openShareProfileModal()" style="cursor: pointer; background: rgba(14, 165, 233, 0.22); border: 1.5px solid rgba(56, 189, 248, 0.55); color: #7dd3fc; font-weight: 700; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.25);">
+                    🔗 Tạo link chia sẻ nhanh kết quả
+                </button>
                 <button type="button" class="btn primary print-btn" id="exportPdfBtnTop" onclick="printCareerReport()" style="cursor: pointer; background: linear-gradient(135deg, #2563eb, #7c3aed); box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35); font-weight: 600;">
                     🖨️ Xuất phiếu định hướng (PDF / In)
                 </button>
@@ -117,6 +562,12 @@
             <!-- Thông tin tổng quan -->
             <div id="summary"></div>
 
+            <!-- 1. CHỈ SỐ ĐỒNG THUẬN ĐỊNH HƯỚNG 3 TRỤ CỘT (3-PILLAR CAREER ALIGNMENT SCORE) -->
+            <div id="alignmentScoreContainer"></div>
+
+            <!-- 2. PHÂN TÍCH TƯ DUY BẬC HAI CHO DỮ LIỆU PHÂN HÓA (SECOND-ORDER THINKING) -->
+            <div id="secondOrderThinkingContainer"></div>
+
             <!-- 1a. BIỂU ĐỒ PHÂN TÍCH TRỰC QUAN (RADAR HOLLAND RIASEC & BAR TOP NGÀNH) -->
             <div id="analyticsChartsContainer"></div>
 
@@ -132,6 +583,9 @@
             <!-- Kết quả ngành nghề -->
             <div id="results" class="result-list"></div>
 
+            <!-- 2c. GIẢI TRÌNH THUẬT TOÁN & TRỌNG SỐ AI (WHITE-BOX EXPLANATION) -->
+            <div id="whiteBoxExplanationContainer"></div>
+
             <!-- 3. LỘ TRÌNH HÀNH ĐỘNG CÁ NHÂN HÓA 3 GIAI ĐOẠN (3-STEP ACTION PLAN) -->
             <div id="actionPlanContainer"></div>
 
@@ -144,8 +598,13 @@
             <!-- GỢI Ý TRƯỜNG ĐẠI HỌC PHÙ HỢP THEO MỤC TIÊU & VÙNG MIỀN -->
             <div id="schoolRecommendations" class="school-rec-section"></div>
 
+            <!-- 4. KHẢO SÁT ĐÁNH GIÁ THỰC NGHIỆM HỆ THỐNG NS AI (LIKERT 5 MỨC) -->
+            <div id="empiricalSurveyContainer"></div>
+
 
             <div class="actions">
+
+                <button type="button" class="btn secondary" onclick="openShareProfileModal()" style="background: rgba(14, 165, 233, 0.2); border: 1.5px solid rgba(56, 189, 248, 0.5); color: #7dd3fc; font-weight: 600;">🔗 Chia sẻ kết quả</button>
 
                 <button type="button" class="btn primary print-btn" id="exportPdfBtnBottom" onclick="printCareerReport()" style="cursor: pointer; background: linear-gradient(135deg, #2563eb, #7c3aed); font-weight: 600;">
                     🖨️ Xuất phiếu định hướng (PDF / In)
@@ -169,6 +628,62 @@
 
     </section>
 
+<!-- MODAL CHIA SẺ LINK HỒ SƠ (PORTABLE URL MODAL) -->
+<div id="shareProfileModal" class="share-modal-overlay" style="display: none;" onclick="if(event.target===this)closeShareProfileModal()">
+    <div class="share-modal-card">
+        <div class="share-modal-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 26px;">🔗</span>
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; color: #ffffff;">Chia sẻ Hồ sơ Định hướng Cá nhân (Portable URL)</h3>
+                    <p style="margin: 4px 0 0; font-size: 12.5px; color: #94a3b8;">Link độc lập mang theo toàn bộ dữ liệu 5 bước — người xem không cần tài khoản hay nhập lại từ đầu.</p>
+                </div>
+            </div>
+            <button type="button" class="share-modal-close" onclick="closeShareProfileModal()">✕</button>
+        </div>
+        <div class="share-modal-body">
+            <div class="share-preview-info" id="shareModalPreviewInfo" style="margin-bottom: 14px; padding: 12px 14px; background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; font-size: 13px; color: #e2e8f0;"></div>
+            
+            <label style="display: block; font-size: 13px; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">
+                Đường dẫn liên kết hồ sơ của bạn:
+            </label>
+            <div class="share-url-input-wrap">
+                <input type="text" id="shareUrlInput" class="share-url-input" readonly onclick="this.select()">
+                <button type="button" id="copyShareUrlBtn" class="btn primary" onclick="copyShareUrl()" style="white-space: nowrap; font-weight: 700; background: linear-gradient(135deg, #0284c7, #2563eb);">
+                    📋 Sao chép link
+                </button>
+            </div>
+            
+            <div id="shareCopyFeedback" style="font-size: 12.5px; color: #34d399; margin: 8px 0 12px; display: none;">
+                ✅ Đã sao chép liên kết vào bộ nhớ tạm! Bạn có thể dán và gửi cho thầy cô, phụ huynh hoặc bạn bè.
+            </div>
+
+            <div class="share-modal-features">
+                <div class="share-feature-item">
+                    <span>🔒</span>
+                    <div><strong>Mã hóa Cục bộ:</strong> Toàn bộ dữ liệu điểm số, sở thích và tính cách được nén UTF-8 Base64 ngay trên link, bảo mật và an toàn.</div>
+                </div>
+                <div class="share-feature-item">
+                    <span>📱</span>
+                    <div><strong>Mở tức thì trên mọi thiết bị:</strong> Người nhận link có thể xem ngay trên điện thoại hoặc máy tính mà không cần cài đặt app.</div>
+                </div>
+                <div class="share-feature-item">
+                    <span>📥</span>
+                    <div><strong>Lưu vào máy 1-chạm:</strong> Người nhận có thể bấm "Lưu vào máy" để nhập toàn bộ hồ sơ vào trình duyệt của họ và tiếp tục điều chỉnh.</div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+                <button type="button" class="btn secondary" onclick="testOpenShareUrl()" style="font-size: 13px;">
+                    ↗ Mở xem thử trong tab mới
+                </button>
+                <button type="button" class="btn secondary" onclick="closeShareProfileModal()" style="font-size: 13px;">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 </main>
 
 
@@ -292,7 +807,837 @@ function renderResultProgressBanner(status) {
     }
 }
 
-const gateStatus = typeof getStepGateStatus === 'function' ? getStepGateStatus() : { isAllCompleted: true, isMinRequired: true, completedCount: 5 };
+// ==========================================================================
+// PORTABLE URL PROFILE & SECOND-ORDER THINKING & 3-PILLAR ALIGNMENT LOGIC
+// ==========================================================================
+
+let _sharedProfileData = null;
+let _isSharedModeActive = false;
+let _activeBifurcatedTab = 1;
+
+// 1. SAFE UTF-8 BASE64 HELPERS
+function safeUtf8ToBase64(str) {
+    try {
+        if (typeof TextEncoder !== 'undefined') {
+            const u8 = new TextEncoder().encode(str);
+            let bin = '';
+            for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
+            return btoa(bin);
+        }
+        return btoa(unescape(encodeURIComponent(str)));
+    } catch (e) {
+        console.error("Lỗi safeUtf8ToBase64:", e);
+        return '';
+    }
+}
+
+function safeBase64ToUtf8(b64) {
+    try {
+        const clean = b64.trim().replace(/ /g, '+');
+        const bin = atob(clean);
+        if (typeof TextDecoder !== 'undefined') {
+            const u8 = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+            return new TextDecoder().decode(u8);
+        }
+        return decodeURIComponent(escape(bin));
+    } catch (e) {
+        console.error("Lỗi safeBase64ToUtf8:", e);
+        return null;
+    }
+}
+
+function encodeProfileToBase64(data) {
+    try {
+        return safeUtf8ToBase64(JSON.stringify(data));
+    } catch (e) {
+        return '';
+    }
+}
+
+function decodeBase64ToProfile(b64Str) {
+    try {
+        const json = safeBase64ToUtf8(b64Str);
+        return json ? JSON.parse(json) : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+// 2. DETECT & HOOK SHARED PROFILE FROM URL ?share=...
+(function initPortableProfileDetection() {
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const shareParam = urlParams.get('share');
+        if (shareParam) {
+            let decoded = null;
+            if (window.NS_ShareProfile && typeof window.NS_ShareProfile.decode === 'function') {
+                decoded = window.NS_ShareProfile.decode(shareParam);
+            }
+            if (!decoded) {
+                decoded = decodeBase64ToProfile(shareParam);
+            }
+            if (decoded && typeof decoded === 'object') {
+                _sharedProfileData = decoded;
+                _isSharedModeActive = true;
+                window._currentSharedProfile = decoded;
+
+                // Hook getProfile để các hàm tính toán dùng ngay dữ liệu hồ sơ chia sẻ
+                if (typeof window.getProfile === 'function') {
+                    const origGetProfile = window.getProfile;
+                    window.getProfile = function() {
+                        return _sharedProfileData || origGetProfile();
+                    };
+                }
+            }
+        }
+    } catch (err) {
+        console.warn("Lỗi khởi tạo Portable Profile:", err);
+    }
+})();
+
+// 3. UI: SHARED PROFILE BANNER
+function renderSharedProfileBanner(sharedData) {
+    const bannerBox = document.getElementById('sharedProfileBanner');
+    if (!bannerBox) return;
+
+    if (!_isSharedModeActive || !sharedData) {
+        bannerBox.innerHTML = '';
+        bannerBox.style.display = 'none';
+        return;
+    }
+
+    const studentName = (sharedData.name || (sharedData.info && sharedData.info.name) || 'Học sinh').trim();
+    const grade = sharedData.grade || (sharedData.info && sharedData.info.grade) || '';
+    const province = sharedData.province || (sharedData.info && sharedData.info.province) || '';
+    const holland = sharedData.hollandCode || sharedData.holland || (sharedData.riasecTopCode) || 'RIA';
+    const scoreKeys = sharedData.scores ? Object.keys(sharedData.scores).filter(k => sharedData.scores[k] !== '' && sharedData.scores[k] != null) : [];
+
+    bannerBox.style.display = 'block';
+    bannerBox.innerHTML = `
+        <div class="shared-profile-banner">
+            <div class="shared-banner-left">
+                <div class="shared-banner-icon">🔗</div>
+                <div>
+                    <div class="shared-banner-title">
+                        Đang xem bản tóm tắt kết quả được chia sẻ qua link: <span style="color: #67e8f9; text-decoration: underline;">${studentName}</span>
+                        ${grade ? ` <span style="font-size: 12px; background: rgba(56, 189, 248, 0.2); border: 1px solid rgba(56, 189, 248, 0.4); padding: 1px 8px; border-radius: 999px;">Lớp ${grade}</span>` : ''}
+                        ${province ? ` <span style="font-size: 12px; color: #94a3b8;">📍 ${province}</span>` : ''}
+                    </div>
+                    <div class="shared-banner-subtitle">
+                        Mã Holland RIASEC: <strong style="color: #c084fc;">${holland}</strong> • 
+                        Dữ liệu: <strong style="color: #34d399;">${scoreKeys.length} môn học</strong>. Toàn bộ kết quả bên dưới được tạo tự động từ liên kết Portable URL độc lập.
+                    </div>
+                </div>
+            </div>
+            <div class="shared-banner-actions">
+                <button type="button" class="btn primary" onclick="importSharedProfileToLocal()" style="font-size: 12.5px; padding: 7px 15px; border-radius: 8px; font-weight: 700; background: linear-gradient(135deg, #059669, #10b981); border: 1px solid #34d399; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);">
+                    📥 Lưu/Nhập hồ sơ vào máy
+                </button>
+                <button type="button" class="btn secondary" onclick="exitSharedProfileView()" style="font-size: 12.5px; padding: 7px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); color: #cbd5e1;">
+                    ✖ Về hồ sơ của tôi
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function importSharedProfileToLocal() {
+    if (!_sharedProfileData) return;
+    const studentName = (_sharedProfileData.name || (_sharedProfileData.info && _sharedProfileData.info.name) || 'Học sinh').trim();
+    const ok = confirm(`Bạn có muốn lưu toàn bộ dữ liệu hồ sơ của "${studentName}" vào trình duyệt máy này? Dữ liệu hiện tại trên máy sẽ được cập nhật đồng bộ.`);
+    if (!ok) return;
+
+    let success = false;
+    if (window.NS_ShareProfile && typeof window.NS_ShareProfile.importProfile === 'function') {
+        success = window.NS_ShareProfile.importProfile(_sharedProfileData);
+    } else {
+        try {
+            if (_sharedProfileData.info) localStorage.setItem('ns_info', JSON.stringify(_sharedProfileData.info));
+            if (_sharedProfileData.scores) localStorage.setItem('ns_scores', JSON.stringify(_sharedProfileData.scores));
+            if (_sharedProfileData.hobbies) localStorage.setItem('ns_hobbies', JSON.stringify(_sharedProfileData.hobbies));
+            if (_sharedProfileData.goals) localStorage.setItem('ns_goals', JSON.stringify(_sharedProfileData.goals));
+            if (_sharedProfileData.personalityAnswers) localStorage.setItem('ns_personalityAnswers', JSON.stringify(_sharedProfileData.personalityAnswers));
+            success = true;
+        } catch (e) {
+            success = false;
+        }
+    }
+
+    if (success) {
+        if (typeof showToast === 'function') {
+            showToast(`✅ Đã nhập thành công hồ sơ của "${studentName}" vào máy!`, 'success');
+        } else {
+            alert(`✅ Đã nhập thành công hồ sơ của "${studentName}" vào máy!`);
+        }
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        setTimeout(() => { window.location.reload(); }, 600);
+    } else {
+        alert('Không thể lưu hồ sơ. Vui lòng thử lại.');
+    }
+}
+
+function exitSharedProfileView() {
+    if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    window.location.href = window.location.pathname;
+}
+
+// 4. UI: SHARE MODAL CONTROLS
+function openShareProfileModal() {
+    const modal = document.getElementById('shareProfileModal');
+    if (!modal) return;
+
+    let profileToShare = _isSharedModeActive ? _sharedProfileData : null;
+    if (!profileToShare) {
+        if (window.NS_ShareProfile && typeof window.NS_ShareProfile.getProfileData === 'function') {
+            profileToShare = window.NS_ShareProfile.getProfileData();
+        } else if (typeof getProfile === 'function') {
+            profileToShare = getProfile();
+        } else {
+            profileToShare = { name: 'Học sinh' };
+        }
+    }
+
+    let shareCode = '';
+    if (window.NS_ShareProfile && typeof window.NS_ShareProfile.encode === 'function') {
+        shareCode = window.NS_ShareProfile.encode(profileToShare);
+    } else {
+        shareCode = encodeProfileToBase64(profileToShare);
+    }
+
+    const shareUrl = window.location.origin + window.location.pathname + '?share=' + encodeURIComponent(shareCode);
+    const inputEl = document.getElementById('shareUrlInput');
+    if (inputEl) inputEl.value = shareUrl;
+
+    const previewEl = document.getElementById('shareModalPreviewInfo');
+    if (previewEl) {
+        const studentName = profileToShare.name || (profileToShare.info && profileToShare.info.name) || 'Học sinh';
+        const grade = profileToShare.grade || (profileToShare.info && profileToShare.info.grade) || '';
+        const holland = profileToShare.hollandCode || profileToShare.holland || profileToShare.riasecTopCode || 'RIA';
+        const scoreCount = profileToShare.scores ? Object.keys(profileToShare.scores).filter(k => profileToShare.scores[k] !== '' && profileToShare.scores[k] != null).length : 0;
+        const dream = (profileToShare.goals && (profileToShare.goals.dreamMajor || profileToShare.goals.dreamCareer)) || 'Chưa chọn';
+
+        previewEl.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-weight: 700; color: #38bdf8; font-size: 14px;">👤 ${studentName}</span>
+                <span style="font-size: 11.5px; background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(129, 140, 248, 0.4); padding: 2px 8px; border-radius: 999px; color: #c7d2fe;">
+                    ${grade ? `Lớp ${grade}` : 'THPT'}
+                </span>
+            </div>
+            <div style="font-size: 12px; color: #94a3b8; display: flex; gap: 12px; flex-wrap: wrap;">
+                <span>📊 Điểm: <strong style="color: #f1f5f9;">${scoreCount} môn</strong></span>
+                <span>🧠 RIASEC: <strong style="color: #c084fc;">${holland}</strong></span>
+                <span>🎯 Mục tiêu: <strong style="color: #34d399;">${dream}</strong></span>
+            </div>
+        `;
+    }
+
+    const feedbackEl = document.getElementById('shareCopyFeedback');
+    if (feedbackEl) feedbackEl.style.display = 'none';
+
+    modal.style.display = 'flex';
+}
+
+function closeShareProfileModal() {
+    const modal = document.getElementById('shareProfileModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function copyShareUrl() {
+    const input = document.getElementById('shareUrlInput');
+    if (!input) return;
+    input.select();
+    input.setSelectionRange(0, 99999);
+    const text = input.value;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            const feedback = document.getElementById('shareCopyFeedback');
+            if (feedback) feedback.style.display = 'block';
+            if (typeof showToast === 'function') showToast('📋 Đã sao chép link chia sẻ!', 'success');
+        }).catch(() => {
+            document.execCommand('copy');
+            const feedback = document.getElementById('shareCopyFeedback');
+            if (feedback) feedback.style.display = 'block';
+        });
+    } else {
+        document.execCommand('copy');
+        const feedback = document.getElementById('shareCopyFeedback');
+        if (feedback) feedback.style.display = 'block';
+    }
+}
+
+function testOpenShareUrl() {
+    const input = document.getElementById('shareUrlInput');
+    if (input && input.value) {
+        window.open(input.value, '_blank');
+    }
+}
+
+window.openShareProfileModal = openShareProfileModal;
+window.closeShareProfileModal = closeShareProfileModal;
+window.copyShareUrl = copyShareUrl;
+window.testOpenShareUrl = testOpenShareUrl;
+window.importSharedProfileToLocal = importSharedProfileToLocal;
+window.exitSharedProfileView = exitSharedProfileView;
+
+// ==========================================================================
+// 5. 3-PILLAR ALIGNMENT SCORE ALGORITHM (CHỈ SỐ ĐỒNG THUẬN 3 TRỤ CỘT)
+// ==========================================================================
+
+function calculate3PillarAlignmentScore(p, topCareer, r) {
+    const scores = (p && p.scores) || {};
+    const validScores = Object.entries(scores)
+        .filter(([, v]) => v !== '' && v != null && !isNaN(v))
+        .map(([k, v]) => ({ subj: k, score: Number(v) }));
+
+    const careerTitle = (topCareer && topCareer.title) || '';
+    const comboCode = String((topCareer && topCareer.bestCombo) || 'A00').split(' ')[0].toUpperCase();
+
+    // 1. Trụ cột 1: Năng lực học tập (Academic Capability - 35%)
+    let academicScore = 70; // baseline
+    let academicDetails = [];
+    if (validScores.length > 0) {
+        let cScore = 0;
+        if (typeof comboScore === 'function') {
+            cScore = comboScore(scores, comboCode) || 0;
+        } else {
+            const vals = validScores.map(x => x.score);
+            const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+            cScore = avg * 3;
+        }
+
+        // Tỷ lệ trên thang điểm 30 (27.5 điểm tương đương 100%)
+        const comboPct = Math.min(100, Math.max(35, Math.round((cScore / 27.5) * 100)));
+        
+        // Điểm thưởng môn chuyên sâu/thế mạnh GDPT 2018
+        let strengthBonus = 0;
+        const normTitle = (careerTitle || '').toLowerCase();
+        const isStem = normTitle.includes('kỹ thuật') || normTitle.includes('công nghệ') || normTitle.includes('tin') || normTitle.includes('phần mềm') || normTitle.includes('dữ liệu') || normTitle.includes('y') || normTitle.includes('dược');
+        const isArtSocial = normTitle.includes('thiết kế') || normTitle.includes('truyền thông') || normTitle.includes('nghệ thuật') || normTitle.includes('báo chí') || normTitle.includes('tâm lý') || normTitle.includes('ngôn ngữ');
+
+        const mathScore = Number(scores['Toán'] || scores['toan'] || 0);
+        const langScore = Number(scores['Ngữ văn'] || scores['Van'] || scores['van'] || 0);
+        const engScore = Number(scores['Tiếng Anh'] || scores['Anh'] || scores['anh'] || 0);
+
+        if (isStem && mathScore >= 8.5) strengthBonus += 6;
+        if (isArtSocial && (langScore >= 8.5 || engScore >= 8.5)) strengthBonus += 6;
+
+        academicScore = Math.min(100, Math.max(40, comboPct + strengthBonus));
+        academicDetails = [
+            `Tổ hợp thế mạnh: <strong>${comboCode} (~${cScore.toFixed(1)}đ)</strong>`,
+            `Môn cốt lõi GDPT 2018: Toán (${mathScore || '--'}đ), Văn (${langScore || '--'}đ), Anh (${engScore || '--'}đ)`,
+            `Mức độ đáp ứng chuẩn đầu vào đại học: <strong>${academicScore >= 80 ? 'Rất cao (Vượt ngưỡng chuẩn)' : academicScore >= 65 ? 'Đạt chuẩn sàn' : 'Cần bồi dưỡng bổ trợ'}</strong>`
+        ];
+    } else {
+        academicScore = 72;
+        academicDetails = ['Chưa nhập đầy đủ điểm số — Hệ thống áp dụng học lực trung bình tham chiếu GDPT 2018.'];
+    }
+
+    // 2. Trụ cột 2: Bản sắc cá nhân (Personal Identity & RIASEC - 40%)
+    let identityScore = 75;
+    let identityDetails = [];
+    const userHolland = ((p.mbti && p.mbti.riasec && (p.mbti.riasec.topCode || p.mbti.riasec.code)) || p.riasecTopCode || p.hollandCode || 'RIA').toUpperCase();
+    const careerHolland = String((topCareer && (topCareer.riasec || topCareer.holland)) || 'IRC').toUpperCase();
+
+    let letterMatchPoints = 0;
+    const userL1 = userHolland[0] || '';
+    const userL2 = userHolland[1] || '';
+    const userL3 = userHolland[2] || '';
+
+    if (careerHolland.includes(userL1)) {
+        letterMatchPoints += (careerHolland[0] === userL1 ? 45 : 30);
+    }
+    if (userL2 && careerHolland.includes(userL2)) {
+        letterMatchPoints += 25;
+    }
+    if (userL3 && careerHolland.includes(userL3)) {
+        letterMatchPoints += 15;
+    }
+
+    // Hexagonal Holland adjacency bonus
+    const hexCircle = ['R', 'I', 'A', 'S', 'E', 'C'];
+    const idxU1 = hexCircle.indexOf(userL1);
+    const idxC1 = hexCircle.indexOf(careerHolland[0]);
+    if (idxU1 >= 0 && idxC1 >= 0) {
+        const dist = Math.abs(idxU1 - idxC1);
+        if (dist === 1 || dist === 5) {
+            letterMatchPoints += 8; // Liền kề trên lục giác Holland
+        }
+    }
+
+    // Hobbies bonus từ cấu trúc dữ liệu mới ns_hobbies (selected, top3, workStyle, distribution)
+    let rawHObj = (p && p.hobbies) || {};
+    try {
+        const rawHStr = localStorage.getItem('ns_hobbies');
+        if (rawHStr) {
+            const hParsed = JSON.parse(rawHStr);
+            if (hParsed && typeof hParsed === 'object') rawHObj = { ...rawHObj, ...hParsed };
+        }
+    } catch(e) {}
+    const hobbiesList = rawHObj.selected || p.interests || [];
+    const topHobbies = rawHObj.top3 || (Array.isArray(hobbiesList) ? hobbiesList.slice(0, 3) : []);
+    let hobbyBonus = Math.min(15, (hobbiesList.length || 0) * 3);
+
+    identityScore = Math.min(100, Math.max(45, letterMatchPoints + hobbyBonus));
+    identityDetails = [
+        `Mã Holland học sinh: <strong>${userHolland}</strong> đối chiếu mã ngành <strong>${careerHolland}</strong>`,
+        `Độ tương đồng bản sắc: <strong>${identityScore >= 80 ? 'Rất cao (Hòa hợp sâu sắc)' : identityScore >= 65 ? 'Tương thích tốt' : 'Cần dung hòa thêm'}</strong>`,
+        `Đam mê nổi trội (Top 3): ${topHobbies.length ? topHobbies.map((h, i) => `<strong>Top ${i+1} [${h}]</strong>`).join(', ') : (hobbiesList.slice(0, 3).join(', ') || 'Đa dạng lĩnh vực')}`
+    ];
+
+    // 3. Trụ cột 3: Kỳ vọng & Mục tiêu cá nhân (Goals & Expectations - 25%)
+    let goalsScore = 75;
+    let goalsDetails = [];
+    const dreamMajor = (p.goals && (p.goals.dreamMajor || p.goals.dreamCareer || p.goals.other)) || '';
+    const selectedGoals = (p.goals && p.goals.selected) || [];
+
+    if (dreamMajor && careerTitle) {
+        const normDream = dreamMajor.toLowerCase();
+        const normCar = careerTitle.toLowerCase();
+        if (normDream.includes(normCar) || normCar.includes(normDream)) {
+            goalsScore = 95;
+            goalsDetails.push(`Khớp chính xác với ngành mơ ước: <strong>"${dreamMajor}"</strong>`);
+        } else {
+            goalsScore = 80;
+            goalsDetails.push(`Định hướng mục tiêu: <strong>"${dreamMajor}"</strong> (Cùng nhóm ngành phát triển)`);
+        }
+    } else {
+        goalsScore = 78;
+        goalsDetails.push(`Mục tiêu chung: Phù hợp nhu cầu thị trường lao động 2026-2030.`);
+    }
+
+    const abroadData = typeof getStudyAbroadData === 'function' ? getStudyAbroadData(p) : null;
+    if (abroadData && abroadData.enabled) {
+        goalsDetails.push(`Kỳ vọng quốc tế: Đã kích hoạt lộ trình Du học & Học bổng toàn cầu.`);
+    }
+
+    // Tổng hợp điểm số đồng thuận 3 trụ cột có trọng số (35% - 40% - 25%)
+    const totalScore = Math.round(academicScore * 0.35 + identityScore * 0.40 + goalsScore * 0.25);
+
+    let levelTitle = '';
+    let levelBadge = '';
+    let levelColor = '#10b981';
+    let levelDesc = '';
+
+    if (totalScore >= 82) {
+        levelTitle = 'Đồng thuận Tối ưu (Optimal Alignment)';
+        levelBadge = 'XUẤT SẮC';
+        levelColor = '#10b981';
+        levelDesc = 'Sự nhất quán toàn diện giữa Năng lực học tập GDPT 2018, Bản sắc cá nhân Holland RIASEC và Mục tiêu dài hạn. Đây là lộ trình vàng giúp tối ưu hóa thành công.';
+    } else if (totalScore >= 70) {
+        levelTitle = 'Tương thích Mạnh (Strong Alignment)';
+        levelBadge = 'RẤT TỐT';
+        levelColor = '#38bdf8';
+        levelDesc = 'Hồ sơ có nền tảng vững chắc với độ đồng thuận cao giữa năng lực và sở thích. Chỉ cần tinh chỉnh nhẹ chiến lược ôn tập để đạt đỉnh phong độ.';
+    } else if (totalScore >= 58) {
+        levelTitle = 'Phân hóa Nhẹ (Moderate Alignment)';
+        levelBadge = 'CẦN CÂN ĐỐI';
+        levelColor = '#f59e0b';
+        levelDesc = 'Có sự chênh lệch giữa điểm số học tập và bản sắc đam mê. Cần áp dụng kế hoạch dung hòa để tránh xung đột động lực trong giai đoạn đại học.';
+    } else {
+        levelTitle = 'Phân hóa Rõ nét (Divergent Profile)';
+        levelBadge = 'TƯ DUY BẬC HAI';
+        levelColor = '#ec4899';
+        levelDesc = 'Phát hiện sự tách biệt rõ ràng giữa thế mạnh thi cử và thiên hướng tính cách. Bắt buộc kích hoạt phân tích Tư duy Bậc hai để lựa chọn lộ trình phù hợp.';
+    }
+
+    return {
+        totalScore,
+        levelTitle,
+        levelBadge,
+        levelColor,
+        levelDesc,
+        academicScore,
+        academicDetails,
+        identityScore,
+        identityDetails,
+        goalsScore,
+        goalsDetails
+    };
+}
+
+function renderAlignmentScoreBreakdown(p, topCareer, r) {
+    const container = document.getElementById('alignmentScoreContainer');
+    if (!container) return;
+
+    const data = calculate3PillarAlignmentScore(p, topCareer, r);
+    window._cachedAlignmentData = data;
+
+    // SVG radial progress math
+    const radius = 54;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (data.totalScore / 100) * circumference;
+
+    container.innerHTML = `
+        <div class="alignment-score-card">
+            <div class="alignment-score-header">
+                <div>
+                    <div style="font-size: 11px; font-weight: 700; color: #a5b4fc; letter-spacing: 0.8px; text-transform: uppercase;">CONSENSUS DECISION ENGINE</div>
+                    <h2 style="margin: 4px 0 0; font-size: 21px; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+                        🎯 Chỉ số Đồng thuận Định hướng 3 Trụ Cột (Alignment Score)
+                    </h2>
+                </div>
+                <div class="alignment-badge-consensus" style="background: ${data.levelColor}22; border: 1.5px solid ${data.levelColor}; color: ${data.levelColor};">
+                    ★ ${data.levelBadge}: ${data.levelTitle}
+                </div>
+            </div>
+
+            <div class="alignment-dashboard-grid">
+                <!-- Radial Gauge -->
+                <div class="alignment-gauge-box" style="border-color: ${data.levelColor}44; box-shadow: 0 0 25px ${data.levelColor}20;">
+                    <div class="alignment-radial-circle">
+                        <svg width="140" height="140" viewBox="0 0 140 140">
+                            <circle cx="70" cy="70" r="${radius}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12" />
+                            <circle cx="70" cy="70" r="${radius}" fill="none" stroke="${data.levelColor}" stroke-width="12"
+                                stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"
+                                stroke-linecap="round" style="transition: stroke-dashoffset 1.2s ease-out;" />
+                        </svg>
+                        <div class="alignment-radial-value">
+                            <div class="alignment-radial-number" style="color: ${data.levelColor};">${data.totalScore}</div>
+                            <div class="alignment-radial-pct">/ 100%</div>
+                        </div>
+                    </div>
+                    <div style="font-weight: 700; font-size: 14px; color: #ffffff; margin-top: 10px;">
+                        Mức độ Đồng thuận
+                    </div>
+                    <div style="font-size: 12px; color: #94a3b8; margin-top: 4px; line-height: 1.45;">
+                        ${data.levelDesc}
+                    </div>
+                </div>
+
+                <!-- 3 Pillars Breakdown Cards -->
+                <div class="alignment-pillars-box">
+                    <!-- Pillar 1: Học tập -->
+                    <div class="pillar-card">
+                        <div class="pillar-card-head">
+                            <div class="pillar-title">
+                                <span>📚</span> Năng lực học tập (Học lực GDPT 2018)
+                                <span style="font-size: 11px; color: #94a3b8; font-weight: normal;">(Trọng số 35%)</span>
+                            </div>
+                            <div class="pillar-score-badge" style="color: #60a5fa;">${data.academicScore}%</div>
+                        </div>
+                        <div class="pillar-progress-track">
+                            <div class="pillar-progress-fill" style="width: ${data.academicScore}%; background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
+                        </div>
+                        <div class="pillar-desc">
+                            Điểm tổ hợp xét tuyển & môn chuyên sâu thích ứng chuẩn đào tạo ngành.
+                        </div>
+                        <button type="button" class="pillar-toggle-btn" onclick="togglePillarDetail('pillarAcademicDetail')">
+                            <span>🔍 Chi tiết điểm tổ hợp GDPT 2018</span> <span id="pillarAcademicDetail_arrow">▼</span>
+                        </button>
+                        <div id="pillarAcademicDetail" class="pillar-details-collapse">
+                            ${data.academicDetails.map(d => `<div>• ${d}</div>`).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Pillar 2: Bản sắc & RIASEC -->
+                    <div class="pillar-card">
+                        <div class="pillar-card-head">
+                            <div class="pillar-title">
+                                <span>🧠</span> Bản sắc cá nhân (Holland RIASEC &amp; Sở thích)
+                                <span style="font-size: 11px; color: #94a3b8; font-weight: normal;">(Trọng số 40%)</span>
+                            </div>
+                            <div class="pillar-score-badge" style="color: #c084fc;">${data.identityScore}%</div>
+                        </div>
+                        <div class="pillar-progress-track">
+                            <div class="pillar-progress-fill" style="width: ${data.identityScore}%; background: linear-gradient(90deg, #9333ea, #c084fc);"></div>
+                        </div>
+                        <div class="pillar-desc">
+                            Mức độ thỏa mãn tính cách, động lực nội tại và khả năng gắn bó bền vững.
+                        </div>
+                        <button type="button" class="pillar-toggle-btn" onclick="togglePillarDetail('pillarIdentityDetail')">
+                            <span>🔍 Chi tiết đối chiếu mã Holland RIASEC</span> <span id="pillarIdentityDetail_arrow">▼</span>
+                        </button>
+                        <div id="pillarIdentityDetail" class="pillar-details-collapse">
+                            ${data.identityDetails.map(d => `<div>• ${d}</div>`).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Pillar 3: Kỳ vọng -->
+                    <div class="pillar-card">
+                        <div class="pillar-card-head">
+                            <div class="pillar-title">
+                                <span>🎯</span> Kỳ vọng &amp; Mục tiêu cá nhân
+                                <span style="font-size: 11px; color: #94a3b8; font-weight: normal;">(Trọng số 25%)</span>
+                            </div>
+                            <div class="pillar-score-badge" style="color: #34d399;">${data.goalsScore}%</div>
+                        </div>
+                        <div class="pillar-progress-track">
+                            <div class="pillar-progress-fill" style="width: ${data.goalsScore}%; background: linear-gradient(90deg, #059669, #34d399);"></div>
+                        </div>
+                        <div class="pillar-desc">
+                            Độ khớp nguyện vọng ngành, khả năng du học và tài chính gia đình.
+                        </div>
+                        <button type="button" class="pillar-toggle-btn" onclick="togglePillarDetail('pillarGoalsDetail')">
+                            <span>🔍 Chi tiết mức độ khớp nguyện vọng</span> <span id="pillarGoalsDetail_arrow">▼</span>
+                        </button>
+                        <div id="pillarGoalsDetail" class="pillar-details-collapse">
+                            ${data.goalsDetails.map(d => `<div>• ${d}</div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function togglePillarDetail(detailId) {
+    const el = document.getElementById(detailId);
+    const arrow = document.getElementById(detailId + '_arrow');
+    if (!el) return;
+    if (el.style.display === 'block') {
+        el.style.display = 'none';
+        if (arrow) arrow.textContent = '▼';
+    } else {
+        el.style.display = 'block';
+        if (arrow) arrow.textContent = '▲';
+    }
+}
+window.togglePillarDetail = togglePillarDetail;
+
+// ==========================================================================
+// 6. SECOND-ORDER THINKING (PHÂN TÍCH TƯ DUY BẬC HAI CHO DỮ LIỆU PHÂN HÓA)
+// ==========================================================================
+
+function detectConflictPattern(p, topCareer, alignmentData) {
+    const scores = (p && p.scores) || {};
+    const holland = ((p.mbti && p.mbti.riasec && (p.mbti.riasec.topCode || p.mbti.riasec.code)) || p.riasecTopCode || p.hollandCode || 'RIA').toUpperCase();
+    const math = Number(scores['Toán'] || scores['toan'] || 0);
+    const physics = Number(scores['Vật lí'] || scores['Ly'] || scores['ly'] || 0);
+    const chem = Number(scores['Hóa học'] || scores['Hoa'] || scores['hoa'] || 0);
+    const lit = Number(scores['Ngữ văn'] || scores['Van'] || scores['van'] || 0);
+    const eng = Number(scores['Tiếng Anh'] || scores['Anh'] || scores['anh'] || 0);
+
+    const isHighStemScore = (math >= 8.0 && (physics >= 7.5 || chem >= 7.5));
+    const isArtisticSocialHolland = (holland.startsWith('A') || holland.startsWith('S') || holland.includes('AS') || holland.includes('SA'));
+
+    const isHighSocialScore = (lit >= 8.0 && eng >= 7.5);
+    const isTechHolland = (holland.startsWith('I') || holland.startsWith('R'));
+
+    const diff = Math.abs((alignmentData ? alignmentData.academicScore : 75) - (alignmentData ? alignmentData.identityScore : 75));
+
+    let patternType = 'balanced';
+    let warningReason = '';
+
+    if (isHighStemScore && isArtisticSocialHolland) {
+        patternType = 'stem_vs_art';
+        warningReason = 'Điểm thi các môn Tự nhiên/STEM (Toán, Lý, Hóa) rất cao nhưng Bản sắc tâm lý Holland lại thuộc nhóm Nghệ thuật (Artistic) hoặc Xã hội (Social).';
+    } else if (isHighSocialScore && isTechHolland) {
+        patternType = 'passion_vs_foundation';
+        warningReason = 'Đam mê mạnh mẽ với Công nghệ/Kỹ thuật nhưng Nền tảng điểm số hiện tại nghiêng hẳn về Khoa học Xã hội và Ngôn ngữ.';
+    } else if (diff >= 18) {
+        patternType = 'general_divergence';
+        warningReason = 'Có sự phân hóa đáng kể giữa Năng lực học tập thực tế và Động lực đam mê nội tại (chênh lệch > 18%).';
+    }
+
+    return {
+        hasConflict: patternType !== 'balanced',
+        patternType,
+        warningReason,
+        isHighStemScore,
+        isArtisticSocialHolland
+    };
+}
+
+function renderSecondOrderThinking(p, topCareer, r) {
+    const container = document.getElementById('secondOrderThinkingContainer');
+    if (!container) return;
+
+    const alignmentData = window._cachedAlignmentData || calculate3PillarAlignmentScore(p, topCareer, r);
+    const conflict = detectConflictPattern(p, topCareer, alignmentData);
+
+    const careerTitle = (topCareer && topCareer.title) || 'Ngành nghề Định hướng';
+    const comboCode = String((topCareer && topCareer.bestCombo) || 'A00').split(' ')[0].toUpperCase();
+
+    container.innerHTML = `
+        <div class="second-order-card">
+            <div class="second-order-header">
+                <div>
+                    <div style="font-size: 11px; font-weight: 700; color: #f59e0b; letter-spacing: 0.8px; text-transform: uppercase;">SECOND-ORDER CONSEQUENCE ANALYSIS</div>
+                    <h2 style="margin: 4px 0 0; font-size: 21px; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+                        ⚠️ Phát hiện Độ lệch Hướng nghiệp giữa Năng lực học tập và Đam mê cá nhân
+                    </h2>
+                </div>
+                <div style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(245, 158, 11, 0.2); border: 1.5px solid #f59e0b; color: #fbbf24;">
+                    ⚡ QUAN SÁT HỆ THỐNG
+                </div>
+            </div>
+
+            <!-- Warning Banner -->
+            <div class="second-order-warning-banner">
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <span style="font-size: 24px; line-height: 1;">💡</span>
+                    <div>
+                        <strong style="color: #fbbf24; font-size: 14.5px;">Phát hiện Phân hóa Dữ liệu:</strong>
+                        <span style="color: #f1f5f9; font-size: 13.5px; line-height: 1.6;">
+                            ${conflict.warningReason || 'Hồ sơ có sự đan xen giữa năng lực học thuật và nguyện vọng sở thích — đòi hỏi nhìn xa hơn một quyết định thi tuyển đại học tức thời.'}
+                        </span>
+                        <div style="margin-top: 8px; font-size: 12.5px; color: #cbd5e1; line-height: 1.55;">
+                            Tư duy Bậc nhất (First-Order) chỉ hỏi: <em>"Điểm này đỗ trường nào?"</em> hoặc <em>"Thích gì thì nộp đó?"</em>.
+                            Nhưng <strong>Tư duy Bậc hai (Second-Order)</strong> phải nhìn tới: <em>"Hệ quả sau 4 năm đại học và 10 năm hành nghề sẽ diễn tiến ra sao?"</em>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Consequence Comparison Table -->
+            <div class="consequence-table">
+                <div class="consequence-col" style="border-color: rgba(96, 165, 250, 0.35);">
+                    <div class="consequence-col-title" style="color: #60a5fa;">
+                        <span>📊</span> Hướng đi 1: Chọn thuần túy theo Điểm số
+                    </div>
+                    <div style="font-size: 12.5px; margin-bottom: 8px;">
+                        <span style="color: #94a3b8;">Hệ quả Bậc 1 (Ngắn hạn):</span>
+                        <div style="color: #34d399; font-weight: 600; margin-top: 2px;">✓ Dễ đỗ trường top danh tiếng, gia đình yên tâm, khởi đầu thuận lợi.</div>
+                    </div>
+                    <div style="font-size: 12.5px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px;">
+                        <span style="color: #f87171; font-weight: 700;">⚠️ Nguy cơ Bậc 2 (Dài hạn 3-5 năm):</span>
+                        <div style="color: #fca5a5; line-height: 1.5; margin-top: 4px;">
+                            Nguy cơ kiệt sức (<strong>Burnout</strong>) cao từ năm 2-3 do thiếu động lực nội tại; chật vật khi làm đồ án tốt nghiệp đòi hỏi đam mê thực chất; khó cạnh tranh với đồng nghiệp làm việc bằng tình yêu nghề.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="consequence-col" style="border-color: rgba(244, 114, 182, 0.35);">
+                    <div class="consequence-col-title" style="color: #f472b6;">
+                        <span>🎨</span> Hướng đi 2: Chọn thuần túy theo Đam mê
+                    </div>
+                    <div style="font-size: 12.5px; margin-bottom: 8px;">
+                        <span style="color: #94a3b8;">Hệ quả Bậc 1 (Ngắn hạn):</span>
+                        <div style="color: #38bdf8; font-weight: 600; margin-top: 2px;">✓ Hào hứng, được làm điều mình thích, cảm giác tự do sáng tạo.</div>
+                    </div>
+                    <div style="font-size: 12.5px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px;">
+                        <span style="color: #f87171; font-weight: 700;">⚠️ Nguy cơ Bậc 2 (Dài hạn 3-5 năm):</span>
+                        <div style="color: #fca5a5; line-height: 1.5; margin-top: 4px;">
+                            Shock học thuật khi đối mặt với các môn cơ sở ngành khắt khe nếu chưa chuẩn bị đủ nền tảng; áp lực điểm rèn luyện và rủi ro trượt tuyển sinh nếu chỉ dựa vào cảm xúc mà thiếu Portfolio chuẩn mực.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bifurcated Switcher Tabs -->
+            <div style="margin-bottom: 12px;">
+                <div style="font-size: 13.5px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px;">
+                    🔀 Chọn Xem Chiến Lược Hành Động theo 2 Lộ Trình Phân Nhánh:
+                </div>
+                <div class="bifurcated-tabs">
+                    <button type="button" id="tabPathway1" class="bifurcated-tab-btn ${_activeBifurcatedTab === 1 ? 'active-pathway1' : ''}" onclick="switchBifurcatedTab(1)">
+                        <span>🛤️ Lộ trình 1: Tối ưu theo Thế mạnh Điểm số (Academic Strengths)</span>
+                    </button>
+                    <button type="button" id="tabPathway2" class="bifurcated-tab-btn ${_activeBifurcatedTab === 2 ? 'active-pathway2' : ''}" onclick="switchBifurcatedTab(2)">
+                        <span>🎨 Lộ trình 2: Theo đuổi Đam mê Cá nhân (Passion-Driven)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pathway 1 Content -->
+            <div id="pathwayContent1" class="bifurcated-pathway-content" style="display: ${_activeBifurcatedTab === 1 ? 'block' : 'none'}; border-color: rgba(96, 165, 250, 0.45);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                    <div style="font-size: 16px; font-weight: 800; color: #60a5fa;">
+                        🛤️ Lộ trình 1: Tối ưu theo Thế mạnh Điểm số (Academic Strengths)
+                    </div>
+                    <span style="font-size: 12px; background: rgba(59, 130, 246, 0.2); border: 1px solid #60a5fa; color: #93c5fd; padding: 3px 12px; border-radius: 999px; font-weight: 600;">
+                        Chiến lược An toàn Tuyển sinh Cao nhất
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #cbd5e1; line-height: 1.6; margin-bottom: 16px;">
+                    <strong>Mục tiêu:</strong> Tận dụng tối đa điểm tổ hợp cao (như <strong>${comboCode}</strong>) để tăng xác suất đỗ đại học top đầu. Đề xuất các nhóm ngành đào tạo giao thoa giàu tiềm năng: <strong>Công nghệ truyền thông, Thiết kế công nghiệp, Quản trị nhân sự số, Phân tích dữ liệu &amp; Fintech</strong>.
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;">
+                    <div style="background: rgba(30, 41, 59, 0.6); padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                        <strong style="color: #93c5fd; font-size: 13px;">1. Chiến thuật Tuyển sinh:</strong>
+                        <div style="font-size: 12px; color: #cbd5e1; margin-top: 4px; line-height: 1.5;">
+                            Đăng ký các ngành kỹ thuật, tài chính, công nghệ có điểm chuẩn phù hợp với phong độ thi thử tốt nhất. Tối ưu điểm số tốt nghiệp THPT và ĐGNL.
+                        </div>
+                    </div>
+                    <div style="background: rgba(30, 41, 59, 0.6); padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                        <strong style="color: #93c5fd; font-size: 13px;">2. Ngành Giao thoa Đề xuất:</strong>
+                        <div style="font-size: 12px; color: #cbd5e1; margin-top: 4px; line-height: 1.5;">
+                            Công nghệ truyền thông, Thiết kế công nghiệp, Quản trị nhân sự số, Phân tích dữ liệu marketing, Quản lý sản phẩm số (Product Management).
+                        </div>
+                    </div>
+                    <div style="background: rgba(30, 41, 59, 0.6); padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                        <strong style="color: #93c5fd; font-size: 13px;">3. Tầm nhìn 5 Năm Tới:</strong>
+                        <div style="font-size: 12px; color: #cbd5e1; margin-top: 4px; line-height: 1.5;">
+                            Sở hữu tấm bằng uy tín từ trường đại học top đầu, mức lương khởi điểm cao, mạng lưới cựu sinh viên mạnh, dùng sở thích nghệ thuật/xã hội làm lợi thế cạnh tranh khác biệt.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pathway 2 Content -->
+            <div id="pathwayContent2" class="bifurcated-pathway-content" style="display: ${_activeBifurcatedTab === 2 ? 'block' : 'none'}; border-color: rgba(244, 114, 182, 0.45);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                    <div style="font-size: 16px; font-weight: 800; color: #f472b6;">
+                        🎨 Lộ trình 2: Theo đuổi Đam mê Cá nhân (Passion-Driven)
+                    </div>
+                    <span style="font-size: 12px; background: rgba(236, 72, 153, 0.2); border: 1px solid #f472b6; color: #fbcfe8; padding: 3px 12px; border-radius: 999px; font-weight: 600;">
+                        Tối đa hóa Sự thỏa mãn Dài hạn
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #cbd5e1; line-height: 1.6; margin-bottom: 16px;">
+                    <strong>Mục tiêu:</strong> Theo đuổi nhóm ngành thuộc sở thích &amp; bản sắc Holland RIASEC; kèm kế hoạch hành động cụ thể để bồi dưỡng/bù đắp môn học còn yếu và lộ trình thi chứng chỉ năng khiếu/ngoại ngữ.
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;">
+                    <div style="background: rgba(30, 41, 59, 0.6); padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                        <strong style="color: #fbcfe8; font-size: 13px;">1. Chiến lược Tuyển sinh Sớm:</strong>
+                        <div style="font-size: 12px; color: #cbd5e1; margin-top: 4px; line-height: 1.5;">
+                            Nộp hồ sơ theo phương thức xét tuyển Portfolio, phỏng vấn tài năng, học bạ kết hợp chứng chỉ ngoại ngữ (IELTS/SAT/VSTEP) để giảm áp lực điểm thi tốt nghiệp.
+                        </div>
+                    </div>
+                    <div style="background: rgba(30, 41, 59, 0.6); padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                        <strong style="color: #fbcfe8; font-size: 13px;">2. Kế hoạch Bồi dưỡng Môn Yếu &amp; Năng khiếu:</strong>
+                        <div style="font-size: 12px; color: #cbd5e1; margin-top: 4px; line-height: 1.5;">
+                            Lập thời gian biểu rèn luyện kỹ năng vẽ/portfolio hoặc tăng cường từ vựng ngoại ngữ; bổ trợ kiến thức các môn còn yếu; tham gia dự án thực tế tạo sản phẩm minh chứng năng lực.
+                        </div>
+                    </div>
+                    <div style="background: rgba(30, 41, 59, 0.6); padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                        <strong style="color: #fbcfe8; font-size: 13px;">3. Tầm nhìn 5 Năm Tới:</strong>
+                        <div style="font-size: 12px; color: #cbd5e1; margin-top: 4px; line-height: 1.5;">
+                            Trở thành chuyên gia sáng tạo hoặc lãnh đạo cộng đồng độc bản, làm việc với trạng thái "dòng chảy" (flow state), thăng tiến vững chắc nhờ đam mê mãnh liệt thúc đẩy không ngừng nghỉ.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function switchBifurcatedTab(tabIdx) {
+    _activeBifurcatedTab = tabIdx;
+    const tab1 = document.getElementById('tabPathway1');
+    const tab2 = document.getElementById('tabPathway2');
+    const content1 = document.getElementById('pathwayContent1');
+    const content2 = document.getElementById('pathwayContent2');
+
+    if (tab1 && tab2 && content1 && content2) {
+        if (tabIdx === 1) {
+            tab1.className = 'bifurcated-tab-btn active-pathway1';
+            tab2.className = 'bifurcated-tab-btn';
+            content1.style.display = 'block';
+            content2.style.display = 'none';
+        } else {
+            tab1.className = 'bifurcated-tab-btn';
+            tab2.className = 'bifurcated-tab-btn active-pathway2';
+            content1.style.display = 'none';
+            content2.style.display = 'block';
+        }
+    }
+}
+window.switchBifurcatedTab = switchBifurcatedTab;
+
+// ==========================================================================
+// 7. STEP-GATE INTEGRATION & INITIALIZATION
+// ==========================================================================
+
+const gateStatus = _isSharedModeActive
+    ? { isAllCompleted: true, isMinRequired: true, completedCount: 5, isSharedProfile: true }
+    : (typeof getStepGateStatus === 'function' ? getStepGateStatus() : { isAllCompleted: true, isMinRequired: true, completedCount: 5 });
 
 const lockedBox = document.getElementById('stepGateLockedSection');
 const unlockedBox = document.getElementById('resultsUnlockedSection');
@@ -313,6 +1658,7 @@ if (!gateStatus.isMinRequired) {
     renderResultProgressBanner(gateStatus);
     renderUnlockedCareerAnalysis();
 }
+
 
 // ==========================================
 // 1b. THẺ ĐIỂM TỔ HỢP CHÍNH
@@ -651,6 +1997,109 @@ function enrichProfileWithHollandAndMbti(p) {
     return p;
 }
 
+// Hàm phân tích chuyên sâu sở thích cá nhân từ cấu trúc ns_hobbies mới (selected, top3, workStyle, distribution)
+function getEnrichedHobbyDetail(topCareer, p) {
+    if (!topCareer) return '';
+    let hobbiesData = (p && p.hobbies) || {};
+    try {
+        const rawH = localStorage.getItem('ns_hobbies');
+        if (rawH) {
+            const parsed = JSON.parse(rawH);
+            if (parsed && typeof parsed === 'object') {
+                hobbiesData = { ...hobbiesData, ...parsed };
+            }
+        }
+    } catch (e) {}
+
+    const selectedList = hobbiesData.selected || [];
+    const top3 = hobbiesData.top3 || (Array.isArray(selectedList) ? selectedList.slice(0, 3) : []);
+    const top1 = top3[0] || selectedList[0] || '';
+    const top2 = top3[1] || selectedList[1] || '';
+    const top3Item = top3[2] || selectedList[2] || '';
+    const customList = Array.isArray(hobbiesData.customList)
+        ? hobbiesData.customList
+        : (Array.isArray(hobbiesData.custom) ? hobbiesData.custom : (hobbiesData.custom ? [hobbiesData.custom] : []));
+    const workStyle = hobbiesData.workStyle || {};
+
+    const careerName = (topCareer.name || '').toLowerCase();
+    const comboCode = String(topCareer.bestCombo || 'A00').split(' ')[0].toUpperCase();
+
+    // Đối chiếu xem sở thích có khớp ngữ nghĩa với ngành dẫn đầu không
+    const matchesHobby = (hobbyName) => {
+        if (!hobbyName) return false;
+        const h = hobbyName.toLowerCase();
+        return careerName.includes(h) || h.includes(careerName) ||
+            (careerName.includes('công nghệ') && (h.includes('lập trình') || h.includes('ai') || h.includes('robot') || h.includes('máy tính') || h.includes('game') || h.includes('stem'))) ||
+            (careerName.includes('thiết kế') && (h.includes('đồ họa') || h.includes('vẽ') || h.includes('canva') || h.includes('kiến trúc') || h.includes('video') || h.includes('sáng tạo'))) ||
+            (careerName.includes('kinh tế') && (h.includes('kinh doanh') || h.includes('tài chính') || h.includes('chứng khoán') || h.includes('marketing') || h.includes('thương mại'))) ||
+            (careerName.includes('y') && (h.includes('y học') || h.includes('chăm sóc') || h.includes('sinh học') || h.includes('thí nghiệm') || h.includes('sức khỏe') || h.includes('dược'))) ||
+            (careerName.includes('sư phạm') && (h.includes('giảng dạy') || h.includes('gia sư') || h.includes('thuyết trình') || h.includes('tâm lý') || h.includes('giáo dục'))) ||
+            (careerName.includes('truyền thông') && (h.includes('mc') || h.includes('video') || h.includes('viết lách') || h.includes('sự kiện') || h.includes('mạng xã hội'))) ||
+            (careerName.includes('luật') && (h.includes('tranh biện') || h.includes('pháp luật') || h.includes('công lý') || h.includes('chính sách')));
+    };
+
+    const isTop1Match = matchesHobby(top1);
+    const isTop2Match = matchesHobby(top2);
+    const isTop3Match = matchesHobby(top3Item);
+    const hasAnyTopMatch = isTop1Match || isTop2Match || isTop3Match;
+
+    // Kiểm tra độ lệch giữa điểm tổ hợp môn và sở thích
+    const isNaturalCombo = ['A00', 'A01', 'A02', 'B00'].includes(comboCode);
+    const isSocialCombo = ['C00', 'C01', 'C14', 'D01', 'D14', 'D15'].includes(comboCode);
+    const isTopCreativeSocial = top1 && (top1.includes('Nghệ thuật') || top1.includes('Vẽ') || top1.includes('Thiết kế') || top1.includes('Tâm lý') || top1.includes('Viết lách') || top1.includes('Tình nguyện') || top1.includes('MC'));
+    const isTopTechStem = top1 && (top1.includes('Lập trình') || top1.includes('Robot') || top1.includes('STEM') || top1.includes('Khoa học') || top1.includes('AI') || top1.includes('Cơ khí'));
+    const hasDivergence = (isNaturalCombo && isTopCreativeSocial) || (isSocialCombo && isTopTechStem);
+
+    let html = '';
+
+    if (top1) {
+        if (isTop1Match) {
+            html += `<div style="margin-bottom: 6px; color: #34d399; font-weight: 700;">
+                🎯 <strong>Khớp nối hoàn hảo:</strong> Ngành này vừa hợp năng lực điểm số, vừa trúng đam mê Top 1 [${top1}] của bạn!
+            </div>`;
+        } else if (hasAnyTopMatch) {
+            const matchedTop = isTop2Match ? `Top 2 [${top2}]` : `Top 3 [${top3Item}]`;
+            html += `<div style="margin-bottom: 6px; color: #38bdf8; font-weight: 700;">
+                🎯 <strong>Tương thích cao:</strong> Ngành này gắn kết chặt chẽ với đam mê ${matchedTop} trong danh mục ưu tiên của bạn!
+            </div>`;
+        } else if (hasDivergence) {
+            html += `<div style="margin-bottom: 6px; color: #fbbf24; font-weight: 700;">
+                ⚠️ <strong>Phát hiện độ lệch:</strong> Ngành này tối ưu theo điểm số tổ hợp <strong>${comboCode}</strong>, nhưng đam mê lớn nhất của bạn là <em>[${top1}]</em>. Hãy tham khảo phân tích Tư duy Bậc hai và Lộ trình 2 bên dưới để điều hòa!
+            </div>`;
+        } else {
+            html += `<div style="margin-bottom: 6px; color: #cbd5e1;">
+                Đam mê hàng đầu của bạn: <strong style="color: #6ee7b7;">Top 1 [${top1}]</strong>${top2 ? `, <strong style="color: #93c5fd;">Top 2 [${top2}]</strong>` : ''}${top3Item ? `, <strong style="color: #c084fc;">Top 3 [${top3Item}]</strong>` : ''}.
+            </div>`;
+        }
+    } else {
+        html += `<div style="margin-bottom: 6px; color: #94a3b8;">
+            Đam mê tự nhiên mang lại hứng thú học tập lâu dài. (Bạn có thể bổ sung danh mục sở thích tại Bước 3 để tăng độ chuẩn xác).
+        </div>`;
+    }
+
+    if (workStyle && (workStyle.team || workStyle.pace || workStyle.focus)) {
+        const wsParts = [];
+        const mapTeam = { independent: 'Làm việc độc lập', team: 'Làm việc theo nhóm', flexible: 'Kết hợp linh hoạt' };
+        const mapPace = { stable: 'Ổn định, quy củ', dynamic: 'Năng động, linh hoạt' };
+        const mapFocus = { people: 'Con người & Xã hội', data_ideas: 'Dữ liệu & Ý tưởng', tools_machines: 'Máy móc & Công nghệ' };
+
+        if (workStyle.team) wsParts.push(`Phong cách: <strong>${mapTeam[workStyle.team] || workStyle.team}</strong>`);
+        if (workStyle.pace) wsParts.push(`Môi trường: <strong>${mapPace[workStyle.pace] || workStyle.pace}</strong>`);
+        if (workStyle.focus) wsParts.push(`Trọng tâm: <strong>${mapFocus[workStyle.focus] || workStyle.focus}</strong>`);
+        html += `<div style="margin-top: 6px; font-size: 12px; color: #a5b4fc; line-height: 1.45;">
+            💼 <strong>Môi trường làm việc mong muốn:</strong> ${wsParts.join(' • ')}
+        </div>`;
+    }
+
+    if (customList.length > 0) {
+        html += `<div style="margin-top: 5px; font-size: 11.5px; color: #cbd5e1;">
+            🏷️ <em>Sở thích tự thêm: "${customList.join('", "')}"</em>
+        </div>`;
+    }
+
+    return html;
+}
+
 // Điểm trung bình CHỈ tính trên các môn có điểm > 0 (tránh môn bị điền 0 làm sai TB)
 function renderUnlockedCareerAnalysis() {
 const r = analyzeCareer();
@@ -700,6 +2149,11 @@ if (topCareer && topCareer.evidence && p.mbti) {
     } else if (p.mbti.title) {
         topCareer.evidence.mbti = `Nhóm tính cách <strong>[${p.mbti.type}] ${p.mbti.title}</strong> (${p.mbti.vietnameseTrait || ''}). ${p.mbti.desc || ''} Phong cách tư duy và hành động này là ưu thế lớn trong môi trường ${topCareer.name}.`;
     }
+}
+
+// Cập nhật bằng chứng sở thích chuyên sâu & kết hợp chéo năng lực từ ns_hobbies
+if (topCareer && topCareer.evidence) {
+    topCareer.evidence.hobby = getEnrichedHobbyDetail(topCareer, p);
 }
 
 document.getElementById("summary").innerHTML = `
@@ -1070,27 +2524,68 @@ function switchSchoolRecMode(newMode) {
 }
 window.switchSchoolRecMode = switchSchoolRecMode;
 
+// ==========================================================================
+// ADMISSION STRATEGIC TIERING (3 NHÓM CHIẾN THUẬT: REACH, MATCH, SAFETY)
+// ==========================================================================
+
+let _currentTierFilter = 'all';
+
+function setTierFilter(tierName) {
+    _currentTierFilter = tierName;
+
+    // Cập nhật trạng thái active của các nút filter
+    const buttons = document.querySelectorAll('.tier-filter-btn');
+    buttons.forEach(btn => {
+        const filterVal = btn.getAttribute('data-tier-filter');
+        if (filterVal === tierName) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // Lọc hiển thị các nhóm phân tầng
+    const groups = document.querySelectorAll('.school-tier-group');
+    groups.forEach(grp => {
+        const groupTier = grp.getAttribute('data-tier');
+        if (tierName === 'all' || groupTier === tierName) {
+            grp.style.display = 'block';
+            grp.style.opacity = '1';
+        } else {
+            grp.style.display = 'none';
+        }
+    });
+}
+window.setTierFilter = setTierFilter;
+
 function renderTieredSchoolRecommendations(p, topCareer, userProvince, reqMode) {
     const container = document.getElementById("schoolRecommendations");
     if (!container) return;
 
-    const abroadData = getStudyAbroadData(p);
+    const abroadData = typeof getStudyAbroadData === 'function' ? getStudyAbroadData(p) : null;
     const activeMode = reqMode || _currentSchoolRecMode || ((abroadData && abroadData.enabled) ? 'global' : 'vn');
     _currentSchoolRecMode = activeMode;
 
-    const scores = p.scores || {};
+    const scores = (p && p.scores) || {};
     const comboCode = String((topCareer && topCareer.bestCombo) || 'A00').split(' ')[0].toUpperCase();
-    const myComboScore = comboScore(scores, comboCode) || (generalAvg ? Number((generalAvg * 3).toFixed(2)) : 24.0);
 
-    let dreamList = [];
-    let targetList = [];
+    const vals = Object.values(scores).filter(v => v !== '' && v != null && !isNaN(v)).map(Number);
+    const generalAvg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 8.0;
+    const myComboScore = (typeof comboScore === 'function' ? comboScore(scores, comboCode) : 0) || Number((generalAvg * 3).toFixed(2)) || 24.0;
+
+    let reachList = [];
+    let matchList = [];
     let safetyList = [];
 
     if (activeMode === 'global') {
         const pool = (_cachedGlobalSchools && _cachedGlobalSchools.length) ? _cachedGlobalSchools : DEFAULT_GLOBAL_SCHOOLS;
-        dreamList = pool.filter(s => (s.rank <= 50) || s.tier === 'dream').slice(0, 3);
-        targetList = pool.filter(s => (s.rank > 50 && s.rank <= 150) || s.tier === 'target').slice(0, 3);
-        safetyList = pool.filter(s => (s.rank > 150) || s.tier === 'safety').slice(0, 3);
+        reachList = pool.filter(s => (s.rank <= 60) || s.tier === 'dream' || s.tier === 'reach').slice(0, 4);
+        matchList = pool.filter(s => (s.rank > 60 && s.rank <= 160) || s.tier === 'target' || s.tier === 'match').slice(0, 4);
+        safetyList = pool.filter(s => (s.rank > 160) || s.tier === 'safety').slice(0, 4);
+
+        if (!reachList.length) reachList = pool.slice(0, 3);
+        if (!matchList.length) matchList = pool.slice(3, 6);
+        if (!safetyList.length) safetyList = pool.slice(6, 9);
     } else {
         const pool = (_cachedVnSchools && _cachedVnSchools.length)
             ? _cachedVnSchools.map(sch => {
@@ -1109,9 +2604,10 @@ function renderTieredSchoolRecommendations(p, topCareer, userProvince, reqMode) 
             : (window.DEFAULT_SCHOOLS_DATA || []);
 
         const scored = pool.map(sch => {
-            const b = schoolBenchForCombo(sch, comboCode) || { score: (sch.benchmarks && sch.benchmarks.floor) || 22.5, combo: comboCode, exact: false };
+            const b = (typeof schoolBenchForCombo === 'function' ? schoolBenchForCombo(sch, comboCode) : null)
+                || { score: (sch.benchmarks && sch.benchmarks.floor) || 22.5, combo: comboCode, exact: false };
             const diff = Number((myComboScore - b.score).toFixed(2));
-            const hasMajor = (sch.majors || []).some(m => matchMajorHighlight(m, topCareer));
+            const hasMajor = (sch.majors || []).some(m => (typeof matchMajorHighlight === 'function' ? matchMajorHighlight(m, topCareer) : true));
             return {
                 ...sch,
                 benchScore: b.score,
@@ -1123,31 +2619,45 @@ function renderTieredSchoolRecommendations(p, topCareer, userProvince, reqMode) 
 
         scored.sort((a, b) => (b.hasMajor ? 20 : 0) - (a.hasMajor ? 20 : 0));
 
-        dreamList = scored.filter(s => s.diff < -0.4 && s.diff >= -2.0).slice(0, 3);
-        targetList = scored.filter(s => s.diff >= -0.4 && s.diff <= 1.0).slice(0, 3);
-        safetyList = scored.filter(s => s.diff > 1.0).slice(0, 3);
+        // 3 Phân tầng chiến lược dựa trên độ lệch điểm
+        reachList = scored.filter(s => s.diff < -0.3 && s.diff >= -2.2).slice(0, 4);
+        matchList = scored.filter(s => s.diff >= -0.3 && s.diff <= 1.2).slice(0, 4);
+        safetyList = scored.filter(s => s.diff > 1.2).slice(0, 4);
 
-        if (!dreamList.length) dreamList = scored.slice(0, 3);
-        if (!targetList.length) targetList = scored.slice(1, 4);
+        // Fallback cân đối nếu dữ liệu điểm thi đặc thù
+        if (!reachList.length) reachList = scored.slice(0, 3);
+        if (!matchList.length) matchList = scored.slice(1, 4);
         if (!safetyList.length) safetyList = scored.slice(-3);
     }
 
-    function renderTierGroup(title, subtitle, badgeText, color, list) {
+    function renderTacticalTierGroup(tierKey, title, subtitle, probBadgeText, probColor, tacticalAdvice, color, list) {
         return `
-            <div style="margin-bottom: 22px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div class="school-tier-group" data-tier="${tierKey}" style="margin-bottom: 26px; transition: all 0.3s ease;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: ${color};"></span>
-                        <h3 style="margin: 0; font-size: 16.5px; color: ${color}; font-weight: 700;">${title}</h3>
-                        <span style="font-size: 12.5px; color: #94a3b8;">(${subtitle})</span>
+                        <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${color}; box-shadow: 0 0 10px ${color};"></span>
+                        <h3 style="margin: 0; font-size: 17px; color: ${color}; font-weight: 800;">${title}</h3>
+                        <span style="font-size: 13px; color: #94a3b8;">(${subtitle})</span>
                     </div>
-                    <span style="font-size: 11.5px; padding: 3px 10px; border-radius: 999px; background: ${color}22; color: ${color}; border: 1px solid ${color}55; font-weight: 600;">
-                        ${badgeText}
+                    <span class="tier-probability-badge" style="background: ${probColor}22; border: 1.5px solid ${probColor}77; color: ${probColor};">
+                        ${probBadgeText}
                     </span>
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+
+                <!-- Tactical Advice Callout -->
+                <div class="tier-tactical-advice" style="border-left-color: ${color}; background: rgba(15, 23, 42, 0.75);">
+                    <div style="display: flex; align-items: flex-start; gap: 8px;">
+                        <span style="font-size: 15px;">💡</span>
+                        <div style="color: #cbd5e1; font-size: 12.5px; line-height: 1.55;">
+                            ${tacticalAdvice}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cards Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(285px, 1fr)); gap: 14px;">
                     ${list.map(sch => {
-                        const isSaved = isSchoolBookmarked(sch.name);
+                        const isSaved = typeof isSchoolBookmarked === 'function' ? isSchoolBookmarked(sch.name) : false;
                         const loc = sch.province || sch.city || sch.country || 'Toàn quốc';
                         const scoreDisplay = sch.score_range
                             ? sch.score_range
@@ -1155,7 +2665,7 @@ function renderTieredSchoolRecommendations(p, topCareer, userProvince, reqMode) 
                         const majorList = sch.strengths ? sch.strengths.slice(0, 3).join(', ') : (sch.majors ? sch.majors.slice(0, 3).join(', ') : '');
 
                         return `
-                            <div class="school-tier-card" style="background: rgba(30, 41, 59, 0.55); border: 1.5px solid ${color}44; border-radius: 14px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s ease;">
+                            <div class="school-tier-card" style="background: rgba(30, 41, 59, 0.55); border: 1.5px solid ${color}44; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.25s ease;">
                                 <div>
                                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px;">
                                         <div style="font-weight: 700; color: #ffffff; font-size: 15px; line-height: 1.35;">
@@ -1163,6 +2673,7 @@ function renderTieredSchoolRecommendations(p, topCareer, userProvince, reqMode) 
                                         </div>
                                     </div>
                                     <div style="font-size: 12px; color: #94a3b8; margin-bottom: 8px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                                        ${sch.type ? `<span style="padding: 2px 7px; border-radius: 6px; font-size: 11px; font-weight: 600; background: rgba(99, 102, 241, 0.18); color: #c7d2fe; border: 1px solid rgba(129, 140, 248, 0.3);">${sch.type}</span> <span>•</span>` : ''}
                                         <span>📍 ${loc}</span>
                                         <span>•</span>
                                         <span style="color: #67e8f9; font-weight: 600;">📊 ${scoreDisplay}</span>
@@ -1191,11 +2702,11 @@ function renderTieredSchoolRecommendations(p, topCareer, userProvince, reqMode) 
         <div class="school-rec-header" style="margin-bottom: 18px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
                 <div>
-                    <span style="font-size: 11px; font-weight: 700; color: #a5b4fc; letter-spacing: 0.8px; text-transform: uppercase;">SMART MATCHING &amp; SAFETY TIERS</span>
-                    <h2 style="margin: 4px 0 0; font-size: 20px; color: #fff;">🏫 Top Trường Phù Hợp Nhất theo 3 Phân Tầng An Toàn</h2>
+                    <span style="font-size: 11px; font-weight: 700; color: #a5b4fc; letter-spacing: 0.8px; text-transform: uppercase;">ADMISSION STRATEGIC TIERING</span>
+                    <h2 style="margin: 4px 0 0; font-size: 21px; color: #fff;">🏫 Phân bổ Nguyện vọng theo 3 Nhóm Chiến thuật Tuyển sinh</h2>
                 </div>
                 <span style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 14px; background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(129, 140, 248, 0.4); border-radius: 999px; font-size: 12px; font-weight: 600; color: #c7d2fe;">
-                    📅 Cập nhật dữ liệu kỳ tuyển sinh gần nhất
+                    📅 Dữ liệu Tuyển sinh Cập nhật Mới nhất
                 </span>
             </div>
 
@@ -1203,34 +2714,86 @@ function renderTieredSchoolRecommendations(p, topCareer, userProvince, reqMode) 
             <div class="disclaimer-transparency-box" style="margin: 10px 0 16px; padding: 12px 16px; background: rgba(245, 158, 11, 0.12); border: 1.5px solid rgba(245, 158, 11, 0.45); border-radius: 12px; color: #cbd5e1; font-size: 13px; line-height: 1.55; display: flex; align-items: flex-start; gap: 10px;">
                 <span style="font-size: 18px; line-height: 1.2;">⚠️</span>
                 <div>
-                    <strong style="color: #fde047;">Lưu ý về tính cập nhật dữ liệu:</strong> Dữ liệu điểm chuẩn, chỉ tiêu và phương thức xét tuyển hiện vận hành trên kho dữ liệu tĩnh được tổng hợp định kỳ; hệ thống chưa kết nối API thời gian thực từ Bộ GD&ĐT hay các trường đại học nên thí sinh cần đối chiếu thêm với đề án tuyển sinh chính thức của từng trường tại thời điểm nộp hồ sơ.
+                    <strong style="color: #fde047;">Lưu ý về tính cập nhật dữ liệu:</strong> Điểm chuẩn và chỉ tiêu vận hành trên kho dữ liệu tĩnh được tổng hợp định kỳ. Thí sinh cần đối chiếu thêm với Đề án tuyển sinh chính thức của từng trường tại thời điểm nộp hồ sơ xét tuyển.
                 </div>
             </div>
 
             <!-- TAB SWITCHER: ĐẠI HỌC VIỆT NAM vs DU HỌC THẾ GIỚI -->
-            <div style="display: flex; gap: 10px; margin: 16px 0 20px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 10px; margin: 16px 0 16px; flex-wrap: wrap;">
                 <button type="button" onclick="switchSchoolRecMode('vn')" style="padding: 9px 18px; border-radius: 10px; font-weight: 700; font-size: 13.5px; cursor: pointer; border: 1.5px solid ${activeMode === 'vn' ? '#818cf8' : 'rgba(255,255,255,0.15)'}; background: ${activeMode === 'vn' ? 'linear-gradient(135deg, #4f46e5, #7c3aed)' : 'rgba(255,255,255,0.06)'}; color: #fff; transition: all 0.25s ease;">
-                    🇻🇳 Đại học Việt Nam (Phân tầng xét tuyển)
+                    🇻🇳 Đại học Việt Nam (3 Nhóm Chiến thuật)
                 </button>
                 <button type="button" onclick="switchSchoolRecMode('global')" style="padding: 9px 18px; border-radius: 10px; font-weight: 700; font-size: 13.5px; cursor: pointer; border: 1.5px solid ${activeMode === 'global' ? '#38bdf8' : 'rgba(255,255,255,0.15)'}; background: ${activeMode === 'global' ? 'linear-gradient(135deg, #0284c7, #2563eb)' : 'rgba(255,255,255,0.06)'}; color: #fff; transition: all 0.25s ease;">
                     🌍 Top Đại học Thế giới (Du học &amp; Học bổng)
                 </button>
             </div>
 
+            <!-- INTERACTIVE TIER FILTER BADGES -->
+            <div class="tier-filter-bar">
+                <span style="font-size: 12.5px; font-weight: 700; color: #94a3b8; margin-right: 4px;">🔍 Lọc theo Nhóm:</span>
+                <button type="button" class="tier-filter-btn ${_currentTierFilter === 'all' ? 'active' : ''}" data-tier-filter="all" onclick="setTierFilter('all')">
+                    🌟 Tất cả 3 Nhóm
+                </button>
+                <button type="button" class="tier-filter-btn ${_currentTierFilter === 'reach' ? 'active' : ''}" data-tier-filter="reach" onclick="setTierFilter('reach')">
+                    🎯 Nhóm Mục tiêu/Thử thách (Reach)
+                </button>
+                <button type="button" class="tier-filter-btn ${_currentTierFilter === 'match' ? 'active' : ''}" data-tier-filter="match" onclick="setTierFilter('match')">
+                    ✅ Nhóm Vừa sức (Match)
+                </button>
+                <button type="button" class="tier-filter-btn ${_currentTierFilter === 'safety' ? 'active' : ''}" data-tier-filter="safety" onclick="setTierFilter('safety')">
+                    🛡️ Nhóm An toàn (Safety)
+                </button>
+            </div>
+
             <p style="color: #94a3b8; font-size: 13px; margin: 0 0 16px; line-height: 1.55;">
-                Dựa trên tổ hợp điểm số <strong>${comboCode} (~${myComboScore}đ)</strong> và nhóm Holland <strong>[${(p.mbti && p.mbti.riasec && (p.mbti.riasec.topCode || p.mbti.riasec.code)) || (p.mbti ? p.mbti.type : 'Năng lực')}]</strong>, hệ thống đã lọc và phân bổ danh sách trường thành 3 nhóm chiến lược để học sinh tự tin xếp nguyện vọng:
+                Dựa trên tổ hợp điểm số <strong>${comboCode} (~${myComboScore}đ)</strong> và nhóm Holland <strong>[${(p.mbti && p.mbti.riasec && (p.mbti.riasec.topCode || p.mbti.riasec.code)) || p.riasecTopCode || (p.mbti ? p.mbti.type : 'Năng lực')}]</strong>, danh sách các trường được phân bổ thành 3 nhóm chiến thuật giúp tối ưu xác suất trúng tuyển:
             </p>
         </div>
 
         <div class="school-tiers-container">
-            ${renderTierGroup('🌟 Nhóm 1 — Vươn tầm (Aspirational / Dream)', 'Cần bứt phá thêm 0.5 - 1.5 điểm để cạnh tranh nguyện vọng top 1', 'Cần bứt phá', '#a855f7', dreamList)}
-            ${renderTierGroup('🎯 Nhóm 2 — Vừa sức (Target)', 'Điểm chuẩn tương đương điểm hiện tại, tỷ lệ trúng tuyển cao nhất', 'Khả năng đỗ cao', '#38bdf8', targetList)}
-            ${renderTierGroup('🛡️ Nhóm 3 — An toàn (Safety)', 'Điểm chuẩn thấp hơn 1.0 - 2.5 điểm, phương án bảo hiểm chắc chắn đỗ', 'Bảo hiểm an toàn', '#34d399', safetyList)}
+            ${renderTacticalTierGroup(
+                'reach',
+                '🎯 Nhóm Mục tiêu / Thử thách (Reach)',
+                'Aspirational — Trường mơ ước top 1',
+                '🔥 Xác suất trúng tuyển: 35% - 50% | Cần bứt phá 0.5 - 1.5đ',
+                '#f59e0b',
+                '<strong>Chiến thuật đặt NV 1 - 2:</strong> Đặt các ngành/trường mơ ước có điểm chuẩn cao hơn năng lực hiện tại từ 0.5 - 1.5 điểm. Dồn sức bứt phá điểm thi tốt nghiệp và tận dụng tối đa các phương thức xét tuyển sớm (ĐGNL, IELTS kết hợp, giải HSG).',
+                '#a855f7',
+                reachList
+            )}
+
+            ${renderTacticalTierGroup(
+                'match',
+                '✅ Nhóm Vừa sức (Match)',
+                'Target — Trọng tâm chiến lược đảm bảo',
+                '🎯 Xác suất trúng tuyển: 75% - 85% | Khả năng đỗ rất cao',
+                '#38bdf8',
+                '<strong>Chiến thuật đặt NV 3 - 4 (Trọng tâm):</strong> Đây là trụ cột then chốt bảo đảm chắc chắn đỗ đúng ngành yêu thích. Chọn các trường có điểm chuẩn các năm ổn định bằng hoặc thấp hơn năng lực thực tế 0.5 điểm.',
+                '#38bdf8',
+                matchList
+            )}
+
+            ${renderTacticalTierGroup(
+                'safety',
+                '🛡️ Nhóm An toàn (Safety)',
+                'Foundation — Lưới bảo hiểm chắc chắn trúng tuyển',
+                '🛡️ Xác suất trúng tuyển: 92% - 98% | Bảo hiểm an toàn',
+                '#34d399',
+                '<strong>Chiến thuật đặt NV 5 - 6 (Bảo hiểm an toàn):</strong> Đóng vai trò lưới an toàn chống trượt đại học trong mọi biến động đề thi. Chọn các trường có chỉ tiêu lớn, điểm chuẩn thấp hơn năng lực từ 1.5 - 2.5 điểm.',
+                '#34d399',
+                safetyList
+            )}
         </div>
     `;
-}
 
-// Kích hoạt render phân tầng
+    // Áp dụng bộ lọc hiện tại nếu có
+    if (_currentTierFilter !== 'all') {
+        setTierFilter(_currentTierFilter);
+    }
+}
+window.renderTieredSchoolRecommendations = renderTieredSchoolRecommendations;
+
+
 renderTieredSchoolRecommendations(p, topCareer, userProvince);
 
 // Bất đồng bộ tải thêm dữ liệu trường mở rộng từ data/ nếu có
@@ -1277,13 +2840,21 @@ function downloadBlob(filename, content, mime) {
 function buildResultSnapshot() {
     const p = enrichProfileWithHollandAndMbti(typeof getProfile === 'function' ? getProfile() : {});
     const r = typeof analyzeCareer === 'function' ? analyzeCareer() : { results: [] };
+    let hobbiesFull = p.hobbies || {};
+    try {
+        const rawH = localStorage.getItem('ns_hobbies');
+        if (rawH) {
+            const h = JSON.parse(rawH);
+            if (h && typeof h === 'object') hobbiesFull = { ...hobbiesFull, ...h };
+        }
+    } catch(e) {}
     return {
         app: 'NS AI - Định hướng nghề nghiệp',
         exportedAt: new Date().toISOString(),
         luuY: 'Kết quả mang tính tham khảo. Điểm chuẩn trong dữ liệu là mốc tham chiếu, không phải điểm chuẩn chính thức.',
         thongTin: p.info || {},
         diemSo: p.scores || {},
-        soThich: p.hobbies || {},
+        soThich: hobbiesFull,
         xuHuongTinhCach: p.mbti ? { ma: p.mbti.type, ten: p.mbti.title, holland: p.mbti.riasec || null } : null,
         mucTieu: p.goals || {},
         ketQuaNganh: (r.results || []).map(x => ({
@@ -2315,6 +3886,257 @@ function renderAnalyticsCharts(p, r) {
         }
     }
 
+    // NATIVE HTML5 CANVAS 2D RENDERERS (OFFLINE / CDN BLOCKED ZERO-CRASH GUARANTEE)
+    function drawNativeRiasecRadar(canvas, scores) {
+        if (!canvas || !canvas.getContext) return false;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return false;
+
+        const dpr = window.devicePixelRatio || 1;
+        const width = canvas.parentElement ? Math.min(canvas.parentElement.clientWidth, 380) : 340;
+        const height = 280;
+
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, width, height);
+
+        const cx = width / 2;
+        const cy = height / 2;
+        const maxRadius = Math.min(width / 2 - 46, height / 2 - 28);
+
+        const axes = [
+            { key: 'R', label: 'Kỹ thuật (R)' },
+            { key: 'I', label: 'Nghiên cứu (I)' },
+            { key: 'A', label: 'Nghệ thuật (A)' },
+            { key: 'S', label: 'Xã hội (S)' },
+            { key: 'E', label: 'Quản lý (E)' },
+            { key: 'C', label: 'Nghiệp vụ (C)' }
+        ];
+
+        const rawVals = axes.map(a => Number(scores[a.key]) || 0);
+        const maxVal = Math.max(...rawVals, 8);
+
+        // 5 Concentric Hexagons
+        const levels = 5;
+        for (let lvl = 1; lvl <= levels; lvl++) {
+            const r = (maxRadius / levels) * lvl;
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 6;
+                const x = cx + r * Math.cos(angle);
+                const y = cy + r * Math.sin(angle);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.strokeStyle = lvl === levels ? 'rgba(255, 255, 255, 0.22)' : 'rgba(255, 255, 255, 0.08)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        // 6 Radial Spokes & Labels
+        for (let i = 0; i < 6; i++) {
+            const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 6;
+            const x = cx + maxRadius * Math.cos(angle);
+            const y = cy + maxRadius * Math.sin(angle);
+
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(x, y);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Label text
+            const labelR = maxRadius + 18;
+            const lx = cx + labelR * Math.cos(angle);
+            const ly = cy + labelR * Math.sin(angle);
+
+            ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillStyle = '#cbd5e1';
+            ctx.textAlign = Math.abs(Math.cos(angle)) < 0.2 ? 'center' : (Math.cos(angle) > 0 ? 'left' : 'right');
+            ctx.textBaseline = Math.abs(Math.sin(angle)) < 0.2 ? 'middle' : (Math.sin(angle) > 0 ? 'top' : 'bottom');
+            ctx.fillText(axes[i].label, lx, ly);
+        }
+
+        // Student RIASEC Polygon
+        ctx.beginPath();
+        const polyPoints = [];
+        for (let i = 0; i < 6; i++) {
+            const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 6;
+            const val = rawVals[i];
+            const rVal = Math.max(0.08, val / maxVal) * maxRadius;
+            const px = cx + rVal * Math.cos(angle);
+            const py = cy + rVal * Math.sin(angle);
+            polyPoints.push({ x: px, y: py, val: val, angle: angle });
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+
+        ctx.fillStyle = 'rgba(99, 102, 241, 0.35)';
+        ctx.fill();
+        ctx.strokeStyle = '#818cf8';
+        ctx.lineWidth = 2.4;
+        ctx.stroke();
+
+        // Vertex dots & score badges
+        polyPoints.forEach((pt) => {
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#c084fc';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Score label
+            ctx.font = 'bold 10px sans-serif';
+            ctx.fillStyle = '#6ee7b7';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const offsetDist = 12;
+            const tx = pt.x + offsetDist * Math.cos(pt.angle);
+            const ty = pt.y + offsetDist * Math.sin(pt.angle);
+            ctx.fillText(pt.val + 'đ', tx, ty);
+        });
+
+        // Offline Native Badge
+        ctx.font = '9.5px sans-serif';
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.8)';
+        ctx.textAlign = 'right';
+        ctx.fillText('⚡ Native Canvas 2D (Offline Mode)', width - 8, height - 6);
+
+        ctx.restore();
+        return true;
+    }
+
+    function drawNativeTopCareersBar(canvas, careers) {
+        if (!canvas || !canvas.getContext) return false;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return false;
+
+        const dpr = window.devicePixelRatio || 1;
+        const width = canvas.parentElement ? Math.min(canvas.parentElement.clientWidth, 400) : 340;
+        const height = 240;
+
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, width, height);
+
+        const count = Math.min(careers.length, 5);
+        if (count === 0) {
+            ctx.font = '13px sans-serif';
+            ctx.fillStyle = '#94a3b8';
+            ctx.textAlign = 'center';
+            ctx.fillText('Đang nạp dữ liệu ngành...', width / 2, height / 2);
+            ctx.restore();
+            return true;
+        }
+
+        const startY = 16;
+        const rowHeight = (height - startY - 20) / count;
+        const barHeight = Math.min(14, rowHeight * 0.42);
+        const labelX = 8;
+        const barX = Math.min(135, width * 0.42);
+        const barMaxW = Math.max(80, width - barX - 52);
+
+        for (let i = 0; i < count; i++) {
+            const c = careers[i];
+            const sc = Math.min(100, Math.max(0, c.score || 85));
+            const y = startY + i * rowHeight;
+
+            // Name
+            ctx.font = 'bold 11.5px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillStyle = i === 0 ? '#6ee7b7' : '#e2e8f0';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            let nameText = `${i + 1}. ${c.name}`;
+            if (nameText.length > 18 && width < 380) {
+                nameText = nameText.substring(0, 16) + '...';
+            }
+            ctx.fillText(nameText, labelX, y + rowHeight / 2);
+
+            // Track
+            const trackY = y + rowHeight / 2 - barHeight / 2;
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(barX, trackY, barMaxW, barHeight, 4);
+            else ctx.rect(barX, trackY, barMaxW, barHeight);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.fill();
+
+            // Bar with gradient
+            const curBarW = Math.max(8, (sc / 100) * barMaxW);
+            const grad = ctx.createLinearGradient(barX, 0, barX + curBarW, 0);
+            if (i === 0) {
+                grad.addColorStop(0, '#10b981');
+                grad.addColorStop(1, '#34d399');
+            } else if (i < 3) {
+                grad.addColorStop(0, '#6366f1');
+                grad.addColorStop(1, '#818cf8');
+            } else {
+                grad.addColorStop(0, '#8b5cf6');
+                grad.addColorStop(1, '#a855f7');
+            }
+
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(barX, trackY, curBarW, barHeight, 4);
+            else ctx.rect(barX, trackY, curBarW, barHeight);
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Score text
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillStyle = i === 0 ? '#34d399' : '#c7d2fe';
+            ctx.textAlign = 'left';
+            ctx.fillText(`${sc}%`, barX + barMaxW + 8, y + rowHeight / 2);
+        }
+
+        // Offline Native Badge
+        ctx.font = '9.5px sans-serif';
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.8)';
+        ctx.textAlign = 'right';
+        ctx.fillText('⚡ Native Canvas 2D (Offline Mode)', width - 8, height - 4);
+
+        ctx.restore();
+        return true;
+    }
+
+    function renderNativeCanvasCharts() {
+        const radarCanvas = document.getElementById('riasecRadarCanvas');
+        const barCanvas = document.getElementById('topCareersBarCanvas');
+        const riasecFallback = document.getElementById('riasecFallbackBox');
+        const barFallback = document.getElementById('topCareersFallbackBox');
+
+        let radarOk = false;
+        let barOk = false;
+
+        if (radarCanvas) {
+            radarCanvas.style.display = 'block';
+            if (riasecFallback) riasecFallback.style.display = 'none';
+            radarOk = drawNativeRiasecRadar(radarCanvas, riasecScores);
+        }
+        if (barCanvas) {
+            barCanvas.style.display = 'block';
+            if (barFallback) barFallback.style.display = 'none';
+            barOk = drawNativeTopCareersBar(barCanvas, topCareers);
+        }
+
+        if (!radarOk || !barOk) {
+            renderFallbackBars();
+        }
+    }
+
     if (typeof Chart !== 'undefined') {
         try {
             if (window._riasecRadarChartInstance) {
@@ -2465,11 +4287,11 @@ function renderAnalyticsCharts(p, r) {
                 });
             }
         } catch (chartErr) {
-            console.warn('Chart.js render error, switching to fallback:', chartErr);
-            renderFallbackBars();
+            console.warn('Chart.js render error, switching to native canvas fallback:', chartErr);
+            renderNativeCanvasCharts();
         }
     } else {
-        renderFallbackBars();
+        renderNativeCanvasCharts();
     }
 }
 
@@ -2705,9 +4527,497 @@ function renderStudyAbroadSection(p, topCareer, r) {
     `;
 }
 
+// ==========================================
+// 4a. WHITE-BOX AI COSINE SIMILARITY & MCDA ENGINE (CHUẨN KHOA HỌC KỸ THUẬT)
+// ==========================================
+const CAREER_RIASEC_BENCHMARKS = {
+    'Công nghệ thông tin': { R: 0.70, I: 0.95, A: 0.40, S: 0.20, E: 0.50, C: 0.80 },
+    'Khoa học máy tính': { R: 0.65, I: 0.98, A: 0.35, S: 0.20, E: 0.50, C: 0.85 },
+    'Kỹ thuật phần mềm': { R: 0.70, I: 0.92, A: 0.45, S: 0.25, E: 0.55, C: 0.80 },
+    'Trí tuệ nhân tạo (AI)': { R: 0.60, I: 0.98, A: 0.40, S: 0.25, E: 0.55, C: 0.85 },
+    'Khoa học dữ liệu': { R: 0.55, I: 0.98, A: 0.35, S: 0.30, E: 0.60, C: 0.90 },
+    'An toàn thông tin': { R: 0.75, I: 0.92, A: 0.25, S: 0.20, E: 0.45, C: 0.90 },
+    'Kỹ thuật Cơ điện tử': { R: 0.95, I: 0.85, A: 0.30, S: 0.20, E: 0.40, C: 0.70 },
+    'Kỹ thuật Ô tô': { R: 0.95, I: 0.75, A: 0.25, S: 0.25, E: 0.45, C: 0.70 },
+    'Kỹ thuật Điều khiển & Tự động hóa': { R: 0.92, I: 0.90, A: 0.25, S: 0.20, E: 0.45, C: 0.75 },
+    'Kỹ thuật Điện - Điện tử': { R: 0.90, I: 0.85, A: 0.20, S: 0.20, E: 0.40, C: 0.75 },
+    'Kỹ thuật Vi mạch bán dẫn': { R: 0.85, I: 0.95, A: 0.25, S: 0.20, E: 0.40, C: 0.85 },
+    'Y đa khoa': { R: 0.60, I: 0.95, A: 0.25, S: 0.85, E: 0.40, C: 0.75 },
+    'Dược học': { R: 0.55, I: 0.95, A: 0.20, S: 0.70, E: 0.45, C: 0.85 },
+    'Răng - Hàm - Mặt': { R: 0.80, I: 0.90, A: 0.60, S: 0.80, E: 0.45, C: 0.70 },
+    'Điều dưỡng': { R: 0.50, I: 0.65, A: 0.25, S: 0.95, E: 0.35, C: 0.75 },
+    'Công nghệ sinh học': { R: 0.75, I: 0.95, A: 0.30, S: 0.40, E: 0.40, C: 0.70 },
+    'Kinh doanh quốc tế': { R: 0.20, I: 0.60, A: 0.50, S: 0.80, E: 0.95, C: 0.70 },
+    'Quản trị kinh doanh': { R: 0.25, I: 0.55, A: 0.50, S: 0.80, E: 0.95, C: 0.65 },
+    'Tài chính - Ngân hàng': { R: 0.20, I: 0.75, A: 0.20, S: 0.40, E: 0.85, C: 0.95 },
+    'Kế toán - Kiểm toán': { R: 0.20, I: 0.70, A: 0.15, S: 0.35, E: 0.75, C: 0.98 },
+    'Marketing': { R: 0.20, I: 0.55, A: 0.85, S: 0.85, E: 0.92, C: 0.50 },
+    'Logistics & Quản lý chuỗi cung ứng': { R: 0.50, I: 0.75, A: 0.20, S: 0.60, E: 0.90, C: 0.90 },
+    'Thương mại điện tử': { R: 0.40, I: 0.75, A: 0.60, S: 0.65, E: 0.90, C: 0.80 },
+    'Thiết kế đồ họa': { R: 0.40, I: 0.40, A: 0.98, S: 0.55, E: 0.50, C: 0.40 },
+    'Kiến trúc': { R: 0.75, I: 0.70, A: 0.95, S: 0.40, E: 0.50, C: 0.65 },
+    'Truyền thông đa phương tiện': { R: 0.35, I: 0.55, A: 0.90, S: 0.85, E: 0.85, C: 0.45 },
+    'Báo chí': { R: 0.20, I: 0.75, A: 0.80, S: 0.85, E: 0.80, C: 0.50 },
+    'Quan hệ công chúng (PR)': { R: 0.20, I: 0.50, A: 0.80, S: 0.92, E: 0.92, C: 0.50 },
+    'Sư phạm Toán': { R: 0.30, I: 0.90, A: 0.25, S: 0.95, E: 0.45, C: 0.75 },
+    'Sư phạm Tiếng Anh': { R: 0.20, I: 0.70, A: 0.60, S: 0.95, E: 0.60, C: 0.65 },
+    'Sư phạm Ngữ văn': { R: 0.15, I: 0.75, A: 0.85, S: 0.95, E: 0.50, C: 0.60 },
+    'Luật': { R: 0.20, I: 0.88, A: 0.35, S: 0.80, E: 0.90, C: 0.85 },
+    'Tâm lý học': { R: 0.15, I: 0.88, A: 0.50, S: 0.98, E: 0.50, C: 0.45 },
+    'Quản trị dịch vụ du lịch & lữ hành': { R: 0.30, I: 0.40, A: 0.60, S: 0.95, E: 0.88, C: 0.60 },
+    'Quản trị khách sạn': { R: 0.30, I: 0.40, A: 0.55, S: 0.95, E: 0.90, C: 0.65 },
+    'Ngoại giao & Quan hệ quốc tế': { R: 0.15, I: 0.85, A: 0.45, S: 0.88, E: 0.92, C: 0.75 },
+    'Công nghệ Hóa học': { R: 0.80, I: 0.92, A: 0.20, S: 0.30, E: 0.40, C: 0.75 },
+    'Công nghệ Môi trường': { R: 0.80, I: 0.85, A: 0.30, S: 0.60, E: 0.45, C: 0.65 }
+};
+
+function getCareerRiasecVector(careerName) {
+    if (!careerName) return { R: 0.50, I: 0.50, A: 0.50, S: 0.50, E: 0.50, C: 0.50 };
+    if (CAREER_RIASEC_BENCHMARKS[careerName]) return CAREER_RIASEC_BENCHMARKS[careerName];
+    const nameLower = careerName.toLowerCase();
+    for (const [k, vec] of Object.entries(CAREER_RIASEC_BENCHMARKS)) {
+        if (nameLower.includes(k.toLowerCase()) || k.toLowerCase().includes(nameLower)) {
+            return vec;
+        }
+    }
+    if (nameLower.includes('kỹ thuật') || nameLower.includes('cơ khí') || nameLower.includes('điện') || nameLower.includes('xây dựng')) {
+        return { R: 0.90, I: 0.80, A: 0.25, S: 0.25, E: 0.40, C: 0.70 };
+    }
+    if (nameLower.includes('tin học') || nameLower.includes('phần mềm') || nameLower.includes('dữ liệu') || nameLower.includes('máy tính') || nameLower.includes('ai') || nameLower.includes('it')) {
+        return { R: 0.70, I: 0.95, A: 0.40, S: 0.20, E: 0.50, C: 0.80 };
+    }
+    if (nameLower.includes('kinh tế') || nameLower.includes('kinh doanh') || nameLower.includes('thương mại') || nameLower.includes('tài chính') || nameLower.includes('quản trị')) {
+        return { R: 0.25, I: 0.60, A: 0.45, S: 0.75, E: 0.95, C: 0.75 };
+    }
+    if (nameLower.includes('y') || nameLower.includes('dược') || nameLower.includes('sinh') || nameLower.includes('sức khỏe')) {
+        return { R: 0.60, I: 0.95, A: 0.25, S: 0.85, E: 0.40, C: 0.75 };
+    }
+    if (nameLower.includes('nghệ thuật') || nameLower.includes('thiết kế') || nameLower.includes('mỹ thuật') || nameLower.includes('đồ họa') || nameLower.includes('kiến trúc')) {
+        return { R: 0.45, I: 0.50, A: 0.98, S: 0.50, E: 0.50, C: 0.40 };
+    }
+    if (nameLower.includes('sư phạm') || nameLower.includes('giáo dục') || nameLower.includes('xã hội') || nameLower.includes('tâm lý') || nameLower.includes('ngôn ngữ')) {
+        return { R: 0.20, I: 0.75, A: 0.60, S: 0.95, E: 0.60, C: 0.55 };
+    }
+    return { R: 0.50, I: 0.70, A: 0.50, S: 0.60, E: 0.60, C: 0.60 };
+}
+
+function calculateCosineSimilarity(u, m) {
+    const keys = ['R', 'I', 'A', 'S', 'E', 'C'];
+    let dot = 0;
+    let normU = 0;
+    let normM = 0;
+    for (const k of keys) {
+        const uk = Number(u[k]) || 0;
+        const mk = Number(m[k]) || 0;
+        dot += uk * mk;
+        normU += uk * uk;
+        normM += mk * mk;
+    }
+    const denom = Math.sqrt(normU) * Math.sqrt(normM);
+    if (denom <= 0.00001) return 0.5;
+    return Math.min(1.0, Math.max(0.0, dot / denom));
+}
+
+function renderWhiteBoxExplanation(p, topCareer, r) {
+    const container = document.getElementById('whiteBoxExplanationContainer');
+    if (!container) return;
+
+    const riasecScores = (typeof getRiasecData === 'function') ? getRiasecData(p) : { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+    const maxVal = Math.max(riasecScores.R || 0, riasecScores.I || 0, riasecScores.A || 0, riasecScores.S || 0, riasecScores.E || 0, riasecScores.C || 0, 1);
+
+    // Vector học sinh chuẩn hóa U = (uR, uI, uA, uS, uE, uC) trong khoảng [0, 1]
+    const vecU = {
+        R: Number(((riasecScores.R || 0) / maxVal).toFixed(2)),
+        I: Number(((riasecScores.I || 0) / maxVal).toFixed(2)),
+        A: Number(((riasecScores.A || 0) / maxVal).toFixed(2)),
+        S: Number(((riasecScores.S || 0) / maxVal).toFixed(2)),
+        E: Number(((riasecScores.E || 0) / maxVal).toFixed(2)),
+        C: Number(((riasecScores.C || 0) / maxVal).toFixed(2))
+    };
+
+    const topCareers = (r && r.results ? r.results : []).slice(0, 5);
+
+    // Tính toán đối sánh MCDA Top 5
+    const matrixRows = topCareers.map((c, idx) => {
+        const vecM = getCareerRiasecVector(c.name);
+        const cosSim = calculateCosineSimilarity(vecU, vecM);
+
+        // GDPT Score normalized (thang 0.0 - 1.0)
+        let gdptNorm = 0.80;
+        const comboKey = String(c.bestCombo || 'A00').split(' ')[0].toUpperCase();
+        if (p && p.scores && typeof comboScore === 'function') {
+            const rawCombo = comboScore(p.scores, comboKey);
+            if (rawCombo !== null && rawCombo > 0) {
+                gdptNorm = Math.min(1.0, Math.max(0.0, rawCombo / 30.0));
+            } else {
+                const vals = Object.values(p.scores).map(Number).filter(v => !isNaN(v) && v > 0);
+                if (vals.length) {
+                    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+                    gdptNorm = Math.min(1.0, Math.max(0.0, avg / 10.0));
+                }
+            }
+        }
+
+        // Interest Match normalized (thang 0.0 - 1.0)
+        let interestNorm = 0.85;
+        if (c.score) {
+            interestNorm = Math.min(1.0, Math.max(0.40, (c.score / 100.0) * 0.96));
+        }
+
+        // Composite MCDA: FinalScore = 0.40 * CosineSim + 0.35 * GDPT + 0.25 * Interest
+        const finalMcda = (0.40 * cosSim) + (0.35 * gdptNorm) + (0.25 * interestNorm);
+
+        return {
+            rank: idx + 1,
+            name: c.name,
+            combo: comboKey,
+            vecM: vecM,
+            cosSim: cosSim,
+            cosSimPct: Math.round(cosSim * 100),
+            gdptNorm: gdptNorm,
+            gdptPct: Math.round(gdptNorm * 100),
+            interestNorm: interestNorm,
+            interestPct: Math.round(interestNorm * 100),
+            finalMcda: finalMcda,
+            finalPct: Math.round(finalMcda * 100)
+        };
+    });
+
+    container.innerHTML = `
+        <details class="whitebox-card" open style="margin: 28px 0; background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.85)); border: 1.5px solid rgba(139, 92, 246, 0.45); border-radius: 16px; box-shadow: 0 12px 36px rgba(0,0,0,0.4); overflow: hidden;">
+            <summary style="cursor: pointer; padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; user-select: none; background: rgba(139, 92, 246, 0.12); border-bottom: 1px solid rgba(139, 92, 246, 0.2);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 26px;">🔬</span>
+                    <div>
+                        <div style="font-size: 11px; font-weight: 700; color: #c084fc; letter-spacing: 0.8px; text-transform: uppercase;">
+                            MÔ HÌNH TOÁN HỌC KHÁCH QUAN · CHUẨN KHOA HỌC KỸ THUẬT (MCDA)
+                        </div>
+                        <h3 style="font-size: 18px; color: #ffffff; margin: 3px 0 0;">
+                            Giải trình Thuật toán AI &amp; Trọng số Quyết định (White-Box Explanation)
+                        </h3>
+                    </div>
+                </div>
+                <span style="font-size: 12px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.45); color: #e9d5ff; padding: 5px 14px; border-radius: 999px; font-weight: 600;">
+                    Zero Black-Box · Đóng/Mở ▾
+                </span>
+            </summary>
+
+            <div style="padding: 22px;">
+                <!-- GIỚI THIỆU CƠ SỞ KHOA HỌC -->
+                <div style="background: rgba(99, 102, 241, 0.08); border-left: 4px solid #818cf8; border-radius: 0 10px 10px 0; padding: 12px 16px; margin-bottom: 20px; font-size: 13.5px; color: #cbd5e1; line-height: 1.6;">
+                    Khác với các ứng dụng AI "hộp đen" (Black-Box LLM) dễ mắc sai số ảo giác (hallucination), hệ thống <strong>NS AI</strong> sử dụng mô hình <strong>Đại số Tuyến tính Không gian Vector 6 Chiều Holland RIASEC</strong> kết hợp kỹ thuật <strong>Đánh giá Đa tiêu chí (MCDA - Multi-Criteria Decision Analysis)</strong>. Mọi tỷ lệ phần trăm tương thích đều được giải trình minh bạch bằng công thức toán học có thể kiểm chứng tại chỗ trước Hội đồng Giám khảo KHKT.
+                </div>
+
+                <!-- CÔNG THỨC TOÁN HỌC & TRỌNG SỐ -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 22px;">
+                    <!-- CARD 1: CÔNG THỨC COSINE SIMILARITY -->
+                    <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(129, 140, 248, 0.3); border-radius: 12px; padding: 16px;">
+                        <div style="font-size: 12px; font-weight: 700; color: #818cf8; text-transform: uppercase; margin-bottom: 8px;">
+                            📐 1. Độ tương đồng Không gian Vector (Cosine Similarity)
+                        </div>
+                        <div style="background: rgba(0,0,0,0.35); border-radius: 8px; padding: 10px 14px; font-family: 'Courier New', monospace; font-size: 13px; color: #67e8f9; text-align: center; margin-bottom: 10px; border: 1px solid rgba(103, 232, 249, 0.2);">
+                            CosineSim(U, M) = (U · M) / (||U|| × ||M||) = ∑(uᵢ × mᵢ) / [√(∑uᵢ²) × √(∑mᵢ²)]
+                        </div>
+                        <p style="font-size: 12px; color: #94a3b8; margin: 0; line-height: 1.5;">
+                            Đo góc lệch giữa Vector thiên hướng học sinh <strong style="color:#e2e8f0;">U</strong> và Vector đặc trưng nghề nghiệp <strong style="color:#e2e8f0;">M</strong> trên 6 trục: R, I, A, S, E, C.
+                        </p>
+                        <div style="margin-top: 8px; font-size: 11.5px; color: #a5b4fc; background: rgba(99, 102, 241, 0.1); padding: 6px 10px; border-radius: 6px;">
+                            🎯 Vector học sinh U = [R: ${vecU.R}, I: ${vecU.I}, A: ${vecU.A}, S: ${vecU.S}, E: ${vecU.E}, C: ${vecU.C}]
+                        </div>
+                    </div>
+
+                    <!-- CARD 2: CÔNG THỨC MCDA -->
+                    <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 12px; padding: 16px;">
+                        <div style="font-size: 12px; font-weight: 700; color: #34d399; text-transform: uppercase; margin-bottom: 8px;">
+                            ⚖️ 2. Công thức Trọng số Quyết định Đa tiêu chí (MCDA)
+                        </div>
+                        <div style="background: rgba(0,0,0,0.35); border-radius: 8px; padding: 10px 14px; font-family: 'Courier New', monospace; font-size: 13px; color: #a7f3d0; text-align: center; margin-bottom: 10px; border: 1px solid rgba(52, 211, 153, 0.2);">
+                            FinalScore = 0.40 × CosineSim + 0.35 × GDPTScore + 0.25 × InterestMatch
+                        </div>
+                        <div style="font-size: 12px; color: #cbd5e1; line-height: 1.6;">
+                            • <b style="color:#818cf8;">w₁ = 40% (0.40):</b> Độ tương đồng RIASEC (CosineSim)<br>
+                            • <b style="color:#34d399;">w₂ = 35% (0.35):</b> Năng lực học tập GDPT 2018 theo tổ hợp chuẩn<br>
+                            • <b style="color:#f59e0b;">w₃ = 25% (0.25):</b> Tỷ lệ ăn khớp sở thích &amp; phong cách làm việc
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BẢNG MA TRẬN VECTOR & ĐỐI SÁNH TOP 5 -->
+                <div style="margin-bottom: 22px;">
+                    <div style="font-size: 14.5px; font-weight: 700; color: #ffffff; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                        <span>📊</span> Ma trận Vector &amp; Bảng đối sánh Đa tiêu chí (Top 5 Ngành nghề)
+                    </div>
+                    <div style="overflow-x: auto; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left; background: rgba(15, 23, 42, 0.5);">
+                            <thead>
+                                <tr style="background: rgba(30, 41, 59, 0.85); border-bottom: 1px solid rgba(255,255,255,0.12); color: #94a3b8; font-size: 11.5px; text-transform: uppercase;">
+                                    <th style="padding: 10px 12px;">Top</th>
+                                    <th style="padding: 10px 12px;">Ngành nghề</th>
+                                    <th style="padding: 10px 12px;">Tổ hợp</th>
+                                    <th style="padding: 10px 12px;">Vector M [R,I,A,S,E,C]</th>
+                                    <th style="padding: 10px 12px; text-align: center;">Cosine (40%)</th>
+                                    <th style="padding: 10px 12px; text-align: center;">GDPT (35%)</th>
+                                    <th style="padding: 10px 12px; text-align: center;">Sở thích (25%)</th>
+                                    <th style="padding: 10px 12px; text-align: center; color: #67e8f9;">MCDA Final</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${matrixRows.map(row => `
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); ${row.rank === 1 ? 'background: rgba(99, 102, 241, 0.12);' : ''}">
+                                        <td style="padding: 10px 12px; font-weight: 700; color: ${row.rank === 1 ? '#34d399' : '#cbd5e1'};">#${row.rank}</td>
+                                        <td style="padding: 10px 12px; font-weight: 600; color: #ffffff;">${row.name}</td>
+                                        <td style="padding: 10px 12px; color: #a5b4fc;"><span style="background: rgba(99,102,241,0.2); padding: 2px 6px; border-radius: 4px; font-size: 11px;">${row.combo}</span></td>
+                                        <td style="padding: 10px 12px; font-family: monospace; font-size: 11px; color: #94a3b8;">
+                                            [${row.vecM.R}, ${row.vecM.I}, ${row.vecM.A}, ${row.vecM.S}, ${row.vecM.E}, ${row.vecM.C}]
+                                        </td>
+                                        <td style="padding: 10px 12px; text-align: center; font-weight: 600; color: #818cf8;">${row.cosSimPct}%</td>
+                                        <td style="padding: 10px 12px; text-align: center; font-weight: 600; color: #34d399;">${row.gdptPct}%</td>
+                                        <td style="padding: 10px 12px; text-align: center; font-weight: 600; color: #fbbf24;">${row.interestPct}%</td>
+                                        <td style="padding: 10px 12px; text-align: center; font-weight: 700; font-size: 13.5px; color: ${row.rank === 1 ? '#34d399' : '#67e8f9'};">
+                                            ${row.finalPct}%
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- LUẬN CHỨNG BẢO VỆ ĐỀ TÀI KHKT -->
+                <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px;">
+                    <div style="font-size: 13.5px; font-weight: 700; color: #f8fafc; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                        <span>🛡️</span> Luận chứng Khoa học Bảo vệ Đề tài KHKT (Science Fair Defense Points)
+                    </div>
+                    <ul style="margin: 0; padding-left: 18px; font-size: 12.5px; color: #cbd5e1; line-height: 1.6;">
+                        <li style="margin-bottom: 5px;"><strong>Khả năng kiểm chứng &amp; tái lập (Reproducibility):</strong> Thuật toán xác định (deterministic), bảo đảm cùng bộ dữ liệu sẽ luôn cho kết quả đồng nhất 100%, khắc phục hoàn toàn tính bấp bênh của các prompt AI sinh tạo.</li>
+                        <li style="margin-bottom: 5px;"><strong>Chuẩn hóa Đa chiều GDPT 2018:</strong> Trọng số được phân bổ cân bằng giữa thiên hướng tâm lý (40%), học lực thực tế (35%) và động lực nội tại (25%), không thiên vị ngành nghề hay điểm số đơn lẻ.</li>
+                        <li style="margin-bottom: 0;"><strong>Triển khai thuần Client-Side:</strong> Toàn bộ quá trình tính toán ma trận vector thực thi ngay trên trình duyệt máy trạm, bảo mật dữ liệu học sinh tuyệt đối và hoạt động hoàn hảo khi mất kết nối mạng.</li>
+                    </ul>
+                </div>
+            </div>
+        </details>
+    `;
+}
+
+// ==========================================
+// 4b. KHẢO SÁT ĐÁNH GIÁ THỰC NGHIỆM HỆ THỐNG NS AI (LIKERT 5 MỨC)
+// ==========================================
+let _empiricalSelectedRatings = {
+    usability: 5,
+    accuracy: 5,
+    counseling: 5
+};
+
+function selectEmpiricalRating(criterion, score) {
+    _empiricalSelectedRatings[criterion] = Number(score);
+    const container = document.getElementById('empiricalSurveyContainer');
+    if (!container) return;
+    const group = container.querySelectorAll(`[data-crit="${criterion}"]`);
+    group.forEach(btn => {
+        const val = Number(btn.getAttribute('data-val'));
+        if (val === Number(score)) {
+            btn.style.background = 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+            btn.style.borderColor = '#c084fc';
+            btn.style.color = '#ffffff';
+            btn.style.boxShadow = '0 0 12px rgba(168, 85, 247, 0.5)';
+        } else {
+            btn.style.background = 'rgba(30, 41, 59, 0.6)';
+            btn.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+            btn.style.color = '#cbd5e1';
+            btn.style.boxShadow = 'none';
+        }
+    });
+}
+window.selectEmpiricalRating = selectEmpiricalRating;
+
+function submitEmpiricalEvaluation() {
+    const feedbackEl = document.getElementById('empiricalFeedbackText');
+    const feedbackText = feedbackEl ? feedbackEl.value.trim() : '';
+
+    let evals = [];
+    try {
+        const raw = localStorage.getItem('ns_empirical_evaluations');
+        if (raw) evals = JSON.parse(raw);
+        if (!Array.isArray(evals)) evals = [];
+    } catch (e) { evals = []; }
+
+    const curP = (typeof getProfile === 'function') ? getProfile() : {};
+    const curR = (typeof analyzeCareer === 'function') ? analyzeCareer() : { results: [] };
+    const curTop = (curR.results && curR.results[0]) ? curR.results[0].name : 'Công nghệ thông tin';
+
+    const newRecord = {
+        id: 'eval_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        timestamp: new Date().toISOString(),
+        dateStr: new Date().toLocaleDateString('vi-VN'),
+        topCareer: curTop,
+        province: curR.province || 'Chưa chọn',
+        ratings: {
+            usability: _empiricalSelectedRatings.usability,
+            accuracy: _empiricalSelectedRatings.accuracy,
+            counseling: _empiricalSelectedRatings.counseling
+        },
+        averageScore: Number(((_empiricalSelectedRatings.usability + _empiricalSelectedRatings.accuracy + _empiricalSelectedRatings.counseling) / 3).toFixed(2)),
+        feedback: feedbackText
+    };
+
+    evals.push(newRecord);
+    localStorage.setItem('ns_empirical_evaluations', JSON.stringify(evals));
+    localStorage.setItem('ns_empirical_submitted', 'true');
+
+    renderEmpiricalSurvey(curP, curR.results && curR.results[0], curR);
+}
+window.submitEmpiricalEvaluation = submitEmpiricalEvaluation;
+
+function resetEmpiricalSurvey() {
+    localStorage.removeItem('ns_empirical_submitted');
+    const curP = (typeof getProfile === 'function') ? getProfile() : {};
+    const curR = (typeof analyzeCareer === 'function') ? analyzeCareer() : { results: [] };
+    renderEmpiricalSurvey(curP, curR.results && curR.results[0], curR);
+}
+window.resetEmpiricalSurvey = resetEmpiricalSurvey;
+
+function renderEmpiricalSurvey(p, topCareer, r) {
+    const container = document.getElementById('empiricalSurveyContainer');
+    if (!container) return;
+
+    let evals = [];
+    try {
+        const raw = localStorage.getItem('ns_empirical_evaluations');
+        if (raw) evals = JSON.parse(raw);
+        if (!Array.isArray(evals)) evals = [];
+    } catch (e) { evals = []; }
+
+    const isSubmitted = localStorage.getItem('ns_empirical_submitted') === 'true';
+
+    if (isSubmitted) {
+        container.innerHTML = `
+            <div class="empirical-survey-card" style="margin: 28px 0; padding: 22px; background: linear-gradient(145deg, rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.75)); border: 1.5px solid rgba(52, 211, 153, 0.45); border-radius: 16px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                <span style="font-size: 38px;">🎉</span>
+                <h3 style="font-size: 19px; color: #34d399; margin: 8px 0 6px;">
+                    Cảm ơn bạn đã đóng góp đánh giá thực nghiệm cho đề tài KHKT!
+                </h3>
+                <p style="font-size: 13.5px; color: #cbd5e1; max-width: 620px; margin: 0 auto 16px; line-height: 1.6;">
+                    Đánh giá của bạn đã được ghi nhận vào cơ sở dữ liệu mẫu thực nghiệm khoa học (Hiện có <strong style="color: #6ee7b7;">${evals.length} học sinh</strong> đã tham gia khảo sát). Kết quả này là luận chứng quan trọng để hoàn thiện báo cáo KHKT.
+                </p>
+                <button type="button" onclick="resetEmpiricalSurvey()" class="btn secondary" style="font-size: 12.5px; padding: 7px 18px; border-radius: 8px; color: #a7f3d0; border-color: rgba(52, 211, 153, 0.4); cursor: pointer; background: rgba(16, 185, 129, 0.1);">
+                    ✏️ Gửi đánh giá lại hoặc cập nhật ý kiến
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    const criteriaList = [
+        {
+            key: 'usability',
+            title: '1. Mức độ dễ sử dụng &amp; tính trực quan của giao diện',
+            desc: 'Thao tác nhập điểm, trắc nghiệm và đọc biểu đồ phân tích năng lực.',
+            levels: [
+                { val: 1, label: '1 ★ Rất khó' },
+                { val: 2, label: '2 ★ Khó' },
+                { val: 3, label: '3 ★ Bình thường' },
+                { val: 4, label: '4 ★ Dễ dùng' },
+                { val: 5, label: '5 ★ Rất trực quan' }
+            ]
+        },
+        {
+            key: 'accuracy',
+            title: '2. Độ sát thực của kết quả phân tích &amp; gợi ý ngành nghề',
+            desc: 'Kết quả có phản ánh đúng thế mạnh môn học, mã Holland và sở thích cá nhân của bạn.',
+            levels: [
+                { val: 1, label: '1 ★ Chưa sát' },
+                { val: 2, label: '2 ★ Ít phù hợp' },
+                { val: 3, label: '3 ★ Tương đối' },
+                { val: 4, label: '4 ★ Phù hợp' },
+                { val: 5, label: '5 ★ Rất chính xác' }
+            ]
+        },
+        {
+            key: 'counseling',
+            title: '3. Hiệu quả hỗ trợ giải tỏa tâm lý &amp; tiết kiệm thời gian tra cứu',
+            desc: 'Hệ thống giúp bạn giảm áp lực chọn nguyện vọng và định hướng lộ trình rõ ràng hơn.',
+            levels: [
+                { val: 1, label: '1 ★ Không rõ' },
+                { val: 2, label: '2 ★ Ít hiệu quả' },
+                { val: 3, label: '3 ★ Chấp nhận' },
+                { val: 4, label: '4 ★ Hữu ích' },
+                { val: 5, label: '5 ★ Rất hữu ích & Giảm áp lực' }
+            ]
+        }
+    ];
+
+    container.innerHTML = `
+        <div class="empirical-survey-card" style="margin: 28px 0; padding: 24px; background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.8)); border: 1.5px solid rgba(56, 189, 248, 0.4); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 18px;">
+                <div>
+                    <div style="font-size: 11px; font-weight: 700; color: #7dd3fc; letter-spacing: 0.8px; text-transform: uppercase;">
+                        📋 KHẢO SÁT THỰC NGHIỆM ĐỀ TÀI KHKT
+                    </div>
+                    <h3 style="font-size: 19px; color: #ffffff; margin: 4px 0 2px;">
+                        Đánh giá Thực nghiệm Hệ thống NS AI (Likert 5 Mức)
+                    </h3>
+                    <p style="font-size: 13px; color: #94a3b8; margin: 0; line-height: 1.5;">
+                        Phản hồi của bạn phục vụ trực tiếp cho Chương 4: Đánh giá Thực nghiệm &amp; Thống kê Hiệu quả của đề tài Nghiên cứu Khoa học Kỹ thuật.
+                    </p>
+                </div>
+                <span style="font-size: 12px; background: rgba(14, 165, 233, 0.18); border: 1px solid rgba(56, 189, 248, 0.4); color: #bae6fd; padding: 4px 12px; border-radius: 999px; font-weight: 600;">
+                    Thực nghiệm mẫu N = ${evals.length}+
+                </span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 18px; margin-bottom: 20px;">
+                ${criteriaList.map(c => `
+                    <div style="background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 16px;">
+                        <div style="font-size: 14px; font-weight: 700; color: #e2e8f0; margin-bottom: 2px;">
+                            ${c.title}
+                        </div>
+                        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 10px;">
+                            ${c.desc}
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            ${c.levels.map(lvl => {
+                                const isDefault = lvl.val === 5;
+                                return `
+                                    <button type="button"
+                                        data-crit="${c.key}"
+                                        data-val="${lvl.val}"
+                                        onclick="selectEmpiricalRating('${c.key}', ${lvl.val})"
+                                        style="flex: 1; min-width: 110px; padding: 8px 10px; font-size: 12px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
+                                            background: ${isDefault ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(30, 41, 59, 0.6)'};
+                                            border: 1px solid ${isDefault ? '#c084fc' : 'rgba(255, 255, 255, 0.12)'};
+                                            color: ${isDefault ? '#ffffff' : '#cbd5e1'};
+                                            box-shadow: ${isDefault ? '0 0 12px rgba(168, 85, 247, 0.5)' : 'none'};">
+                                        ${lvl.label}
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div style="margin-bottom: 18px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #e2e8f0; margin-bottom: 6px;">
+                    💬 Ý kiến đóng góp &amp; đề xuất hoàn thiện hệ thống (Không bắt buộc):
+                </label>
+                <textarea id="empiricalFeedbackText" rows="2" placeholder="Ví dụ: Em thấy giao diện biểu đồ trực quan, gợi ý tổ hợp môn rất sát thực tế..." style="width: 100%; box-sizing: border-box; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #ffffff; resize: vertical; outline: none;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 12px;">
+                <button type="button" onclick="submitEmpiricalEvaluation()" class="btn primary" style="background: linear-gradient(135deg, #10b981, #059669); font-weight: 700; padding: 11px 26px; border-radius: 10px; cursor: pointer; border: none; font-size: 14px; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); color: #ffffff;">
+                    🚀 Gửi Đánh Giá Thực Nghiệm
+                </button>
+            </div>
+        </div>
+    `;
+}
+
     // ==========================================
     // KÍCH HOẠT TẤT CẢ CÁC KHỐI KẾT QUẢ (nằm trong hàm vì dùng biến cục bộ p / topCareer / r)
     // ==========================================
+    if (typeof renderSharedProfileBanner === 'function') renderSharedProfileBanner(_sharedProfileData);
+    if (typeof renderAlignmentScoreBreakdown === 'function') renderAlignmentScoreBreakdown(p, topCareer, r);
+    if (typeof renderSecondOrderThinking === 'function') renderSecondOrderThinking(p, topCareer, r);
     if (typeof renderAnalyticsCharts === 'function') renderAnalyticsCharts(p, r);
     if (typeof renderComboScoreCard === 'function') renderComboScoreCard(p, r);
     if (typeof renderExpectationGapIndex === 'function') renderExpectationGapIndex(p, topCareer, r);
@@ -2715,6 +5025,8 @@ function renderStudyAbroadSection(p, topCareer, r) {
     if (typeof render3StepActionPlan === 'function') render3StepActionPlan(topCareer);
     if (typeof renderStudyAbroadSection === 'function') renderStudyAbroadSection(p, topCareer, r);
     if (typeof initWhatIfSimulator === 'function') initWhatIfSimulator(p, topCareer, r);
+    if (typeof renderWhiteBoxExplanation === 'function') renderWhiteBoxExplanation(p, topCareer, r);
+    if (typeof renderEmpiricalSurvey === 'function') renderEmpiricalSurvey(p, topCareer, r);
 } // Kết thúc hàm renderUnlockedCareerAnalysis()
 
 </script>

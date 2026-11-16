@@ -9,11 +9,14 @@ body{
     min-height:100%;
     font-family:Inter,Segoe UI,Arial,sans-serif;
     color:#f6f8ff;
+    overflow-x:hidden;
+    max-width:100vw;
 }
 
 body{
     background:#05071b;
     overflow-x:hidden;
+    max-width:100vw;
 }
 
 body:before,
@@ -1658,6 +1661,18 @@ textarea{
     background: rgba(6, 182, 212, 0.2);
     color: #67e8f9;
     border: 1px solid rgba(6, 182, 212, 0.35);
+}
+
+.school-badge-danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.school-badge-teal {
+    background: rgba(20, 184, 166, 0.2);
+    color: #5eead4;
+    border: 1px solid rgba(20, 184, 166, 0.4);
 }
 
 .school-badge-rank {
@@ -6323,4 +6338,275 @@ a.feature:hover,
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #e2e8f0;
+}
+
+
+/* ========================================================
+   HOBBIES UPGRADE: 8 CATEGORIES, PASSION MAP, WORK STYLE & TOP 3
+   ======================================================== */
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chip.selected {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(168, 85, 247, 0.4));
+  border-color: #818cf8;
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(99, 102, 241, 0.35);
+}
+.chip.top-1 {
+  border-color: #fbbf24 !important;
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.45) !important;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.35), rgba(217, 119, 6, 0.35)) !important;
+}
+.chip.top-2 {
+  border-color: #94a3b8 !important;
+  box-shadow: 0 0 16px rgba(148, 163, 184, 0.45) !important;
+  background: linear-gradient(135deg, rgba(100, 116, 139, 0.35), rgba(71, 85, 105, 0.35)) !important;
+}
+.chip.top-3 {
+  border-color: #d97706 !important;
+  box-shadow: 0 0 16px rgba(217, 119, 6, 0.45) !important;
+  background: linear-gradient(135deg, rgba(180, 83, 9, 0.35), rgba(146, 64, 14, 0.35)) !important;
+}
+.chip-rank-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 999px;
+  line-height: 1.3;
+}
+.chip-rank-badge.rank-1 { background: rgba(251, 191, 36, 0.3); color: #fef08a; border: 1px solid rgba(251, 191, 36, 0.6); }
+.chip-rank-badge.rank-2 { background: rgba(148, 163, 184, 0.3); color: #f1f5f9; border: 1px solid rgba(148, 163, 184, 0.6); }
+.chip-rank-badge.rank-3 { background: rgba(217, 119, 6, 0.3); color: #fed7aa; border: 1px solid rgba(217, 119, 6, 0.6); }
+
+/* Top 3 Passions Panel */
+.top3-passions-panel {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 18px;
+  padding: 18px 22px;
+  margin: 18px 0 24px;
+}
+.top3-passions-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+@media (max-width: 768px) {
+  .top3-passions-slots { grid-template-columns: 1fr; }
+}
+.top3-slot {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+.top3-slot.filled {
+  border-style: solid;
+  border-color: rgba(99, 102, 241, 0.45);
+  background: rgba(99, 102, 241, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Custom Hobbies Section */
+.custom-hobbies-section {
+  margin: 24px 0;
+  padding: 20px 22px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+}
+.custom-hobby-input-wrap {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.custom-hobby-input-wrap input {
+  flex: 1;
+}
+.custom-hobby-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.custom-chip-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #bae6fd;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  animation: fadeInDown 0.2s ease;
+}
+.custom-chip-delete {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 0 2px;
+  transition: color 0.15s ease;
+}
+.custom-chip-delete:hover {
+  color: #ef4444;
+}
+
+/* Work Style Section */
+.workstyle-section {
+  margin: 28px 0;
+  padding: 24px 26px;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+}
+.workstyle-group {
+  margin-top: 18px;
+}
+.workstyle-group-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.workstyle-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+.workstyle-pill-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  cursor: pointer;
+  color: #cbd5e1;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  font-size: 13px;
+}
+.workstyle-pill-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateY(-2px);
+}
+.workstyle-pill-card.selected {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.28), rgba(16, 185, 129, 0.28));
+  border-color: #10b981;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.28);
+}
+
+/* Passion Map Container */
+.passion-map-container {
+  margin: 24px 0 28px;
+  padding: 22px 24px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 20px;
+}
+.passion-bar-wrap {
+  width: 100%;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+  margin: 14px 0 16px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+.passion-bar-segment {
+  height: 100%;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+.passion-legend-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin-top: 10px;
+}
+.passion-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+.passion-legend-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+
+/* ========================================================
+   MOBILE POLISH & CHATBOT FLOATING BUTTON NON-CONFLICT
+   ======================================================== */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+
+  /* Nút nổi Chatbot thu gọn nhẹ nhàng, co giãn z-index: 99 */
+  .floating-chat-btn {
+    bottom: 16px !important;
+    right: 16px !important;
+    transform: scale(0.9) !important;
+    transform-origin: bottom right !important;
+    z-index: 99 !important;
+  }
+  .floating-chat-btn:hover {
+    transform: scale(0.95) !important;
+  }
+
+  /* Đảm bảo tất cả các khối .actions, thanh công cụ và nút bấm "Lưu & Tiếp tục" ở cuối các trang có khoảng đệm an toàn padding-bottom: 75px */
+  .actions,
+  .form-card .actions,
+  .result-toolbar,
+  .page > .actions,
+  .page-bottom-actions {
+    padding-bottom: 75px !important;
+    margin-bottom: 20px !important;
+  }
+
+  /* Tránh tràn khung bảng và container trên mobile */
+  .compare-table-wrap,
+  .table-responsive,
+  .score-table-wrap,
+  .riasec-radar-container {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
 }

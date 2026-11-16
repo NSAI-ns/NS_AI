@@ -76,7 +76,7 @@
         </div>
 
         <!-- Right: Action Buttons (Save backup, Restore profile, Reset, Manage Account) -->
-        <div class="home-auth-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: nowrap;">
+        <div class="home-auth-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
           <button type="button" onclick="exportProfile()" class="home-auth-btn" style="height: 38px; padding: 0 14px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #e2e8f0; cursor: pointer; white-space: nowrap; transition: 0.2s; gap: 6px;" title="Xuất file JSON sao lưu hồ sơ">
             💾 Lưu sao lưu
           </button>
@@ -254,6 +254,18 @@
       const nameEl = document.getElementById('homeProfileUsername');
       const badgeEl = document.getElementById('homeUserBadge');
       if (!nameEl) return;
+
+      if (window._currentSharedProfile) {
+        const sharedName = (window._currentSharedProfile.name || (window._currentSharedProfile.info && window._currentSharedProfile.info.name) || 'Học sinh').trim();
+        nameEl.innerHTML = `${escapeHtml(sharedName)} <span style="font-size: 0.75rem; font-weight: normal; color: #38bdf8;">(Hồ sơ chia sẻ)</span>`;
+        if (badgeEl) {
+          badgeEl.textContent = '🔗 Xem qua link';
+          badgeEl.style.color = '#38bdf8';
+          badgeEl.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+          badgeEl.style.background = 'rgba(56, 189, 248, 0.15)';
+        }
+        return;
+      }
 
       const current = (typeof getCurrentUser === 'function' ? getCurrentUser() : null) || 'Học sinh';
       nameEl.textContent = current;

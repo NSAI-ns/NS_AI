@@ -6,14 +6,15 @@
  * - Hỗ trợ đầy đủ: Tài liệu học tập, phương pháp ôn thi, mức lương, học phí, định hướng ngành & tổ hợp xét tuyển.
  */
 
-// Quản lý trạng thái hội thoại để chống lặp lại
+// Quản lý trạng thái hội thoại để chống lặp lại & lưu trữ hồ sơ đã tiêm nhập
 const chatState = {
   lastTopic: null,
   topicCounts: {},
   lastAnswer: '',
   isSending: false,
   fallbackIndex: 0,
-  activeRoleplay: null
+  activeRoleplay: null,
+  injectedProfile: null // Lưu trữ hồ sơ người dùng được nạp từ LocalStorage
 };
 
 // Chuẩn hóa câu hỏi: xử lý từ viết tắt, teen code, lỗi chính tả gõ vội
@@ -96,6 +97,8 @@ function formatMsg(text) {
   if (!text) return '';
   // Đổi **in đậm** thành <strong>
   let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Đổi *in nghiêng* thành <em> (chỉ khớp dấu sao đơn độc)
+  html = html.replace(/(^|[^*>])\*(?!\*)([^*<]+)\*(?!\*)/g, '$1<em>$2</em>');
   return html;
 }
 
@@ -328,29 +331,756 @@ function addMsg(text, who = 'bot') {
   box.scrollTop = box.scrollHeight;
 }
 
+// =========================================================================
+// CONTEXT-AWARE PROFILE INJECTION & PSYCHOLOGICAL SAFETY GUARDRAIL
+// Hệ thống Nhận diện Hồ sơ Năng lực Tự động & Chốt chặn An toàn Tâm lý Học đường
+// =========================================================================
+
+// Danh mục tổ hợp môn xét tuyển đại học chuẩn GDPT 2018
+const STANDARD_COMBINATIONS = {
+  A00: { name: 'Toán, Vật lý, Hóa học', subjects: ['Toán', 'Vật lý', 'Hóa học'] },
+  A01: { name: 'Toán, Vật lý, Tiếng Anh', subjects: ['Toán', 'Vật lý', 'Tiếng Anh'] },
+  B00: { name: 'Toán, Hóa học, Sinh học', subjects: ['Toán', 'Hóa học', 'Sinh học'] },
+  C00: { name: 'Ngữ văn, Lịch sử, Địa lý', subjects: ['Ngữ văn', 'Lịch sử', 'Địa lý'] },
+  C01: { name: 'Toán, Ngữ văn, Vật lý', subjects: ['Toán', 'Ngữ văn', 'Vật lý'] },
+  C14: { name: 'Toán, Ngữ văn, GDKT&PL', subjects: ['Toán', 'Ngữ văn', 'GDKT&PL'] },
+  D01: { name: 'Toán, Ngữ văn, Tiếng Anh', subjects: ['Toán', 'Ngữ văn', 'Tiếng Anh'] },
+  D07: { name: 'Toán, Hóa học, Tiếng Anh', subjects: ['Toán', 'Hóa học', 'Tiếng Anh'] },
+  D08: { name: 'Toán, Sinh học, Tiếng Anh', subjects: ['Toán', 'Sinh học', 'Tiếng Anh'] },
+  D09: { name: 'Toán, Lịch sử, Tiếng Anh', subjects: ['Toán', 'Lịch sử', 'Tiếng Anh'] },
+  D10: { name: 'Toán, Địa lý, Tiếng Anh', subjects: ['Toán', 'Địa lý', 'Tiếng Anh'] },
+  D14: { name: 'Ngữ văn, Lịch sử, Tiếng Anh', subjects: ['Ngữ văn', 'Lịch sử', 'Tiếng Anh'] },
+  D15: { name: 'Ngữ văn, Địa lý, Tiếng Anh', subjects: ['Ngữ văn', 'Địa lý', 'Tiếng Anh'] }
+};
+
+// Tìm điểm môn học theo tên chuẩn hoặc từ khóa đồng nghĩa
+function getSubjectScore(scores, subjectName) {
+  if (!scores || typeof scores !== 'object') return null;
+  const aliases = {
+    'Toán': ['toán', 'toan', 'math', 'toán học', 'toan hoc'],
+    'Vật lý': ['vật lý', 'vật lí', 'vat ly', 'vat li', 'ly', 'physics'],
+    'Hóa học': ['hóa học', 'hóa', 'hoa hoc', 'hoa', 'chemistry'],
+    'Sinh học': ['sinh học', 'sinh', 'sinh hoc', 'biology'],
+    'Ngữ văn': ['ngữ văn', 'văn', 'ngu van', 'van', 'literature'],
+    'Tiếng Anh': ['tiếng anh', 'anh', 'tieng anh', 'english', 'ngoại ngữ'],
+    'Lịch sử': ['lịch sử', 'sử', 'lich su', 'su', 'history'],
+    'Địa lý': ['địa lý', 'địa lí', 'dia ly', 'dia li', 'dia', 'geography'],
+    'Tin học': ['tin học', 'tin', 'tin hoc', 'informatics', 'cs'],
+    'GDKT&PL': ['gdkt&pl', 'gdktpl', 'gdcd', 'giáo dục công dân', 'kinh tế pháp luật']
+  };
+
+  // 1. Kiểm tra chính xác key
+  if (scores[subjectName] != null && !isNaN(Number(scores[subjectName]))) {
+    return Number(scores[subjectName]);
+  }
+
+  // 2. Kiểm tra qua các tên gọi đồng nghĩa
+  const searchList = aliases[subjectName] || [subjectName.toLowerCase()];
+  for (const [key, val] of Object.entries(scores)) {
+    const kNorm = key.toLowerCase().trim();
+    if (searchList.some(alias => kNorm === alias || kNorm.includes(alias))) {
+      const num = Number(val);
+      if (!isNaN(num)) return num;
+    }
+  }
+
+  return null;
+}
+
+// Tính toán tổ hợp xét tuyển có điểm số cao nhất
+function computeHighestCombination(scores, convertedScore) {
+  let best = null;
+
+  if (scores && typeof scores === 'object') {
+    for (const [code, combo] of Object.entries(STANDARD_COMBINATIONS)) {
+      let complete = true;
+      let sum = 0;
+      const subDetails = [];
+
+      for (const sub of combo.subjects) {
+        const score = getSubjectScore(scores, sub);
+        if (score === null || isNaN(score) || score <= 0) {
+          complete = false;
+          break;
+        }
+        sum += score;
+        subDetails.push(`${sub}: ${score}`);
+      }
+
+      if (complete) {
+        const roundSum = Number(sum.toFixed(2));
+        if (!best || roundSum > best.score) {
+          best = {
+            code: code,
+            name: combo.name,
+            score: roundSum,
+            detail: subDetails.join(', ')
+          };
+        }
+      }
+    }
+  }
+
+  // Nếu có dữ liệu quy đổi ns_converted_score từ diemso.html
+  if (convertedScore && convertedScore.combo && (convertedScore.finalScore || convertedScore.rawTotal)) {
+    const cScore = Number((convertedScore.finalScore || convertedScore.rawTotal).toFixed(2));
+    const comboInfo = STANDARD_COMBINATIONS[convertedScore.combo];
+    const comboName = comboInfo ? comboInfo.name : (convertedScore.subjects ? convertedScore.subjects.join(', ') : convertedScore.combo);
+
+    if (!best || cScore >= best.score) {
+      best = {
+        code: convertedScore.combo,
+        name: comboName,
+        score: cScore,
+        detail: `Điểm xét tuyển đã quy đổi: ${cScore}đ`
+      };
+    }
+  }
+
+  return best;
+}
+
+// Tra cứu tên giải nghĩa mã Holland (RIASEC)
+function getHollandDescription(code) {
+  if (!code || typeof code !== 'string') return '';
+  const shortMap = {
+    R: 'Kỹ thuật',
+    I: 'Nghiên cứu',
+    A: 'Nghệ thuật',
+    S: 'Xã hội',
+    E: 'Quản lý',
+    C: 'Nghiệp vụ'
+  };
+  const cleanCode = code.toUpperCase().trim();
+  const letters = cleanCode.split('');
+  if (letters.length >= 2 && letters.every(l => shortMap[l])) {
+    return letters.map(l => shortMap[l]).join(' · ');
+  }
+  const fullMap = {
+    R: 'Kỹ thuật - Thực tế (Realistic)',
+    I: 'Nghiên cứu - Tư duy logic (Investigative)',
+    A: 'Nghệ thuật - Sáng tạo (Artistic)',
+    S: 'Xã hội - Giao tiếp & Hướng con người (Social)',
+    E: 'Quản lý - Khởi nghiệp & Lãnh đạo (Enterprising)',
+    C: 'Nghiệp vụ - Chi tiết & Quy chuẩn (Conventional)'
+  };
+  return fullMap[letters[0]] || cleanCode;
+}
+
+// Nạp toàn diện hồ sơ người dùng từ mọi key LocalStorage (Context-Aware Profile Injection)
+function loadInjectedUserProfile() {
+  const result = {
+    hasProfile: false,
+    name: '',
+    province: '',
+    grade: '',
+    school: '',
+    scores: {},
+    scoreCount: 0,
+    avgScore: null,
+    bestCombo: null,
+    hollandCode: '',
+    hollandTitle: '',
+    interests: [],
+    customInterests: '',
+    goals: {
+      isStudyAbroad: false,
+      studyAbroadCountry: '',
+      studyAbroadCert: '',
+      dreamMajor: '',
+      dreamCareer: '',
+      dreamSchool: '',
+      targetLocation: '',
+      admissionMethods: []
+    },
+    topCareer: ''
+  };
+
+  try {
+    // 1. Đọc Unified Profile (ns_ai_user_profile hoặc ns_test_user_profile)
+    let unified = null;
+    const rawUnified = localStorage.getItem('ns_ai_user_profile') || localStorage.getItem('ns_test_user_profile');
+    if (rawUnified) {
+      try { unified = JSON.parse(rawUnified); } catch (e) {}
+    }
+
+    // 2. Đọc ns_profile (Object lưu trữ hồ sơ độc lập)
+    let standaloneProfile = null;
+    const rawProfile = localStorage.getItem('ns_profile');
+    if (rawProfile) {
+      try { standaloneProfile = JSON.parse(rawProfile); } catch (e) {}
+    }
+
+    // 3. Đọc ns_student_info, ns_info, info
+    let studentInfo = null;
+    const rawStudentInfo = localStorage.getItem('ns_student_info') || localStorage.getItem('ns_info') || localStorage.getItem('info');
+    if (rawStudentInfo) {
+      try {
+        studentInfo = JSON.parse(rawStudentInfo);
+      } catch (e) {
+        if (typeof rawStudentInfo === 'string' && rawStudentInfo.trim()) {
+          studentInfo = { name: rawStudentInfo.trim() };
+        }
+      }
+    }
+
+    // 4. Đọc ns_current_user
+    let currentUser = null;
+    const rawUser = localStorage.getItem('ns_current_user');
+    if (rawUser) {
+      try {
+        currentUser = JSON.parse(rawUser);
+      } catch (e) {
+        if (typeof rawUser === 'string' && rawUser.trim()) {
+          currentUser = { username: rawUser.trim(), name: rawUser.trim() };
+        }
+      }
+    }
+
+    // 5. Đọc getProfile() từ main.js nếu có
+    const p = (typeof getProfile === 'function') ? getProfile() : null;
+
+    // --- TRÍCH XUẤT TÊN HỌC SINH ---
+    const detectedName = (studentInfo && (studentInfo.name || studentInfo.studentName || studentInfo.fullName)) ||
+                         (standaloneProfile && (standaloneProfile.name || standaloneProfile.studentName || standaloneProfile.fullName || (standaloneProfile.info && standaloneProfile.info.name))) ||
+                         (currentUser && (currentUser.name || currentUser.fullName || currentUser.username)) ||
+                         (unified && unified.info && unified.info.name) ||
+                         (p && p.info && p.info.name) || '';
+    if (detectedName && detectedName !== 'bạn' && detectedName !== 'Học sinh') {
+      result.name = detectedName.trim();
+    }
+
+    // --- TRÍCH XUẤT ĐỊA BÀN & LỚP HỌC ---
+    result.province = (studentInfo && studentInfo.province) ||
+                     (standaloneProfile && (standaloneProfile.province || (standaloneProfile.info && standaloneProfile.info.province))) ||
+                     (unified && unified.info && unified.info.province) ||
+                     (p && p.info && p.info.province) || '';
+
+    result.grade = (studentInfo && studentInfo.grade) ||
+                  (standaloneProfile && (standaloneProfile.grade || (standaloneProfile.info && standaloneProfile.info.grade))) ||
+                  (unified && unified.info && unified.info.grade) ||
+                  (p && p.info && p.info.grade) || '';
+
+    result.school = (studentInfo && (studentInfo.school || studentInfo.schoolName)) ||
+                   (standaloneProfile && (standaloneProfile.school || (standaloneProfile.info && standaloneProfile.info.school))) ||
+                   (unified && unified.info && unified.info.school) ||
+                   (p && p.info && p.info.school) || '';
+
+    // --- TRÍCH XUẤT ĐIỂM SỐ (ns_user_scores, ns_scores...) ---
+    let rawScores = null;
+    const s1 = localStorage.getItem('ns_user_scores');
+    const s2 = localStorage.getItem('ns_scores');
+    if (s1) { try { rawScores = JSON.parse(s1); } catch (e) {} }
+    if (!rawScores && s2) { try { rawScores = JSON.parse(s2); } catch (e) {} }
+    if (!rawScores && standaloneProfile && (standaloneProfile.scores || standaloneProfile.user_scores)) {
+      rawScores = standaloneProfile.scores || standaloneProfile.user_scores;
+    }
+    if (!rawScores && unified && unified.scores) {
+      rawScores = unified.scores;
+    }
+    if (!rawScores && p && p.scores) {
+      rawScores = p.scores;
+    }
+
+    if (rawScores && typeof rawScores === 'object') {
+      if (Array.isArray(rawScores)) {
+        rawScores.forEach(item => {
+          if (item && item.subject && item.score != null) {
+            result.scores[item.subject] = Number(item.score);
+          }
+        });
+      } else {
+        Object.entries(rawScores).forEach(([k, v]) => {
+          const num = Number(v);
+          if (!isNaN(num) && num > 0) {
+            result.scores[k] = num;
+          }
+        });
+      }
+    }
+
+    // Đọc ns_converted_score từ LocalStorage
+    let convertedScore = null;
+    const rawConv = localStorage.getItem('ns_converted_score');
+    if (rawConv) {
+      try { convertedScore = JSON.parse(rawConv); } catch (e) {}
+    }
+
+    // Tính toán tổ hợp cao nhất & điểm trung bình
+    result.bestCombo = computeHighestCombination(result.scores, convertedScore);
+    const scoreVals = Object.values(result.scores);
+    result.scoreCount = scoreVals.length;
+    if (scoreVals.length > 0) {
+      result.avgScore = Number((scoreVals.reduce((a, b) => a + b, 0) / scoreVals.length).toFixed(1));
+    }
+
+    // --- TRÍCH XUẤT HOLLAND RIASEC (ns_holland_result, ns_riasecTopCode, ns_mbtiType...) ---
+    function extractHollandString(val) {
+      if (!val) return '';
+      if (typeof val === 'string') return val.trim();
+      if (typeof val === 'object') return (val.topCode || val.code || val.type || '').trim();
+      return '';
+    }
+
+    function isLikelyHollandCode(str) {
+      if (!str || typeof str !== 'string') return false;
+      const clean = str.trim().toUpperCase();
+      return clean.length >= 1 && clean.length <= 6 && /^[RIASEC]+$/.test(clean);
+    }
+
+    const candidateHollandValues = [
+      localStorage.getItem('ns_holland_result'),
+      localStorage.getItem('ns_riasecTopCode'),
+      localStorage.getItem('ns_mbtiType'),
+      localStorage.getItem('ns_mbtiData'),
+      standaloneProfile && (standaloneProfile.holland || standaloneProfile.riasec || standaloneProfile.holland_result),
+      unified && unified.personality && (unified.personality.riasecTopCode || unified.personality.mbtiType),
+      p && (p.riasec || (p.mbti && p.mbti.type))
+    ];
+
+    let holland = null;
+    // Ưu tiên chuỗi khớp định dạng mã RIASEC chuẩn (R, I, A, S, E, C)
+    for (const rawItem of candidateHollandValues) {
+      if (!rawItem) continue;
+      let parsed = rawItem;
+      if (typeof rawItem === 'string') {
+        try { parsed = JSON.parse(rawItem); } catch (e) { parsed = rawItem; }
+      }
+      const codeStr = extractHollandString(parsed);
+      if (isLikelyHollandCode(codeStr)) {
+        holland = codeStr;
+        break;
+      }
+    }
+    // Fallback nếu không có mã khớp chuẩn nhưng có chuỗi
+    if (!holland) {
+      for (const rawItem of candidateHollandValues) {
+        if (!rawItem) continue;
+        let parsed = rawItem;
+        if (typeof rawItem === 'string') {
+          try { parsed = JSON.parse(rawItem); } catch (e) { parsed = rawItem; }
+        }
+        const codeStr = extractHollandString(parsed);
+        if (codeStr && codeStr.length >= 2) {
+          holland = codeStr;
+          break;
+        }
+      }
+    }
+
+    if (holland && typeof holland === 'string' && holland.trim()) {
+      result.hollandCode = holland.trim().toUpperCase();
+      result.hollandTitle = getHollandDescription(result.hollandCode);
+    }
+
+    // --- TRÍCH XUẤT SỞ THÍCH (ns_interests, ns_hobbies...) ---
+    let interestsRaw = null;
+    const i1 = localStorage.getItem('ns_interests');
+    const i2 = localStorage.getItem('ns_hobbies');
+    if (i1) { try { interestsRaw = JSON.parse(i1); } catch (e) { interestsRaw = [i1]; } }
+    if (!interestsRaw && i2) { try { interestsRaw = JSON.parse(i2); } catch (e) {} }
+    if (!interestsRaw && standaloneProfile && (standaloneProfile.interests || standaloneProfile.hobbies)) {
+      interestsRaw = standaloneProfile.interests || standaloneProfile.hobbies;
+    }
+    if (!interestsRaw && unified && unified.hobbies) {
+      interestsRaw = unified.hobbies;
+    }
+    if (!interestsRaw && p && p.hobbies) {
+      interestsRaw = p.hobbies;
+    }
+
+    if (interestsRaw) {
+      if (Array.isArray(interestsRaw)) {
+        result.interests = interestsRaw.filter(x => typeof x === 'string' && x.trim());
+      } else if (typeof interestsRaw === 'object') {
+        if (Array.isArray(interestsRaw.selected)) {
+          result.interests = interestsRaw.selected.filter(x => typeof x === 'string' && x.trim());
+        }
+        if (interestsRaw.custom && typeof interestsRaw.custom === 'string' && interestsRaw.custom.trim()) {
+          result.customInterests = interestsRaw.custom.trim();
+        }
+      } else if (typeof interestsRaw === 'string' && interestsRaw.trim()) {
+        result.interests = [interestsRaw.trim()];
+      }
+    }
+
+    // --- TRÍCH XUẤT MỤC TIÊU & DU HỌC (ns_goals...) ---
+    let goalsRaw = null;
+    const g1 = localStorage.getItem('ns_goals');
+    if (g1) { try { goalsRaw = JSON.parse(g1); } catch (e) {} }
+    if (!goalsRaw && standaloneProfile && standaloneProfile.goals) {
+      goalsRaw = standaloneProfile.goals;
+    }
+    if (!goalsRaw && unified && unified.goals) {
+      goalsRaw = unified.goals;
+    }
+    if (!goalsRaw && p && p.goals) {
+      goalsRaw = p.goals;
+    }
+
+    if (goalsRaw && typeof goalsRaw === 'object') {
+      result.goals.dreamMajor = goalsRaw.dreamMajor || (Array.isArray(goalsRaw.selected) && goalsRaw.selected[0]) || '';
+      result.goals.dreamCareer = goalsRaw.dreamCareer || '';
+      result.goals.dreamSchool = goalsRaw.dreamSchool || '';
+      result.goals.targetLocation = goalsRaw.studyLocation || '';
+      result.goals.admissionMethods = Array.isArray(goalsRaw.admissionMethods) ? goalsRaw.admissionMethods : [];
+
+      const isAbroad = goalsRaw.studyAbroad === 'Có' ||
+                       goalsRaw.studyAbroad === true ||
+                       goalsRaw.studyAbroad === 'yes' ||
+                       result.goals.admissionMethods.includes('duhoc') ||
+                       Boolean(goalsRaw.studyAbroadDetail && goalsRaw.studyAbroadDetail.enabled);
+
+      result.goals.isStudyAbroad = isAbroad;
+      if (goalsRaw.studyAbroadDetail) {
+        result.goals.studyAbroadCountry = goalsRaw.studyAbroadDetail.country || '';
+        result.goals.studyAbroadCert = goalsRaw.studyAbroadDetail.languageCert || '';
+      }
+    }
+
+    // Gợi ý ngành hàng đầu nếu có analyzeCareer
+    if (typeof analyzeCareer === 'function') {
+      try {
+        const ana = analyzeCareer();
+        if (ana && ana.results && ana.results[0]) {
+          result.topCareer = ana.results[0].name;
+        }
+      } catch (e) {}
+    }
+
+    // Đánh giá xem hồ sơ có dữ liệu ý nghĩa hay không
+    const hasData = Boolean(
+      result.name ||
+      result.scoreCount > 0 ||
+      result.bestCombo ||
+      result.hollandCode ||
+      result.interests.length > 0 ||
+      result.goals.dreamMajor ||
+      result.goals.dreamSchool ||
+      result.goals.isStudyAbroad
+    );
+    result.hasProfile = hasData;
+
+  } catch (err) {
+    console.warn('Lỗi khi nạp hồ sơ người dùng:', err);
+  }
+
+  return result;
+}
+
+// Tiêm nạp hồ sơ vào trạng thái của Chatbot
+function injectUserProfileIntoChatState() {
+  try {
+    chatState.injectedProfile = loadInjectedUserProfile();
+  } catch (err) {
+    console.warn('Không thể tiêm hồ sơ vào chatState:', err);
+  }
+}
+
+// =========================================================================
+// CHỐT CHẶN AN TOÀN TÂM LÝ HỌC ĐƯỜNG (PSYCHOLOGICAL SAFETY GUARDRAIL)
+// Phát hiện từ khóa & phân tích ngữ nghĩa khủng hoảng, tự hại, bế tắc, kiệt sức
+// =========================================================================
+function detectPsychologicalCrisis(rawQuery, normalizedQuery) {
+  if (!rawQuery) return { triggered: false };
+
+  const raw = rawQuery.toLowerCase().trim();
+  const s = ' ' + (normalizedQuery || raw).toLowerCase().trim() + ' ';
+
+  // 0. CHỐT CHẶN AN TOÀN TÂM LÝ HỌC ĐƯỜNG - DANH MỤC TỪ KHÓA KHỦNG HOẢNG NGHIÊM TRỌNG BẮT BUỘC
+  const mandatoryCrisisKeywords = [
+    'tự tử', 'tự hại', 'muốn chết', 'kết thúc cuộc sống', 'không muốn sống',
+    'muốn biến mất', 'quá bế tắc', 'tuyệt vọng hoàn toàn', 'trầm cảm nặng',
+    'tổn thương bản thân', 'nhảy lầu', 'cắt tay'
+  ];
+
+  for (const kw of mandatoryCrisisKeywords) {
+    if (raw.includes(kw) || s.includes(kw)) {
+      return { triggered: true, severity: 'critical', matchedRule: 'mandatory_crisis_keyword', keyword: kw };
+    }
+  }
+
+  // 1. TỪ KHÓA & MẪU CÂU TỰ HẠI / TỰ TỬ / KHỦNG HOẢNG NGUY CẤP (CẤP ĐỘ KHẨN CẤP CAO NHẤT)
+  const suicideCrisisPatterns = [
+    /muốn\s*chết/i,
+    /muon\s*chet/i,
+    /tự\s*tử/i,
+    /tu\s*tu\b/i,
+    /tự\s*sát/i,
+    /tu\s*sat\b/i,
+    /tự\s*làm\s*hại/i,
+    /tu\s*lam\s*hai/i,
+    /tự\s*hại/i,
+    /tu\s*hai\b/i,
+    /không\s*muốn\s*sống\s*(nữa)?/i,
+    /khong\s*muon\s*song\s*(nua)?/i,
+    /(không|khong|chẳng|chang|hết|het|k|ko)\s*(muốn|muon|còn|con|thiết|thiet)\s*(sống|song)/i,
+    /(không|khong|chẳng|chang|hết|het|k|ko)\s*(muốn|muon)\s*(sống|song)\s*(nữa|nua)?/i,
+    /chẳng\s*muốn\s*sống\s*(nữa)?/i,
+    /chang\s*muon\s*song\s*(nua)?/i,
+    /hết\s*muốn\s*sống/i,
+    /het\s*muon\s*song/i,
+    /không\s*còn\s*muốn\s*sống/i,
+    /khong\s*con\s*muon\s*song/i,
+    /sống\s*làm\s*gì\s*nữa/i,
+    /song\s*lam\s*gi\s*nua/i,
+    /(sống|song)\s*(làm|lam|để|de)\s*(gì|gi)\s*(nữa|nua)?/i,
+    /sống\s*để\s*làm\s*gì\s*nữa/i,
+    /song\s*de\s*lam\s*gi\s*nua/i,
+    /không\s*thiết\s*sống/i,
+    /khong\s*thiet\s*song/i,
+    /chết\s*đi\s*cho\s*xong/i,
+    /chet\s*di\s*cho\s*xong/i,
+    /(chết|chet)\s*(đi|quách|cho)\s*(cho\s*xong|cho\s*rồi|cho\s*roi|đi)?/i,
+    /chết\s*quách\s*(đi|cho\s*rồi)?/i,
+    /chet\s*quach/i,
+    /chết\s*cho\s*rồi/i,
+    /chet\s*cho\s*roi/i,
+    /kết\s*thúc\s*cuộc\s*(sống|đời)/i,
+    /ket\s*thuc\s*cuoc\s*(song|doi)/i,
+    /chấm\s*dứt\s*cuộc\s*(sống|đời)/i,
+    /cham\s*dut\s*cuoc\s*(song|doi)/i,
+    /kết\s*liễu/i,
+    /ket\s*lieu/i,
+    /muốn\s*biến\s*mất(\s*khỏi\s*thế\s*giới)?/i,
+    /muon\s*bien\s*mat/i,
+    /muốn\s*giải\s*thoát/i,
+    /muon\s*giai\s*thoat/i,
+    /tự\s*giải\s*thoát/i,
+    /tu\s*giai\s*thoat/i,
+    /rạch\s*tay/i,
+    /rach\s*tay/i,
+    /uống\s*thuốc\s*ngủ/i,
+    /uong\s*thuoc\s*ngu/i,
+    /nhảy\s*lầu/i,
+    /nhay\s*lau/i,
+    /nhảy\s*cầu/i,
+    /nhay\s*cau/i,
+    /\b(want\s*to\s*die|kill\s*myself|suicide|self\s*harm)\b/i
+  ];
+
+  for (const regex of suicideCrisisPatterns) {
+    if (regex.test(s) || regex.test(raw)) {
+      return { triggered: true, severity: 'critical', matchedRule: 'suicide_crisis' };
+    }
+  }
+
+  // 2. TỪ KHÓA BẾ TẮC HOÀN TOÀN / KHÔNG CÒN LỐI THOÁT / TUYỆT VỌNG
+  const severeDespairPatterns = [
+    /\bbế\s*tắc\b/i,
+    /\bbe\s*tac\b/i,
+    /bế\s*tắc\s*(quá|hoàn\s*toàn|tột\s*cùng|không\s*lối\s*thoát)/i,
+    /be\s*tac\s*(qua|hoan\s*toan)/i,
+    /không\s*còn\s*lối\s*thoát/i,
+    /khong\s*con\s*loi\s*thoat/i,
+    /không\s*có\s*lối\s*thoát/i,
+    /khong\s*co\s*loi\s*thoat/i,
+    /hết\s*lối\s*thoát/i,
+    /het\s*loi\s*thoat/i,
+    /mất\s*hết\s*lối\s*thoát/i,
+    /\btuyệt\s*vọng\b/i,
+    /\btuyet\s*vong\b/i,
+    /quá\s*tuyệt\s*vọng/i,
+    /qua\s*tuyet\s*vong/i,
+    /tuyệt\s*vọng\s*tột\s*cùng/i,
+    /mất\s*hết\s*hy\s*vọng/i,
+    /mat\s*het\s*hy\s*vong/i,
+    /không\s*còn\s*hy\s*vọng/i,
+    /khong\s*con\s*hy\s*vong/i,
+    /\bvô\s*vọng\b/i,
+    /\bvo\s*vong\b/i,
+    /không\s*ai\s*cứu\s*được/i,
+    /khong\s*ai\s*cuu\s*duoc/i,
+    /buông\s*bỏ\s*tất\s*cả/i,
+    /buon\s*bo\s*tat\s*ca/i,
+    /buông\s*xuôi\s*tất\s*cả/i,
+    /buong\s*xuoi\s*tat\s*ca/i
+  ];
+
+  for (const regex of severeDespairPatterns) {
+    if (regex.test(s) || regex.test(raw)) {
+      return { triggered: true, severity: 'high', matchedRule: 'severe_despair' };
+    }
+  }
+
+  // 3. ÁP LỰC QUÁ MỨC / TRẦM CẢM NẶNG / SUY SỤP HOÀN TOÀN (EXTREME BURNOUT)
+  const extremeBurnoutPatterns = [
+    /áp\s*lực\s*quá\s*mức/i,
+    /ap\s*luc\s*qua\s*muc/i,
+    /áp\s*lực\s*(cùng\s*cực|tột\s*cùng|kinh\s*khủng)/i,
+    /áp\s*lực\s*không\s*thở\s*nổi/i,
+    /ap\s*luc\s*khong\s*tho\s*noi/i,
+    /nghẹt\s*thở\s*vì\s*áp\s*lực/i,
+    /không\s*chịu\s*nổi\s*nữa/i,
+    /khong\s*chiu\s*noi\s*nua/i,
+    /không\s*thể\s*chịu\s*nổi\s*nữa/i,
+    /khong\s*the\s*chiu\s*noi/i,
+    /quá\s*sức\s*chịu\s*đựng/i,
+    /qua\s*suc\s*chiu\s*dung/i,
+    /vượt\s*quá\s*sức\s*chịu\s*đựng/i,
+    /trầm\s*cảm\s*nặng/i,
+    /tram\s*cam\s*nang/i,
+    /bị\s*trầm\s*cảm\s*nặng/i,
+    /khủng\s*hoảng\s*tâm\s*lý\s*nặng/i,
+    /sụp\s*đổ\s*hoàn\s*toàn/i,
+    /sup\s*do\s*hoan\s*toan/i,
+    /suy\s*sụp\s*hoàn\s*toàn/i,
+    /tâm\s*trí\s*sụp\s*đổ/i,
+    /kiệt\s*sức\s*hoàn\s*toàn/i,
+    /kiệt\s*quệ\s*hoàn\s*toàn/i,
+    /gục\s*ngã\s*hoàn\s*toàn/i
+  ];
+
+  for (const regex of extremeBurnoutPatterns) {
+    if (regex.test(s) || regex.test(raw)) {
+      return { triggered: true, severity: 'high', matchedRule: 'extreme_burnout' };
+    }
+  }
+
+  // 4. PHÁT HIỆN NGỮ NGHĨA KẾT HỢP (COMPOUND SENTIMENT DISTRESS SCORING)
+  const distressWords = ['áp lực', 'ap luc', 'stress', 'mệt mỏi', 'met moi', 'đau khổ', 'dau kho', 'bất lực', 'bat luc', 'chán nản', 'chan nan', 'sợ hãi', 'so hai', 'hoảng loạn', 'hoang loan', 'khóc', 'khoc', 'cô độc', 'co doc'];
+  const extremeModifiers = ['kinh khủng', 'kinh khung', 'tột cùng', 'tot cung', 'cực độ', 'cuc do', 'quá chừng', 'qua chung', 'phát điên', 'phat dien', 'muốn nổ tung', 'no tung', 'chịu không nổi', 'chiu khong noi', 'sắp phát điên', 'gục ngã', 'guc nga', 'chết mất', 'chet mat'];
+
+  let hasDistress = distressWords.some(w => s.includes(w) || raw.includes(w));
+  let hasExtreme = extremeModifiers.some(w => s.includes(w) || raw.includes(w));
+
+  if (hasDistress && hasExtreme) {
+    return { triggered: true, severity: 'medium', matchedRule: 'compound_extreme_distress' };
+  }
+
+  return { triggered: false };
+}
+
+// Phản hồi an toàn tâm lý: Lời văn ân cần, giải tỏa áp lực & hiển thị Thẻ Hỗ trợ Khẩn cấp
+function generateCrisisSafetyResponse(crisisCheck) {
+  const cardHtml = `
+<div class="emergency-safety-card" style="margin-top: 14px; padding: 18px 20px; background: linear-gradient(135deg, rgba(220, 38, 38, 0.25), rgba(126, 34, 206, 0.22)); border: 2px solid rgba(248, 113, 113, 0.7); border-radius: 16px; box-shadow: 0 10px 36px 0 rgba(220, 38, 38, 0.38); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); white-space: normal; color: #f8fafc; font-family: inherit;">
+  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px; border-bottom: 1px solid rgba(248, 113, 113, 0.35); padding-bottom: 12px;">
+    <span style="font-size: 32px; line-height: 1; filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.7));">🆘</span>
+    <div>
+      <div style="font-size: 16.5px; font-weight: 800; color: #fef08a; letter-spacing: 0.02em; text-transform: uppercase;">
+        🆘 HỖ TRỢ TÂM LÝ &amp; BẢO VỆ HỌC SINH KHẨN CẤP
+      </div>
+      <div style="font-size: 12.5px; color: #cbd5e1; margin-top: 2px;">
+        Đường dây nóng quốc gia bảo vệ trẻ em &amp; Can thiệp khủng hoảng tâm lý học đường (Miễn phí 24/7)
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 14px;">
+    <!-- Hotline 111 -->
+    <div style="background: rgba(15, 23, 42, 0.8); border: 1.5px solid rgba(239, 68, 68, 0.5); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div style="font-size: 12px; text-transform: uppercase; color: #f87171; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+          <span>🛡️</span> Tổng đài Quốc gia Bảo vệ Trẻ em
+        </div>
+        <div style="font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: 0.05em; margin-bottom: 4px;">
+          111
+        </div>
+        <div style="font-size: 12.5px; color: #94a3b8; line-height: 1.45;">
+          Tư vấn tâm lý, bảo vệ trẻ em và học sinh trong mọi tình huống khẩn cấp. <strong>Miễn phí cước gọi 24/7</strong>.
+        </div>
+      </div>
+      <a href="tel:111" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; padding: 9px 14px; background: linear-gradient(135deg, #ef4444, #dc2626); color: #ffffff; font-weight: 700; font-size: 13.5px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4); transition: transform 0.15s ease;">
+        <span>📞</span> Bấm gọi 111 (Miễn phí 24/7)
+      </a>
+    </div>
+
+    <!-- Hotline 1900 1567 / 1800 1567 -->
+    <div style="background: rgba(15, 23, 42, 0.8); border: 1.5px solid rgba(234, 179, 8, 0.5); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div style="font-size: 12px; text-transform: uppercase; color: #facc15; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+          <span>📞</span> Đường dây nóng tư vấn &amp; can thiệp khủng hoảng
+        </div>
+        <div style="font-size: 22px; font-weight: 900; color: #ffffff; letter-spacing: 0.05em; margin-bottom: 4px;">
+          1900 1567 / 1800 1567
+        </div>
+        <div style="font-size: 12.5px; color: #94a3b8; line-height: 1.45;">
+          Tư vấn tâm lý, can thiệp khủng hoảng và trợ giúp sức khỏe tinh thần thanh thiếu niên.
+        </div>
+      </div>
+      <a href="tel:19001567" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; padding: 9px 14px; background: linear-gradient(135deg, #eab308, #ca8a04); color: #ffffff; font-weight: 700; font-size: 13.5px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 14px rgba(234, 179, 8, 0.4); transition: transform 0.15s ease;">
+        <span>📞</span> Bấm gọi 1900 1567 / 1800 1567
+      </a>
+    </div>
+  </div>
+
+  <!-- Lời khuyên ân cần kết nối -->
+  <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px; padding: 13px 16px; margin-bottom: 14px; line-height: 1.6; font-size: 13.5px; color: #f1f5f9;">
+    <div style="font-weight: 700; color: #fef08a; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+      <span>🫂</span> Hãy chia sẻ ngay với Thầy cô cố vấn, Phòng tham vấn học đường hoặc Cha mẹ/Người thân tin cậy:
+    </div>
+    <div>
+      Bạn luôn có người đồng hành! Thầy cô, bố mẹ và những người thân yêu luôn sẵn lòng lắng nghe, đồng hành và bảo vệ bạn mà không hề phán xét. Đừng gánh chịu một mình bạn nhé! Hãy nhắn tin hoặc gọi điện cho một người mà bạn cảm thấy an tâm và tin cậy nhất lúc này.
+    </div>
+  </div>
+
+  <!-- Nút hành động nhanh xoa dịu -->
+  <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+    <button type="button" onclick="quick('Hướng dẫn em bài tập thở 4-7-8 để thư giãn')" style="flex: 1; min-width: 190px; padding: 9px 14px; background: rgba(59, 130, 246, 0.22); border: 1px solid rgba(59, 130, 246, 0.45); border-radius: 8px; color: #93c5fd; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+      <span>🧘</span> Làm bài tập thở 4-7-8 cùng NS AI
+    </button>
+    <button type="button" onclick="quick('Em muốn tâm sự thêm với bạn về những điều làm em mệt mỏi')" style="flex: 1; min-width: 190px; padding: 9px 14px; background: rgba(16, 185, 129, 0.22); border: 1px solid rgba(16, 185, 129, 0.45); border-radius: 8px; color: #6ee7b7; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+      <span>💚</span> Tâm sự thêm những điều trong lòng
+    </button>
+  </div>
+</div>
+`;
+
+  return `🫂 **Mình đang ở ngay đây với bạn... Hãy dừng lại một nhịp và hít một hơi thật sâu cùng mình nhé.**\n\n` +
+    `Mình cảm nhận được bạn đang phải gánh chịu những cảm xúc bế tắc, ngột ngạt và kiệt sức đến cùng cực. Những áp lực học tập, thi cử, kỳ vọng hay những dồn nén thầm kín có thể khiến bạn cảm thấy như không còn lối thoát, nhưng mình muốn bạn biết một điều từ tận đáy lòng:\n\n` +
+    `🌱 **Bạn vô cùng quý giá, và sự hiện diện của bạn trên cuộc đời này có ý nghĩa rất lớn.**\n` +
+    `Những gì bạn đang trải qua thực sự là một thử thách quá lớn đối với một học sinh, nhưng cảm giác tồi tệ này chỉ là một **cơn bão tạm thời** – nó không phải là định mệnh hay điểm kết thúc của bạn. Bạn không hề đơn độc và không bao giờ phải chịu đựng nỗi đau này một mình.\n\n` +
+    `Hãy cho phép bản thân được buông bài vở xuống lúc này và kết nối ngay với các nguồn trợ giúp khẩn cấp dưới đây:` +
+    `\n\n` +
+    cardHtml;
+}
+
 function getChatContext() {
   const p = typeof getProfile === 'function' ? getProfile() : {};
+  const injected = (chatState.injectedProfile) || loadInjectedUserProfile();
   const result = typeof analyzeCareer === 'function' ? analyzeCareer() : { results: [] };
   const results = result.results || [];
-  const top = results[0] || null;
+  const top = results[0] || (injected.topCareer ? { name: injected.topCareer } : null);
 
-  const province = (p.info && p.info.province) ? p.info.province : 'chưa chọn tỉnh/thành';
-  const grade = (p.info && p.info.grade) ? `lớp ${p.info.grade}` : 'học sinh THPT';
-  const goal = (p.goals && p.goals.dreamMajor)
-    ? `ngành ${p.goals.dreamMajor}`
-    : ((p.goals && p.goals.dreamCareer)
-      ? `nghề ${p.goals.dreamCareer}`
-      : (((p.goals && p.goals.selected) || []).length
-        ? p.goals.selected.join(', ')
-        : 'khám phá ngành nghề phù hợp'));
-  const hobbies = ((p.hobbies && p.hobbies.selected) || []).join(', ') || 'chưa có';
-  const custom = (p.hobbies && p.hobbies.custom) ? `; ${p.hobbies.custom}` : '';
-  const goals = ((p.goals && p.goals.selected) || []).join(', ') || 'chưa có';
-  const other = (p.goals && p.goals.other) ? `; ${p.goals.other}` : '';
-  const avg = (p.avg != null) ? Number(p.avg).toFixed(1) : null;
+  const studentName = (injected.name && injected.name !== 'bạn' && injected.name !== 'Học sinh')
+    ? injected.name
+    : ((p.info && p.info.name && p.info.name !== 'bạn' && p.info.name !== 'Học sinh')
+      ? p.info.name
+      : ((typeof getCurrentUser === 'function' && getCurrentUser()) || 'bạn'));
 
-  // Lấy các môn có điểm cao nhất và thấp nhất
-  const scores = (p.scores) || {};
+  const province = injected.province || (p.info && p.info.province) || 'chưa chọn tỉnh/thành';
+  const grade = injected.grade
+    ? (injected.grade.toString().includes('Lớp') || injected.grade.toString().includes('lớp') ? injected.grade : `lớp ${injected.grade}`)
+    : ((p.info && p.info.grade) ? `lớp ${p.info.grade}` : 'học sinh THPT');
+
+  let goal = 'khám phá ngành nghề phù hợp';
+  if (injected.goals) {
+    if (injected.goals.isStudyAbroad) {
+      goal = `Du học quốc tế${injected.goals.studyAbroadCountry ? ` (${injected.goals.studyAbroadCountry})` : ''}${injected.goals.dreamMajor ? ` - Ngành ${injected.goals.dreamMajor}` : ''}`;
+    } else if (injected.goals.dreamMajor) {
+      goal = `ngành ${injected.goals.dreamMajor}${injected.goals.dreamSchool ? ` tại ${injected.goals.dreamSchool}` : ''}`;
+    } else if (injected.goals.dreamCareer) {
+      goal = `nghề ${injected.goals.dreamCareer}`;
+    }
+  } else if (p.goals) {
+    goal = (p.goals.dreamMajor)
+      ? `ngành ${p.goals.dreamMajor}`
+      : ((p.goals.dreamCareer)
+        ? `nghề ${p.goals.dreamCareer}`
+        : (((p.goals.selected) || []).length
+          ? p.goals.selected.join(', ')
+          : 'khám phá ngành nghề phù hợp'));
+  }
+
+  const hobbiesList = (injected.interests && injected.interests.length > 0) ? injected.interests.join(', ') : (((p.hobbies && p.hobbies.selected) || []).join(', ') || 'chưa có');
+  const custom = injected.customInterests ? `; ${injected.customInterests}` : ((p.hobbies && p.hobbies.custom) ? `; ${p.hobbies.custom}` : '');
+  const avg = injected.avgScore != null ? injected.avgScore.toFixed(1) : ((p.avg != null) ? Number(p.avg).toFixed(1) : null);
+  const bestCombo = injected.bestCombo;
+  const hollandCode = injected.hollandCode;
+  const hollandTitle = injected.hollandTitle;
+
+  const scores = (injected.scores && Object.keys(injected.scores).length > 0) ? injected.scores : (p.scores || {});
   const scoreEntries = Object.entries(scores)
     .filter(([_, v]) => typeof v === 'number' && !isNaN(v))
     .sort((a, b) => b[1] - a[1]);
@@ -358,7 +1088,6 @@ function getChatContext() {
   const bestSubjects = scoreEntries.slice(0, 3);
   const lowestSubjects = scoreEntries.slice(-2);
 
-  // Lấy dữ liệu trường học nếu có
   const schools = (typeof window !== 'undefined' && Array.isArray(window.DEFAULT_SCHOOLS_DATA))
     ? window.DEFAULT_SCHOOLS_DATA
     : [];
@@ -369,16 +1098,21 @@ function getChatContext() {
 
   return {
     p,
+    injected,
+    studentName,
     top,
     results,
     province,
     grade,
     goal,
-    hobbies,
+    hobbies: hobbiesList,
     custom,
-    goals,
-    other,
+    goals: goal,
+    other: '',
     avg,
+    bestCombo,
+    hollandCode,
+    hollandTitle,
     scores,
     bestSubjects,
     lowestSubjects,
@@ -703,6 +1437,16 @@ function answer(q) {
   const s = normalizeQuery(raw);
   const c = getChatContext();
 
+  // =========================================================================
+  // CHỐT CHẶN AN TOÀN TÂM LÝ HỌC ĐƯỜNG (PSYCHOLOGICAL SAFETY GUARDRAIL)
+  // Ưu tiên tuyệt đối số 1: Bảo vệ an toàn tính mạng & Hỗ trợ khủng hoảng tâm lý
+  // =========================================================================
+  const crisisCheck = detectPsychologicalCrisis(raw, s);
+  if (crisisCheck.triggered) {
+    recordTopic('psychological_crisis_guardrail');
+    return generateCrisisSafetyResponse(crisisCheck);
+  }
+
   // 0. XỬ LÝ TRẢ LỜI TÌNH HUỐNG MÔ PHỎNG NGHỀ NGHIỆP (A, B, C)
   if (chatState.activeRoleplay) {
     const rawClean = raw.trim().toUpperCase();
@@ -743,19 +1487,19 @@ function answer(q) {
       `• Đừng tự gặm nhấm nỗi lo một mình: nếu bạn muốn lập thời gian biểu ôn tập cụ thể cho từng môn, hãy nói cho mình biết bạn đang lo lắng nhất ở môn nào nhé! 🫂💚`;
   }
 
-  // 1. CẢNH BÁO NGUY HIỂM / KHẨN CẤP
-  if (/tự tử|muốn chết|tự làm hại|tự hại|tự sát|kết thúc cuộc sống/.test(s)) {
-    return 'Mình rất lo lắng khi nghe bạn chia sẻ cảm xúc này. Hãy dừng lại một chút và hít thở thật sâu nhé. Bạn vô cùng quý giá và không hề đơn độc. Hãy liên hệ ngay với người thân, thầy cô hoặc gọi tổng đài bảo vệ trẻ em 111 (miễn phí) hoặc cơ sở y tế gần nhất để luôn có người bên cạnh lắng nghe và bảo vệ bạn nhé.';
-  }
-
   // 1.00 CHÀO HỎI & LÀM QUEN CÁ NHÂN HÓA
   if (/^(chào|xin chào|hello|hi|helo|alo|hai|chao|xin chao)\b/.test(s.trim())) {
     recordTopic('greeting');
-    const uName = (typeof getCurrentUser === 'function' && getCurrentUser()) || c.p?.info?.name || 'bạn';
-    const topStr = c.top ? ` Hiện tại theo hồ sơ, bạn đang có thế mạnh nổi trội với ngành **${c.top.name}**.` : '';
-    return `Chào **${uName}**! Rất vui được gặp bạn! 💚🌌\n\n` +
-      `Mình là **NS AI Assistant** – trợ lý thông minh đồng hành cùng bạn trên hành trình định hướng nghề nghiệp, tra cứu đại học và giải tỏa áp lực thi cử.${topStr}\n\n` +
-      `Hôm nay bạn đang có câu hỏi hay muốn tâm sự điều gì cùng mình không? Hãy gõ câu hỏi hoặc bấm 🎙️ để nói nhé!`;
+    const uName = (c.studentName && c.studentName !== 'bạn' && c.studentName !== 'Học sinh') ? c.studentName : 'bạn';
+    const summaryTraits = [];
+    if (c.bestCombo) summaryTraits.push(`Tổ hợp cao nhất **${c.bestCombo.code} (${c.bestCombo.score}đ)**`);
+    if (c.hollandCode) summaryTraits.push(`Mã Holland **${c.hollandCode}**`);
+    if (c.top) summaryTraits.push(`Ngành thế mạnh **${c.top.name}**`);
+    const traitStr = summaryTraits.length > 0 ? `\nHồ sơ năng lực của bạn đã được kết nối: ${summaryTraits.join(' · ')}.` : '';
+
+    return `Chào **${uName}**! Rất vui được đồng hành cùng bạn! 💚🌌\n\n` +
+      `Mình là **NS AI Assistant** – trợ lý cá nhân hóa về định hướng học đường và đồng hành tâm lý.${traitStr}\n\n` +
+      `Toàn bộ dữ liệu hồ sơ của bạn đã sẵn sàng và không cần nhập lại. Hôm nay bạn muốn mình hỗ trợ gì cho hành trình này? Hãy gõ câu hỏi hoặc bấm 🎙️ Micro để trò chuyện nhé!`;
   }
 
   // 1.0 MẤT ĐỘNG LỰC / HẾT ĐỘNG LỰC / TỤT MOOD / CHÁN HỌC / MÔNG LUNG (TƯ VẤN TÂM LÝ CHUYÊN SÂU)
@@ -1098,20 +1842,25 @@ function answer(q) {
   // 13. HỒ SƠ HỌC SINH
   if (/tôi là ai|thông tin của em|hồ sơ|profile|bạn biết gì về em|xem lại thông tin/.test(s)) {
     recordTopic('profile');
-    let scoreText = c.avg ? `${c.p.scoreCount} môn (Điểm TB: ${c.avg}/10)` : 'chưa nhập điểm';
+    let scoreText = c.bestCombo
+      ? `Tổ hợp cao nhất **${c.bestCombo.code} (${c.bestCombo.name}) - ${c.bestCombo.score}đ** (Điểm TB: ${c.avg || 'chưa có'}/10)`
+      : (c.avg ? `${(c.injected && c.injected.scoreCount) || c.p.scoreCount} môn (Điểm TB: ${c.avg}/10)` : 'chưa nhập điểm');
+    let hollandText = c.hollandCode
+      ? `• **Mã tính cách Holland (RIASEC):** **${c.hollandCode}**${c.hollandTitle ? ` (${c.hollandTitle})` : ''}\n`
+      : `• **Xu hướng tính cách:** ${c.p.personality || 'đang cập nhật'}.\n`;
     let imprintInfo = '';
     if (c.customAnswers && c.customAnswers.length) {
       imprintInfo = `• ✨ **Dấu ấn cá nhân (Phản xạ riêng của bạn):** Đã ghi nhận ${c.customAnswers.length} chia sẻ độc lập:\n` +
         c.customAnswers.map(ca => `  - *${ca.contextLabel || `Câu ${ca.questionNumber}`}:* "${ca.userAnswer}" (Quy đổi: ${ca.matchedGroup})`).join('\n') + '\n';
     }
-    return `📋 **Tóm tắt hồ sơ của bạn đang được mình ghi nhớ:**\n\n` +
-      `• **Học vấn:** ${c.grade}, tại ${c.province}\n` +
-      `• **Mục tiêu tương lai:** ${c.goal}\n` +
-      `• **Điểm học tập:** Đã nhập ${scoreText}\n` +
+    return `📋 **Tóm tắt hồ sơ của bạn đang được NS AI ghi nhớ:**\n\n` +
+      `• **Học sinh:** **${(c.studentName && c.studentName !== 'bạn') ? c.studentName : 'Bạn'}** (${c.grade}, tại ${c.province})\n` +
+      `• **Định hướng mục tiêu:** ${c.goal}\n` +
+      `• **Năng lực học tập:** ${scoreText}\n` +
+      hollandText +
       `• **Sở thích:** ${c.hobbies}${c.custom}\n` +
-      `• **Xu hướng tính cách:** ${c.p.personality}.\n` +
       imprintInfo + `\n` +
-      `Bạn có muốn mình phân tích sâu hơn về mục nào trong hồ sơ không?`;
+      `Toàn bộ dữ liệu này được tự động kết nối từ hồ sơ của bạn và không cần nhập lại. Bạn có muốn mình phân tích sâu hơn về khía cạnh nào không?`;
   }
 
   // 13.1 DẤU ẤN CÁ NHÂN & PHẢN XẠ TỰ LUẬN ĐÁP ÁN E
@@ -1561,9 +2310,34 @@ function setCurrentChatId(id) {
 function getStudentGreetingName() {
   let name = '';
   try {
-    const info = typeof read === 'function' ? read('info') : null;
-    if (info && info.name && info.name.trim()) {
-      name = info.name.trim();
+    if (chatState.injectedProfile && chatState.injectedProfile.name) {
+      name = chatState.injectedProfile.name;
+    }
+    if (!name) {
+      const rawStudent = localStorage.getItem('ns_student_info');
+      if (rawStudent) {
+        try {
+          const parsed = JSON.parse(rawStudent);
+          if (parsed && (parsed.name || parsed.studentName)) name = (parsed.name || parsed.studentName).trim();
+        } catch (e) {
+          if (typeof rawStudent === 'string' && rawStudent.trim()) name = rawStudent.trim();
+        }
+      }
+    }
+    if (!name) {
+      const rawProfile = localStorage.getItem('ns_profile');
+      if (rawProfile) {
+        try {
+          const parsed = JSON.parse(rawProfile);
+          if (parsed && (parsed.name || parsed.studentName)) name = (parsed.name || parsed.studentName).trim();
+        } catch (e) {}
+      }
+    }
+    if (!name) {
+      const info = typeof read === 'function' ? read('info') : null;
+      if (info && info.name && info.name.trim()) {
+        name = info.name.trim();
+      }
     }
     if (!name) {
       const rawInfo = localStorage.getItem('ns_info') || localStorage.getItem('info');
@@ -1577,13 +2351,125 @@ function getStudentGreetingName() {
       if (curUser && typeof curUser === 'string' && curUser.trim()) name = curUser.trim();
     }
   } catch (e) {}
-  return name || 'bạn';
+  return (name && name !== 'bạn' && name !== 'Học sinh') ? name : 'bạn';
 }
 
 function getInitialGreetingMessage() {
-  const name = getStudentGreetingName();
-  const salutation = name !== 'bạn' ? `Chào ${name}!` : 'Chào bạn!';
-  return `${salutation} Mình là NS AI – trợ lý định hướng và tư vấn tâm lý học đường. Mình luôn ở đây để lắng nghe bạn tâm sự về áp lực thi cử, chuyện gia đình, những ngày mệt mỏi hay băn khoăn về chọn ngành, chọn trường. Bạn có thể gõ phím hoặc bấm nút 🎙️ Micro để tâm sự trực tiếp bằng giọng nói nhé! 💚🌌`;
+  const profile = (chatState.injectedProfile) || loadInjectedUserProfile();
+
+  let name = '';
+  // 1. ns_info (fullName hoặc name)
+  try {
+    const rawInfo = localStorage.getItem('ns_info') || localStorage.getItem('ns_student_info');
+    if (rawInfo) {
+      const parsed = JSON.parse(rawInfo);
+      if (parsed && (parsed.fullName || parsed.name)) {
+        name = (parsed.fullName || parsed.name).trim();
+      }
+    }
+  } catch (e) {}
+
+  // 2. ns_current_user (username)
+  if (!name) {
+    try {
+      const rawUser = localStorage.getItem('ns_current_user');
+      if (rawUser) {
+        try {
+          const parsed = JSON.parse(rawUser);
+          if (parsed && parsed.username) name = parsed.username.trim();
+        } catch (e) {
+          if (typeof rawUser === 'string' && rawUser.trim()) name = rawUser.trim();
+        }
+      }
+    } catch (e) {}
+  }
+
+  if (!name && profile.name) name = profile.name;
+  if (!name || name === 'Học sinh' || name === 'guest') name = 'bạn';
+
+  // Tổ hợp điểm thế mạnh nhất
+  let comboStr = 'A00 (24.0đ)';
+  if (profile.bestCombo && profile.bestCombo.code) {
+    comboStr = `${profile.bestCombo.code} (${profile.bestCombo.score}đ)`;
+  } else {
+    try {
+      const conv = JSON.parse(localStorage.getItem('ns_converted_score'));
+      if (conv && conv.combo) {
+        comboStr = `${conv.combo} (${conv.totalScore || conv.finalScore || '24.0'}đ)`;
+      }
+    } catch (e) {}
+  }
+
+  // Mã Holland 3 chữ cái
+  let hollandCode = 'RIA';
+  if (profile.hollandCode) {
+    hollandCode = profile.hollandCode;
+  } else {
+    try {
+      const mType = localStorage.getItem('ns_mbtiType');
+      if (mType && typeof mType === 'string' && mType.trim()) {
+        hollandCode = mType.trim().toUpperCase();
+      } else {
+        const mData = JSON.parse(localStorage.getItem('ns_mbtiData'));
+        if (mData && mData.riasec && mData.riasec.topCode) {
+          hollandCode = mData.riasec.topCode;
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Mục tiêu ngành/trường/du học
+  let targetStr = 'các trường Đại học khối Kỹ thuật & Công nghệ';
+  if (profile.goals) {
+    const g = profile.goals;
+    if (g.isStudyAbroad) {
+      const c = g.studyAbroadCountry ? ` tại ${g.studyAbroadCountry}` : '';
+      const m = g.dreamMajor ? ` ngành ${g.dreamMajor}` : '';
+      targetStr = `du học quốc tế${c}${m}`;
+    } else {
+      const m = g.dreamMajor ? `ngành ${g.dreamMajor}` : '';
+      const s = g.dreamSchool ? ` tại ${g.dreamSchool}` : '';
+      if (m || s) targetStr = [m, s].filter(Boolean).join('');
+    }
+  } else {
+    try {
+      const gRaw = JSON.parse(localStorage.getItem('ns_goals'));
+      if (gRaw) {
+        if (gRaw.studyAbroad === 'Có' || (gRaw.studyAbroadDetail && gRaw.studyAbroadDetail.enabled)) {
+          const c = gRaw.studyAbroadDetail && gRaw.studyAbroadDetail.country ? ` tại ${gRaw.studyAbroadDetail.country}` : '';
+          const m = gRaw.dreamMajor ? ` ngành ${gRaw.dreamMajor}` : '';
+          targetStr = `du học quốc tế${c}${m}`;
+        } else {
+          const m = gRaw.dreamMajor ? `ngành ${gRaw.dreamMajor}` : '';
+          const s = gRaw.dreamSchool ? ` tại ${gRaw.dreamSchool}` : '';
+          if (m || s) targetStr = [m, s].filter(Boolean).join('');
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Sở thích hàng đầu
+  let hobbyText = '';
+  if (profile.interests && profile.interests.length > 0) {
+    hobbyText = profile.interests.slice(0, 3).join(', ');
+  }
+
+  const traits = [];
+  traits.push(`• 📊 **Thế mạnh tổ hợp:** ${comboStr}`);
+  traits.push(`• 🧭 **Mã tính cách Holland (RIASEC):** [${hollandCode}]${profile.hollandTitle ? ` (${profile.hollandTitle})` : ''}`);
+  if (hobbyText) {
+    traits.push(`• ❤️ **Sở thích nổi bật:** ${hobbyText}`);
+  }
+  traits.push(`• 🎯 **Nguyện vọng hiện tại:** ${targetStr}`);
+  if (profile.topCareer) {
+    traits.push(`• 🌟 **Gợi ý nghề nghiệp phù hợp nhất:** ${profile.topCareer}`);
+  }
+
+  return `Xin chào **${name}**! Mình là Trợ lý NS AI. Mình đã nắm được hồ sơ năng lực của bạn với thế mạnh tổ hợp **${comboStr}** và mã tính cách Holland **[${hollandCode}]**. Hiện bạn đang quan tâm đến **${targetStr}**.\n\n` +
+    `📋 **Tóm tắt hồ sơ năng lực đã liên thông:**\n` +
+    `${traits.join('\n')}\n\n` +
+    `Bạn cần mình tư vấn chiến lược xét tuyển, giải tỏa áp lực thi cử hay định hướng gì hôm nay? 💚`;
+}
 }
 
 function initChatHistory() {
@@ -1618,7 +2504,7 @@ function initChatHistory() {
     if (box) {
       box.innerHTML = `
         <div class="msg bot">
-          ${getInitialGreetingMessage()}
+          ${formatMsg(getInitialGreetingMessage())}
           <div class="msg-tools">
             <button type="button" class="btn-read-msg" title="Đọc bằng giọng nói" onclick="speakMessage(this)">🔊 Nghe đọc</button>
           </div>
@@ -1638,14 +2524,14 @@ function loadSessionMessages(session) {
 
   if (msgs.length === 0) {
     addMsg(getInitialGreetingMessage(), 'bot');
+  } else if (msgs.length === 1 && msgs[0].who === 'bot' && (msgs[0].text.includes('Chào bạn!') || msgs[0].text.includes('Mình là NS AI'))) {
+    // Nếu phiên chat chỉ có duy nhất 1 câu chào ban đầu, cập nhật theo hồ sơ người dùng mới nhất!
+    const proactiveGreeting = getInitialGreetingMessage();
+    msgs[0].text = proactiveGreeting;
+    addMsg(proactiveGreeting, 'bot');
   } else {
-    const sName = getStudentGreetingName();
-    msgs.forEach((m, idx) => {
-      let text = m.text;
-      if (idx === 0 && m.who === 'bot' && sName !== 'bạn' && text.includes('Chào bạn!')) {
-        text = text.replace(/Chào bạn!/g, `Chào ${sName}!`);
-      }
-      addMsg(text, m.who);
+    msgs.forEach((m) => {
+      addMsg(m.text, m.who);
     });
   }
 
@@ -1722,8 +2608,6 @@ function switchChatSession(id) {
 function createNewChatSession() {
   const sessions = getChatSessions();
   const newId = 'conv_' + Date.now();
-  const greetingName = getStudentGreetingName();
-  const salutation = greetingName !== 'bạn' ? `Chào ${greetingName}!` : 'Chào bạn!';
   const newSession = {
     id: newId,
     title: 'Đoạn chat mới',
@@ -1732,7 +2616,7 @@ function createNewChatSession() {
     messages: [
       {
         who: 'bot',
-        text: `${salutation} Mình là NS AI – trợ lý định hướng và tư vấn tâm lý học đường. Hôm nay bạn đang có điều gì muốn chia sẻ hoặc câu hỏi nào cần mình hỗ trợ không? 💚🌌`
+        text: getInitialGreetingMessage()
       }
     ]
   };
@@ -2019,6 +2903,7 @@ function checkUrlPrompt() {
 }
 
 function initAllChatbot() {
+  injectUserProfileIntoChatState();
   checkWebSpeechSupport();
   initChatInput();
   initChatHistory();

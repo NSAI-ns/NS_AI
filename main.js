@@ -1,4 +1,31 @@
 
+/**
+ * Khử lỗi số an toàn: ngăn chặn triệt để NaN, undefined, null, chuỗi rỗng
+ */
+function safeNumber(val, fallback = 0) {
+  if (val === null || val === undefined || val === '') return fallback;
+  const num = Number(val);
+  return isNaN(num) ? fallback : num;
+}
+
+/**
+ * Khử lỗi chuỗi an toàn: ngăn chặn undefined, null, object lỗi
+ */
+function safeString(val, fallback = '') {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val === 'string') return val.trim();
+  try {
+    return String(val).trim();
+  } catch (e) {
+    return fallback;
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.safeNumber = safeNumber;
+  window.safeString = safeString;
+}
+
 const NS_PREFIX = 'ns_';
 const UNIFIED_PROFILE_KEY = 'ns_ai_user_profile';
 const ALT_PROFILE_KEY = 'ns_test_user_profile';
@@ -506,15 +533,19 @@ function initMouseSpotlight() {
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
+    loadSharedProfileIfPresent();
     renderAuthTopbar();
     updateStepGateNavUI();
     renderIndexProgressBar();
+    updateHomeShareButtonState();
     initMouseSpotlight();
   });
 } else {
+  loadSharedProfileIfPresent();
   renderAuthTopbar();
   updateStepGateNavUI();
   renderIndexProgressBar();
+  updateHomeShareButtonState();
   initMouseSpotlight();
 }
 
@@ -876,8 +907,45 @@ function renderIndexProgressBar() {
   if (pct === 0) note = 'Hãy bắt đầu với Bước 1: Nhập thông tin cơ bản';
   else if (pct < 60) note = 'Bạn đã hoàn thành ' + completed + '/5 bước. Tiếp tục nhé!';
   else if (pct < 100) note = 'Gần xong rồi! Hoàn thành ' + (5 - completed) + ' bước còn lại để xem kết quả đầy đủ.';
-  else note = '🎉 Hoàn thành! Xem kết quả phân tích từ NS AI ngay.';
-  if (noteEl) noteEl.textContent = note;
+  else {
+    note = '🎉 Chúc mừng bạn đã hoàn tất 5/5 bước! ' +
+      '<div style="margin-top: 10px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">' +
+      '<button type="button" onclick="generateShareableUrl()" style="background: linear-gradient(135deg, #0284c7, #6366f1); color: #fff; border: 1px solid rgba(56, 189, 248, 0.5); padding: 7px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);">🔗 Tạo link chia sẻ kết quả</button>' +
+      '<a href="ketqua.html" style="background: linear-gradient(135deg, #059669, #10b981); color: #fff; text-decoration: none; padding: 7px 18px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);">🚀 Xem kết quả phân tích →</a>' +
+      '</div>';
+  }
+  if (noteEl) noteEl.innerHTML = note;
+
+  // Cập nhật trạng thái nút chia sẻ trên toolbar trang chủ
+  updateHomeShareButtonState();
+}
+
+/**
+ * Cập nhật trạng thái nút tạo link chia sẻ trên thanh công cụ trang chủ index.html
+ */
+function updateHomeShareButtonState() {
+  const btn = document.getElementById('homeShareBtn');
+  if (!btn) return;
+
+  const status = typeof getStepGateStatus === 'function' ? getStepGateStatus() : { isMinRequired: false, isAllCompleted: false, completedCount: 0 };
+
+  if (!status.isMinRequired || status.completedCount < 3) {
+    btn.innerHTML = '🔒 Tạo link kết quả';
+    btn.title = `Chưa hoàn thành đủ bước: Cần tối thiểu 3 bước (1, 2, 4) để tạo link chia sẻ kết quả. Hiện bạn mới hoàn thành ${status.completedCount}/5 bước. Bấm để xem hướng dẫn.`;
+    btn.style.opacity = '0.65';
+    btn.style.background = 'rgba(255, 255, 255, 0.08)';
+    btn.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+    btn.style.boxShadow = 'none';
+  } else {
+    btn.innerHTML = '🔗 Tạo link chia sẻ kết quả';
+    btn.title = status.isAllCompleted
+      ? 'Đã hoàn tất trọn vẹn 5/5 bước - Bấm để tạo link chia sẻ kết quả đầy đủ!'
+      : `Đã hoàn thành ${status.completedCount}/5 bước - Bấm để tạo link chia sẻ kết quả`;
+    btn.style.opacity = '1';
+    btn.style.background = 'linear-gradient(135deg, #0284c7, #6366f1)';
+    btn.style.borderColor = 'rgba(56, 189, 248, 0.6)';
+    btn.style.boxShadow = '0 4px 16px rgba(14, 165, 233, 0.4)';
+  }
 }
 
 // Tự động dọn dẹp dữ liệu trắc nghiệm tính cách không hợp lệ (ví dụ: mảng chữ cái demo cũ)
@@ -1179,6 +1247,9 @@ function initMainComponents() {
   renderAuthTopbar();
   initCollapsibleTopbar();
   renderOrientationStepper();
+  if (typeof initIndexSharedProfileBanner === 'function') {
+    initIndexSharedProfileBanner();
+  }
 }
 
 try {
@@ -1695,14 +1766,15 @@ function keywordHit(haystackNorm, keywordRaw) {
   return hay.indexOf(kw) !== -1;
 }
 
-function analyzeCareer(overrideScores = null) {
-  const info = typeof read === 'function' ? (read('info') || {}) : {};
-  const scores = (overrideScores && typeof overrideScores === 'object') ? overrideScores : (typeof read === 'function' ? (read('scores') || {}) : {});
-  const hobbies = typeof read === 'function' ? (read('hobbies') || { selected: [], custom: '' }) : { selected: [], custom: '' };
-  const answers = typeof read === 'function' ? (read('personalityAnswers') || []) : [];
-  const customAnswers = typeof read === 'function' ? (read('personalityCustomAnswers') || {}) : {};
-  const selfReflect = typeof read === 'function' ? (read('personalitySelfReflect') || { strengths: '', idealEnv: '', vision: '' }) : { strengths: '', idealEnv: '', vision: '' };
-  const goals = typeof read === 'function' ? (read('goals') || { selected: [], other: '' }) : { selected: [], other: '' };
+function analyzeCareer(overrideScores = null, overrideProfile = null) {
+  const profileToUse = overrideProfile || (typeof window !== 'undefined' ? window._currentSharedProfile : null) || null;
+  const info = (profileToUse && profileToUse.info) ? profileToUse.info : (typeof read === 'function' ? (read('info') || {}) : {});
+  const scores = (overrideScores && typeof overrideScores === 'object') ? overrideScores : ((profileToUse && profileToUse.scores) ? profileToUse.scores : (typeof read === 'function' ? (read('scores') || {}) : {}));
+  const hobbies = (profileToUse && (profileToUse.hobbies || profileToUse.interests)) ? (profileToUse.hobbies || { selected: profileToUse.interests || [], custom: profileToUse.customInterests || '' }) : (typeof read === 'function' ? (read('hobbies') || { selected: [], custom: '' }) : { selected: [], custom: '' });
+  const answers = (profileToUse && profileToUse.personalityAnswers) ? profileToUse.personalityAnswers : (typeof read === 'function' ? (read('personalityAnswers') || []) : []);
+  const customAnswers = (profileToUse && (profileToUse.personalityCustomAnswers || profileToUse.customPersonalityAnswers)) ? (profileToUse.personalityCustomAnswers || profileToUse.customPersonalityAnswers) : (typeof read === 'function' ? (read('personalityCustomAnswers') || {}) : {});
+  const selfReflect = (profileToUse && profileToUse.selfReflect) ? profileToUse.selfReflect : (typeof read === 'function' ? (read('personalitySelfReflect') || { strengths: '', idealEnv: '', vision: '' }) : { strengths: '', idealEnv: '', vision: '' });
+  const goals = (profileToUse && profileToUse.goals) ? profileToUse.goals : (typeof read === 'function' ? (read('goals') || { selected: [], other: '' }) : { selected: [], other: '' });
 
   const vals = Object.values(scores).filter(v => v !== '' && v != null && !isNaN(v)).map(Number);
   const generalAvg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
@@ -2344,5 +2416,801 @@ function importProfile(event) {
 if (typeof window !== 'undefined') {
   window.exportProfile = exportProfile;
   window.importProfile = importProfile;
+}
+
+// ==========================================================================
+// HỆ THỐNG CHIA SẺ HỒ SƠ ĐỊNH HƯỚNG BẰNG LIÊN KẾT (PORTABLE PROFILE URL)
+// ==========================================================================
+(function initNSShareProfileModule() {
+  function safeUtf8ToBase64(str) {
+    if (typeof str !== 'string') return '';
+    try {
+      if (typeof TextEncoder !== 'undefined' && typeof btoa === 'function') {
+        const bytes = new TextEncoder().encode(str);
+        let binary = '';
+        const len = bytes.length;
+        for (let i = 0; i < len; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+      }
+    } catch (e) {}
+    try {
+      return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+        return String.fromCharCode(parseInt(p1, 16));
+      }));
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function safeBase64ToUtf8(b64) {
+    if (!b64 || typeof b64 !== 'string') return null;
+    try {
+      let str = b64.trim().replace(/-/g, '+').replace(/_/g, '/');
+      str = str.replace(/ /g, '+');
+      while (str.length % 4 !== 0) {
+        str += '=';
+      }
+      if (typeof atob === 'function') {
+        const binary = atob(str);
+        try {
+          if (typeof TextDecoder !== 'undefined' && typeof Uint8Array !== 'undefined') {
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+              bytes[i] = binary.charCodeAt(i);
+            }
+            return new TextDecoder('utf-8').decode(bytes);
+          }
+        } catch (e) {}
+        return decodeURIComponent(Array.prototype.map.call(binary, function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function getProfileData() {
+    const info = (typeof read === 'function' ? read('info') : null) || {};
+    let candidateName = '';
+    if (info.name && info.name.trim()) candidateName = info.name.trim();
+    else if (info.studentName && info.studentName.trim()) candidateName = info.studentName.trim();
+    else if (typeof getCurrentUser === 'function') {
+      const cu = getCurrentUser();
+      if (cu && cu !== 'Học sinh') candidateName = cu;
+    }
+    if (!candidateName) candidateName = 'Học sinh';
+
+    const scores = (typeof read === 'function' ? read('scores') : null) || {};
+    const hobbies = (typeof read === 'function' ? read('hobbies') : null) || { selected: [], custom: '' };
+    const answers = (typeof read === 'function' ? read('personalityAnswers') : null) || [];
+    const customPersonalityAnswers = (typeof read === 'function' ? (read('personalityCustomAnswers') || read('customPersonalityAnswers')) : null) || {};
+    const selfReflect = (typeof read === 'function' ? read('personalitySelfReflect') : null) || { strengths: '', idealEnv: '', vision: '' };
+    const goals = (typeof read === 'function' ? read('goals') : null) || { selected: [], admissionMethods: [], other: '' };
+
+    let hollandCode = typeof read === 'function' ? read('riasecTopCode') : null;
+    let mbtiType = typeof read === 'function' ? read('mbtiType') : null;
+    let riasecScores = typeof read === 'function' ? read('riasecScores') : null;
+
+    if (typeof computeMBTI === 'function' && Array.isArray(answers) && answers.length > 0) {
+      try {
+        const computed = computeMBTI(answers);
+        if (computed) {
+          if (!mbtiType && computed.type) mbtiType = computed.type;
+          if (computed.riasec) {
+            if (!hollandCode && computed.riasec.topCode) hollandCode = computed.riasec.topCode;
+            if (!riasecScores && computed.riasec.scores) riasecScores = computed.riasec.scores;
+          }
+        }
+      } catch (e) {}
+    }
+
+    return {
+      version: '1.0',
+      name: candidateName,
+      province: info.province || '',
+      grade: info.grade || '',
+      info: {
+        name: candidateName,
+        province: info.province || '',
+        grade: info.grade || ''
+      },
+      scores: scores,
+      hollandCode: hollandCode || 'RIA',
+      holland: hollandCode || 'RIA',
+      riasecTopCode: hollandCode || 'RIA',
+      riasecScores: riasecScores || null,
+      mbtiType: mbtiType || null,
+      mbti: mbtiType || null,
+      interests: hobbies.selected || [],
+      customInterests: hobbies.custom || '',
+      hobbies: hobbies,
+      goals: goals,
+      personalityAnswers: answers,
+      personalityCustomAnswers: customPersonalityAnswers,
+      selfReflect: selfReflect,
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  function encode(data) {
+    try {
+      const payload = (data && typeof data === 'object') ? data : getProfileData();
+      const jsonStr = JSON.stringify(payload);
+      return safeUtf8ToBase64(jsonStr);
+    } catch (err) {
+      console.error('NS_ShareProfile.encode lỗi:', err);
+      return '';
+    }
+  }
+
+  function decode(hashOrQuery) {
+    try {
+      let target = hashOrQuery;
+      if (!target && typeof window !== 'undefined' && window.location) {
+        target = window.location.search || window.location.hash || window.location.href;
+      }
+      if (typeof target !== 'string') return null;
+
+      let b64 = '';
+      const match = target.match(/[?&#]?share=([^&#]+)/);
+      if (match && match[1]) {
+        b64 = match[1];
+      } else if (!target.includes('?') && !target.includes('&') && !target.includes('://')) {
+        // Raw base64 string directly (may contain padding '=' or safe '-' '_')
+        b64 = target;
+      } else {
+        try {
+          const qIdx = target.indexOf('?');
+          const search = qIdx !== -1 ? target.substring(qIdx) : target;
+          const params = new URLSearchParams(search);
+          if (params.has('share')) {
+            b64 = params.get('share');
+          }
+        } catch (e) {}
+      }
+
+      if (!b64) return null;
+
+      try {
+        b64 = decodeURIComponent(b64);
+      } catch (e) {}
+
+      const jsonStr = safeBase64ToUtf8(b64);
+      if (!jsonStr) return null;
+
+      const obj = JSON.parse(jsonStr);
+      if (obj && typeof obj === 'object') {
+        return obj;
+      }
+      return null;
+    } catch (err) {
+      console.warn('NS_ShareProfile.decode lỗi:', err);
+      return null;
+    }
+  }
+
+  function buildShareUrl(targetPage = 'ketqua.html', customData = null) {
+    const encoded = encode(customData);
+    if (!encoded) return '';
+    try {
+      if (typeof window !== 'undefined' && window.location) {
+        const href = window.location.href.split('?')[0].split('#')[0];
+        const lastSlash = href.lastIndexOf('/');
+        const baseDir = lastSlash !== -1 ? href.substring(0, lastSlash + 1) : href;
+        const url = new URL(targetPage, baseDir);
+        url.searchParams.set('share', encoded);
+        return url.href;
+      }
+    } catch (e) {}
+    return `${targetPage}?share=${encodeURIComponent(encoded)}`;
+  }
+
+  function importProfile(profileData) {
+    if (!profileData || typeof profileData !== 'object') return false;
+    try {
+      const name = profileData.name || (profileData.info && profileData.info.name) || 'Học sinh';
+      const info = profileData.info || {
+        name: name,
+        province: profileData.province || '',
+        grade: profileData.grade || ''
+      };
+      if (typeof save === 'function') {
+        save('info', info);
+      } else {
+        localStorage.setItem(NS_PREFIX + 'info', JSON.stringify(info));
+      }
+
+      let userObj = {
+        username: name,
+        role: 'guest',
+        isGuest: false,
+        updatedAt: new Date().toISOString()
+      };
+      localStorage.setItem('ns_current_user', JSON.stringify(userObj));
+
+      if (profileData.scores && typeof profileData.scores === 'object') {
+        if (typeof save === 'function') save('scores', profileData.scores);
+        else localStorage.setItem(NS_PREFIX + 'scores', JSON.stringify(profileData.scores));
+      }
+
+      if (profileData.hobbies || profileData.interests) {
+        const h = profileData.hobbies || {
+          selected: Array.isArray(profileData.interests) ? profileData.interests : [],
+          custom: profileData.customInterests || ''
+        };
+        if (typeof save === 'function') save('hobbies', h);
+        else localStorage.setItem(NS_PREFIX + 'hobbies', JSON.stringify(h));
+      }
+
+      if (profileData.goals && typeof profileData.goals === 'object') {
+        if (typeof save === 'function') save('goals', profileData.goals);
+        else localStorage.setItem(NS_PREFIX + 'goals', JSON.stringify(profileData.goals));
+      }
+
+      if (Array.isArray(profileData.personalityAnswers)) {
+        if (typeof save === 'function') save('personalityAnswers', profileData.personalityAnswers);
+        else localStorage.setItem(NS_PREFIX + 'personalityAnswers', JSON.stringify(profileData.personalityAnswers));
+      }
+
+      if (profileData.personalityCustomAnswers) {
+        if (typeof save === 'function') save('personalityCustomAnswers', profileData.personalityCustomAnswers);
+        else localStorage.setItem(NS_PREFIX + 'personalityCustomAnswers', JSON.stringify(profileData.personalityCustomAnswers));
+      }
+
+      if (profileData.selfReflect) {
+        if (typeof save === 'function') save('personalitySelfReflect', profileData.selfReflect);
+        else localStorage.setItem(NS_PREFIX + 'personalitySelfReflect', JSON.stringify(profileData.selfReflect));
+      }
+
+      if (profileData.mbtiType) {
+        if (typeof save === 'function') save('mbtiType', profileData.mbtiType);
+        else localStorage.setItem(NS_PREFIX + 'mbtiType', JSON.stringify(profileData.mbtiType));
+      }
+
+      if (profileData.riasecScores) {
+        if (typeof save === 'function') save('riasecScores', profileData.riasecScores);
+        else localStorage.setItem(NS_PREFIX + 'riasecScores', JSON.stringify(profileData.riasecScores));
+      }
+
+      const holland = profileData.hollandCode || profileData.holland || profileData.riasecTopCode;
+      if (holland) {
+        if (typeof save === 'function') save('riasecTopCode', holland);
+        else localStorage.setItem(NS_PREFIX + 'riasecTopCode', JSON.stringify(holland));
+      }
+
+      if (typeof syncUnifiedProfile === 'function') {
+        syncUnifiedProfile();
+      }
+
+      return true;
+    } catch (err) {
+      console.error('NS_ShareProfile.importProfile lỗi:', err);
+      return false;
+    }
+  }
+
+  window.NS_ShareProfile = {
+    encode: encode,
+    decode: decode,
+    getProfileData: getProfileData,
+    buildShareUrl: buildShareUrl,
+    importProfile: importProfile,
+    safeUtf8ToBase64: safeUtf8ToBase64,
+    safeBase64ToUtf8: safeBase64ToUtf8
+  };
+})();
+
+// ==========================================================================
+// MODAL VÀ BANNER CHIA SẺ HỒ SƠ URL (SHARE MODAL & BANNER UI)
+// ==========================================================================
+
+function ensureShareProfileStyles() {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById('nsShareProfileStyles')) return;
+  const style = document.createElement('style');
+  style.id = 'nsShareProfileStyles';
+  style.textContent = `
+    .ns-share-modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(3, 7, 18, 0.78);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      z-index: 99999;
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+      animation: nsShareFadeIn 0.22s ease-out;
+    }
+    .ns-share-modal-card {
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(167, 139, 250, 0.4);
+      border-radius: 20px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 40px rgba(124, 58, 237, 0.18);
+      max-width: 620px; width: 100%;
+      padding: 24px 26px; color: #f1f5f9; box-sizing: border-box;
+      position: relative; max-height: 90vh; overflow-y: auto;
+      animation: nsShareScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes nsShareFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes nsShareScaleIn { from { opacity: 0; transform: scale(0.96) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .ns-share-url-box {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px; padding: 6px 8px; margin-top: 6px;
+    }
+    .ns-share-url-input {
+      flex: 1; background: transparent; border: none;
+      color: #e2e8f0; font-size: 13px; font-family: monospace;
+      outline: none; padding: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .ns-share-btn-copy {
+      background: rgba(99, 102, 241, 0.25);
+      border: 1px solid rgba(129, 140, 248, 0.4);
+      color: #c7d2fe; padding: 6px 12px; border-radius: 6px;
+      font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .ns-share-btn-copy:hover {
+      background: rgba(99, 102, 241, 0.45); color: #fff;
+    }
+    .ns-share-btn-open {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #cbd5e1; padding: 6px 10px; border-radius: 6px;
+      font-size: 12.5px; text-decoration: none; white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .ns-share-btn-open:hover {
+      background: rgba(255, 255, 255, 0.18); color: #fff;
+    }
+    .ns-share-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 6px;
+      font-size: 12px; font-weight: 600; background: rgba(99, 102, 241, 0.18);
+      color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function openShareProfileModal() {
+  ensureShareProfileStyles();
+  const profile = (window.NS_ShareProfile && window.NS_ShareProfile.getProfileData)
+    ? window.NS_ShareProfile.getProfileData()
+    : { name: 'Học sinh' };
+
+  const ketquaUrl = window.NS_ShareProfile.buildShareUrl('ketqua.html', profile);
+  const indexUrl = window.NS_ShareProfile.buildShareUrl('index.html', profile);
+
+  // Sao chép tự động link kết quả vào clipboard
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ketquaUrl).then(() => {
+      if (typeof showToast === 'function') {
+        showToast('📋 Đã tạo & sao chép link chia sẻ vào bộ nhớ tạm!', 'success');
+      }
+    }).catch(() => {});
+  }
+
+  // Tóm tắt thông tin hồ sơ
+  const scoreKeys = profile.scores ? Object.keys(profile.scores).filter(k => profile.scores[k] !== '' && profile.scores[k] != null) : [];
+  const scoreSummary = scoreKeys.length
+    ? `${scoreKeys.length} môn học (${scoreKeys.map(k => `${k}: ${profile.scores[k]}`).slice(0, 3).join(', ')}${scoreKeys.length > 3 ? '...' : ''})`
+    : 'Chưa nhập điểm số';
+
+  const hollandSummary = profile.hollandCode
+    ? `Mã Holland: <strong>${escapeHtml(profile.hollandCode)}</strong>${profile.mbtiType ? ` • MBTI: <strong>${escapeHtml(profile.mbtiType)}</strong>` : ''}`
+    : 'Chưa làm trắc nghiệm tính cách';
+
+  const selectedHobbies = (profile.hobbies && profile.hobbies.selected) || profile.interests || [];
+  const hobbiesSummary = selectedHobbies.length
+    ? `${selectedHobbies.slice(0, 2).join(', ')}${selectedHobbies.length > 2 ? '...' : ''}`
+    : (profile.customInterests || 'Chưa chọn sở thích');
+
+  const goalSummary = (profile.goals && (profile.goals.dreamMajor || profile.goals.dreamCareer || (profile.goals.selected && profile.goals.selected[0])))
+    || 'Chưa đặt mục tiêu';
+
+  let modalEl = document.getElementById('nsShareProfileModal');
+  if (modalEl) modalEl.remove();
+
+  modalEl = document.createElement('div');
+  modalEl.id = 'nsShareProfileModal';
+  modalEl.className = 'ns-share-modal-backdrop';
+  modalEl.innerHTML = `
+    <div class="ns-share-modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px;">
+        <div>
+          <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: #a78bfa; font-weight: 700;">
+            <span>🔗</span> URL Portable Profile
+          </div>
+          <h2 style="font-size: 1.25rem; font-weight: 800; margin: 4px 0 0; color: #fff;">Tạo link chia sẻ nhanh kết quả</h2>
+        </div>
+        <button type="button" onclick="closeShareProfileModal()" style="background: none; border: none; font-size: 22px; color: #94a3b8; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 6px;" title="Đóng modal">✕</button>
+      </div>
+
+      <p style="font-size: 13.5px; color: #cbd5e1; margin: 0 0 16px; line-height: 1.5;">
+        Dữ liệu hồ sơ của bạn được mã hóa an toàn chuẩn <strong>UTF-8 Base64</strong> trực tiếp trong đường link. Người nhận có thể mở xem trực tiếp mà không cần đăng nhập hay phụ thuộc máy chủ.
+      </p>
+
+      <!-- PREVIEW CARD -->
+      <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 12px 16px; margin-bottom: 18px; font-size: 13px; line-height: 1.6;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
+          <span style="font-weight: 700; color: #38bdf8;">👤 ${escapeHtml(profile.name || 'Học sinh')}</span>
+          <span class="ns-share-badge">${profile.grade ? `Lớp ${escapeHtml(profile.grade)}` : ''} ${profile.province ? `• ${escapeHtml(profile.province)}` : 'Hồ sơ THPT'}</span>
+        </div>
+        <div>📊 <strong>Điểm số:</strong> ${escapeHtml(scoreSummary)}</div>
+        <div>🧠 <strong>Tính cách:</strong> ${hollandSummary}</div>
+        <div>❤️ <strong>Sở thích:</strong> ${escapeHtml(hobbiesSummary)}</div>
+        <div>🎯 <strong>Mục tiêu:</strong> ${escapeHtml(goalSummary)}</div>
+      </div>
+
+      <!-- LINK 1: KETQUA.HTML -->
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 13px; font-weight: 700; color: #a5b4fc; display: flex; align-items: center; justify-content: space-between;">
+          <span>🎯 Link xem Kết quả phân tích &amp; Gợi ý trường (Khuyên dùng)</span>
+          <span style="font-size: 11px; color: #10b981; font-weight: 600;">✨ Tối ưu gửi cho người xem</span>
+        </label>
+        <div class="ns-share-url-box">
+          <input type="text" readonly value="${escapeHtml(ketquaUrl)}" id="shareUrlKetQuaInput" class="ns-share-url-input" onclick="this.select()" />
+          <button type="button" class="ns-share-btn-copy" onclick="copyShareLinkInput('shareUrlKetQuaInput')">📋 Sao chép</button>
+          <a href="${escapeHtml(ketquaUrl)}" target="_blank" class="ns-share-btn-open" title="Mở trong tab mới">↗ Mở thử</a>
+        </div>
+      </div>
+
+      <!-- LINK 2: INDEX.HTML -->
+      <div style="margin-bottom: 20px;">
+        <label style="font-size: 13px; font-weight: 700; color: #94a3b8; display: block;">
+          🏠 Link xem Tổng quan hồ sơ tại Trang chủ
+        </label>
+        <div class="ns-share-url-box">
+          <input type="text" readonly value="${escapeHtml(indexUrl)}" id="shareUrlIndexInput" class="ns-share-url-input" onclick="this.select()" />
+          <button type="button" class="ns-share-btn-copy" onclick="copyShareLinkInput('shareUrlIndexInput')">📋 Sao chép</button>
+          <a href="${escapeHtml(indexUrl)}" target="_blank" class="ns-share-btn-open" title="Mở trong tab mới">↗ Mở thử</a>
+        </div>
+      </div>
+
+      <!-- FOOTER ACTIONS -->
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 14px;">
+        <div style="font-size: 12px; color: #94a3b8;">
+          🔒 Portable URL: Người nhận có thể bấm "Nhập dữ liệu vào máy" để lưu.
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" onclick="closeShareProfileModal()" class="btn secondary" style="font-size: 13px; padding: 7px 16px; border-radius: 8px;">Đóng</button>
+          <button type="button" onclick="copyShareLinkInput('shareUrlKetQuaInput')" class="btn primary" style="font-size: 13px; padding: 7px 18px; border-radius: 8px;">📋 Sao chép link kết quả</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modalEl);
+
+  modalEl.addEventListener('click', (e) => {
+    if (e.target === modalEl) closeShareProfileModal();
+  });
+}
+
+function closeShareProfileModal() {
+  const modalEl = document.getElementById('nsShareProfileModal');
+  if (modalEl) modalEl.remove();
+}
+
+function copyShareLinkInput(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  input.select();
+  input.setSelectionRange(0, 99999);
+  const text = input.value;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      if (typeof showToast === 'function') {
+        showToast('📋 Đã sao chép liên kết chia sẻ vào khay nhớ tạm!', 'success');
+      } else {
+        alert('Đã sao chép liên kết vào khay nhớ tạm!');
+      }
+    }).catch(() => {
+      document.execCommand('copy');
+      if (typeof showToast === 'function') showToast('📋 Đã sao chép liên kết!', 'success');
+    });
+  } else {
+    document.execCommand('copy');
+    if (typeof showToast === 'function') showToast('📋 Đã sao chép liên kết!', 'success');
+  }
+}
+
+// ==========================================================================
+// BANNER HỒ SƠ CHIA SẺ TRÊN TRANG CHỦ (INDEX.HTML SHARE BANNER)
+// ==========================================================================
+
+function initIndexSharedProfileBanner(sharedOverride = null) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+  const shared = sharedOverride || window._currentSharedProfile || ((window.NS_ShareProfile && window.NS_ShareProfile.decode)
+    ? window.NS_ShareProfile.decode()
+    : null);
+
+  if (!shared) return;
+
+  window._currentSharedProfile = shared;
+
+  const studentName = (shared.name || (shared.info && shared.info.name) || 'Học sinh').trim();
+  const searchParams = new URLSearchParams(window.location.search);
+  const shareCode = searchParams.get('share') || window.NS_ShareProfile.encode(shared);
+  const ketquaUrl = `ketqua.html?share=${encodeURIComponent(shareCode)}`;
+
+  // Tóm tắt nhanh chi tiết hồ sơ
+  const scoreKeys = shared.scores ? Object.keys(shared.scores).filter(k => shared.scores[k] !== '' && shared.scores[k] != null) : [];
+  let scorePill = '';
+  if (scoreKeys.length) {
+    scorePill = `<span style="font-size: 11.5px; padding: 2px 7px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; color: #38bdf8;">📊 ${scoreKeys.length} môn</span>`;
+  }
+  let hollandPill = '';
+  if (shared.hollandCode) {
+    hollandPill = `<span style="font-size: 11.5px; padding: 2px 7px; background: rgba(167, 139, 250, 0.15); border: 1px solid rgba(167, 139, 250, 0.3); border-radius: 6px; color: #a78bfa;">🧠 RIASEC: ${escapeHtml(shared.hollandCode)}</span>`;
+  }
+
+  // Tạo banner
+  let banner = document.getElementById('nsSharedProfileBanner');
+  if (banner) banner.remove();
+
+  banner = document.createElement('div');
+  banner.id = 'nsSharedProfileBanner';
+  banner.className = 'ns-shared-profile-banner';
+  banner.style.cssText = 'position: sticky; top: 0; z-index: 99; width: 100%; box-sizing: border-box; background: linear-gradient(135deg, rgba(30, 27, 75, 0.96) 0%, rgba(15, 23, 42, 0.98) 100%); border-bottom: 2px solid #818cf8; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding: 12px 4%; box-shadow: 0 8px 30px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; animation: nsShareFadeIn 0.3s ease-out;';
+
+  banner.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: #f1f5f9; font-size: 0.92rem;">
+      <span style="font-size: 1.25rem;">🔗</span>
+      <span style="font-weight: 500;">
+        Đang xem hồ sơ chia sẻ của <strong style="color: #67e8f9; font-size: 0.98rem;">${escapeHtml(studentName)}</strong>
+      </span>
+      ${scorePill}
+      ${hollandPill}
+      <span style="color: #64748b; margin: 0 2px;">—</span>
+      <a href="${escapeHtml(ketquaUrl)}" class="share-banner-link" style="color: #38bdf8; font-weight: 700; text-decoration: underline; text-underline-offset: 4px; display: inline-flex; align-items: center; gap: 4px; transition: 0.2s;" title="Xem đầy đủ phân tích nghề nghiệp">
+        Xem phân tích chi tiết tại Kết quả &rarr;
+      </a>
+      <span style="color: #64748b; margin: 0 2px;">|</span>
+      <button type="button" onclick="window.importSharedProfileToCurrentDevice()" class="share-banner-import-btn" style="background: linear-gradient(135deg, #059669, #10b981); color: #fff; border: 1px solid rgba(52, 211, 153, 0.4); border-radius: 8px; padding: 6px 14px; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);" title="Nhập dữ liệu hồ sơ này vào trình duyệt của bạn">
+        📥 Nhập dữ liệu vào máy
+      </button>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <button type="button" onclick="window.dismissSharedProfileBanner()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer; transition: 0.2s;" title="Đóng banner chia sẻ">
+        ✕ Đóng
+      </button>
+    </div>
+  `;
+
+  const topbar = document.querySelector('.topbar');
+  if (topbar && topbar.parentNode) {
+    topbar.parentNode.insertBefore(banner, topbar.nextSibling);
+  } else {
+    document.body.insertBefore(banner, document.body.firstChild);
+  }
+
+  // Cập nhật tên hiển thị trên Hero Toolbar nếu có
+  const nameEl = document.getElementById('homeProfileUsername');
+  if (nameEl) {
+    nameEl.innerHTML = `${escapeHtml(studentName)} <span style="font-size: 0.75rem; font-weight: normal; color: #38bdf8;">(Hồ sơ chia sẻ)</span>`;
+  }
+  const badgeEl = document.getElementById('homeUserBadge');
+  if (badgeEl) {
+    badgeEl.textContent = '🔗 Đang xem link chia sẻ';
+    badgeEl.style.color = '#38bdf8';
+    badgeEl.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+    badgeEl.style.background = 'rgba(56, 189, 248, 0.15)';
+  }
+}
+
+function importSharedProfileToCurrentDevice() {
+  const shared = window._currentSharedProfile || (window.NS_ShareProfile && window.NS_ShareProfile.decode ? window.NS_ShareProfile.decode() : null);
+  if (!shared) {
+    alert('Không tìm thấy dữ liệu hồ sơ chia sẻ để nhập.');
+    return;
+  }
+  const studentName = (shared.name || (shared.info && shared.info.name) || 'Học sinh').trim();
+  const ok = confirm(`Bạn có muốn nạp dữ liệu hồ sơ của "${studentName}" vào máy này? Dữ liệu hiện tại trên máy sẽ được cập nhật theo hồ sơ chia sẻ.`);
+  if (!ok) return;
+
+  const success = window.NS_ShareProfile.importProfile(shared);
+  if (success) {
+    if (typeof showToast === 'function') {
+      showToast(`✅ Đã nạp thành công hồ sơ của "${studentName}" vào máy!`, 'success');
+    }
+    // Cập nhật banner thành thông báo thành công
+    const banner = document.getElementById('nsSharedProfileBanner');
+    if (banner) {
+      banner.style.background = 'linear-gradient(135deg, rgba(6, 78, 59, 0.96) 0%, rgba(15, 23, 42, 0.98) 100%)';
+      banner.style.borderBottomColor = '#10b981';
+      banner.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: #f1f5f9; font-size: 0.92rem;">
+          <span style="font-size: 1.25rem;">✅</span>
+          <span>Đã nạp thành công hồ sơ của <strong>${escapeHtml(studentName)}</strong> vào máy của bạn!</span>
+          <span style="color: #64748b;">—</span>
+          <a href="ketqua.html" class="share-banner-link" style="color: #6ee7b7; font-weight: 700; text-decoration: underline; text-underline-offset: 4px; display: inline-flex; align-items: center; gap: 4px;">
+            Xem kết quả phân tích &rarr;
+          </a>
+        </div>
+        <div>
+          <button type="button" onclick="window.dismissSharedProfileBanner()" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer;">
+            ✕ Đóng
+          </button>
+        </div>
+      `;
+    }
+    // Làm sạch URL
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    // Cập nhật lại UI trang chủ
+    if (typeof renderHomeAuthState === 'function') renderHomeAuthState();
+    if (typeof updateStepGateNavUI === 'function') updateStepGateNavUI();
+    if (typeof renderIndexProgressBar === 'function') renderIndexProgressBar();
+  } else {
+    alert('Không thể nạp hồ sơ. Vui lòng thử lại.');
+  }
+}
+
+function dismissSharedProfileBanner() {
+  const banner = document.getElementById('nsSharedProfileBanner') || document.getElementById('sharedProfileNoticeBanner');
+  if (banner) banner.remove();
+  if (window.history && window.history.replaceState) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+/**
+ * Tạo link chia sẻ kết quả di động (Portable Profile URL Base64)
+ */
+function generateShareableUrl(copyToClipboard = true) {
+  try {
+    const status = typeof getStepGateStatus === 'function' ? getStepGateStatus() : null;
+    if (status && (!status.isMinRequired || status.completedCount < 3)) {
+      const msg = `⚠️ Bạn cần hoàn thành các bước đánh giá năng lực (tối thiểu Thông tin, Điểm số, Tính cách) trước khi tạo link chia sẻ kết quả! Hiện bạn mới hoàn thành ${status.completedCount}/5 bước.`;
+      if (typeof showToast === 'function') {
+        showToast(msg, 'warning');
+      } else {
+        alert(msg);
+      }
+      return '';
+    }
+
+    const info = (typeof read === 'function' ? read('info') : null) || {};
+    let studentName = '';
+    if (info.name && info.name.trim()) studentName = info.name.trim();
+    else if (typeof getCurrentUser === 'function') {
+      const cu = getCurrentUser();
+      if (cu && cu !== 'Học sinh') studentName = cu;
+    }
+    if (!studentName) studentName = 'Học sinh';
+
+    const scores = (typeof read === 'function' ? read('scores') : null) || {};
+    const hobbies = (typeof read === 'function' ? read('hobbies') : null) || { selected: [], custom: '' };
+    const goals = (typeof read === 'function' ? read('goals') : null) || {};
+    let bookmarked = [];
+    try {
+      const rawBm = localStorage.getItem('ns_bookmarked_schools') || localStorage.getItem('ns_bookmarked_school_ids');
+      if (rawBm) bookmarked = JSON.parse(rawBm);
+    } catch (e) {}
+
+    let hollandCode = typeof read === 'function' ? read('riasecTopCode') : null;
+    let mbtiType = typeof read === 'function' ? read('mbtiType') : null;
+    const answers = (typeof read === 'function' ? read('personalityAnswers') : null) || [];
+
+    if (!hollandCode && typeof computeMBTI === 'function' && Array.isArray(answers) && answers.length > 0) {
+      try {
+        const computed = computeMBTI(answers);
+        if (computed) {
+          if (computed.riasec && computed.riasec.topCode) hollandCode = computed.riasec.topCode;
+          if (computed.type) mbtiType = computed.type;
+        }
+      } catch (e) {}
+    }
+
+    const summaryData = {
+      name: studentName,
+      province: info.province || '',
+      grade: info.grade || '',
+      scores: scores,
+      holland: hollandCode || 'RIA',
+      hollandCode: hollandCode || 'RIA',
+      mbtiType: mbtiType || 'ENFP',
+      interests: Array.isArray(hobbies.selected) ? hobbies.selected : [],
+      customInterests: hobbies.custom || '',
+      goals: {
+        dreamSchool: goals.dreamSchool || '',
+        dreamMajor: goals.dreamMajor || '',
+        dreamCareer: goals.dreamCareer || '',
+        admissionMethods: goals.admissionMethods || [],
+        studyAbroad: goals.studyAbroad || 'Không',
+        studyAbroadDetail: goals.studyAbroadDetail || null
+      },
+      bookmarkedSchools: bookmarked,
+      sharedAt: new Date().toISOString()
+    };
+
+    const jsonStr = JSON.stringify(summaryData);
+    const base64String = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
+
+    let finalUrl = '';
+    if (typeof window !== 'undefined' && window.location) {
+      const href = window.location.href.split('?')[0].split('#')[0];
+      const lastSlash = href.lastIndexOf('/');
+      const baseDir = lastSlash !== -1 ? href.substring(0, lastSlash + 1) : href;
+      finalUrl = `${baseDir}ketqua.html?share=${encodeURIComponent(base64String)}`;
+    } else {
+      finalUrl = `ketqua.html?share=${encodeURIComponent(base64String)}`;
+    }
+
+    if (copyToClipboard) {
+      if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(finalUrl).then(() => {
+          if (typeof showToast === 'function') {
+            showToast('✅ Đã tạo link chia sẻ kết quả! Bạn có thể gửi link này để người khác hoặc giám khảo xem trên thiết bị khác.', 'success');
+          } else {
+            alert('✅ Đã tạo link chia sẻ kết quả! Bạn có thể gửi link này để người khác hoặc giám khảo xem trên thiết bị khác.');
+          }
+        }).catch(() => {
+          prompt('Sao chép link chia sẻ:', finalUrl);
+        });
+      } else {
+        prompt('Sao chép link chia sẻ:', finalUrl);
+      }
+    }
+
+    return finalUrl;
+  } catch (err) {
+    console.error('generateShareableUrl error:', err);
+    return '';
+  }
+}
+
+/**
+ * Nạp dữ liệu chia sẻ nếu có param ?share=... trên ketqua.html (không ghi đè localStorage)
+ */
+function loadSharedProfileIfPresent() {
+  if (typeof window === 'undefined' || !window.location) return null;
+  try {
+    const search = window.location.search;
+    if (!search || !search.includes('share=')) return null;
+
+    const params = new URLSearchParams(search);
+    const b64 = params.get('share');
+    if (!b64) return null;
+
+    let cleanB64 = decodeURIComponent(b64).trim().replace(/-/g, '+').replace(/_/g, '/');
+    while (cleanB64.length % 4 !== 0) {
+      cleanB64 += '=';
+    }
+
+    const binary = atob(cleanB64);
+    const jsonStr = decodeURIComponent(Array.prototype.map.call(binary, c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    const data = JSON.parse(jsonStr);
+    if (!data || typeof data !== 'object') return null;
+
+    window.SHARED_PROFILE = data;
+    window._currentSharedProfile = data;
+
+    // ketqua.html đã tự có #sharedProfileBanner chuẩn nên không chèn thêm sharedProfileNoticeBanner nữa, tránh bị trùng lặp 2 banner cùng lúc.
+    return data;
+  } catch (err) {
+    console.warn('loadSharedProfileIfPresent error:', err);
+    return null;
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.safeNumber = safeNumber;
+  window.safeString = safeString;
+  window.generateShareableUrl = generateShareableUrl;
+  window.loadSharedProfileIfPresent = loadSharedProfileIfPresent;
+  window.updateHomeShareButtonState = updateHomeShareButtonState;
+  window.openShareProfileModal = openShareProfileModal;
+  window.closeShareProfileModal = closeShareProfileModal;
+  window.copyShareLinkInput = copyShareLinkInput;
+  window.initIndexSharedProfileBanner = initIndexSharedProfileBanner;
+  window.importSharedProfileToCurrentDevice = importSharedProfileToCurrentDevice;
+  window.dismissSharedProfileBanner = dismissSharedProfileBanner;
 }
 
