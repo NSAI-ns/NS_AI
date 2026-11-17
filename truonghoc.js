@@ -1775,7 +1775,7 @@ function scrollToSchoolGrid() {
  * Mở modal so sánh trường học
  */
 function openSchoolCompareModal() {
-  if (selectedCompareSchoolIds.length === 0) {
+  if (!Array.isArray(selectedCompareSchoolIds) || selectedCompareSchoolIds.length === 0) {
     if (typeof showToast === 'function') {
       showToast('Vui lòng chọn ít nhất 1 trường để so sánh.', 'warning');
     }
@@ -1786,6 +1786,7 @@ function openSchoolCompareModal() {
   const modal = document.getElementById('schoolCompareModal');
   if (modal) {
     modal.hidden = false;
+    modal.style.display = 'grid';
   }
 }
 
@@ -1796,6 +1797,7 @@ function closeSchoolCompareModal() {
   const modal = document.getElementById('schoolCompareModal');
   if (modal) {
     modal.hidden = true;
+    modal.style.display = 'none';
   }
 }
 
@@ -2277,26 +2279,32 @@ async function loadAllSchoolData() {
     `;
   }
 
-  // 1. Tải dữ liệu trường Việt Nam
-  let rawVN = null;
-  try {
-    const res = await fetch('data/schools_vn.json');
-    if (res.ok) rawVN = await res.json();
-  } catch (e) {}
-
-  if (!rawVN || !Array.isArray(rawVN) || rawVN.length === 0) {
-    try {
-      const res = await fetch('../JS/data/schools_vn.json');
-      if (res.ok) rawVN = await res.json();
-    } catch (e) {}
+  // Helper tải JSON an toàn qua nhiều đường dẫn tương đối (tương thích GitHub Pages & local)
+  async function fetchJsonSafely(paths) {
+    for (let i = 0; i < paths.length; i++) {
+      try {
+        const res = await fetch(paths[i]);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) return data;
+        }
+      } catch (e) {}
+    }
+    return null;
   }
 
-  if (!rawVN || !Array.isArray(rawVN) || rawVN.length === 0) {
-    try {
-      const res = await fetch('truonghoc.json');
-      if (res.ok) rawVN = await res.json();
-    } catch (e) {}
-  }
+  // 1. Tải dữ liệu trường Việt Nam (hỗ trợ 255 trường đầy đủ)
+  const vnCandidates = [
+    'data/schools_vn.json',
+    './data/schools_vn.json',
+    '../data/schools_vn.json',
+    '../HTML/data/schools_vn.json',
+    'HTML/data/schools_vn.json',
+    '../JS/data/schools_vn.json',
+    'JS/data/schools_vn.json',
+    'truonghoc.json'
+  ];
+  let rawVN = await fetchJsonSafely(vnCandidates);
 
   if (!rawVN || !Array.isArray(rawVN) || rawVN.length === 0) {
     if (Array.isArray(window.DEFAULT_SCHOOLS_DATA) && window.DEFAULT_SCHOOLS_DATA.length > 0) {
@@ -2307,20 +2315,22 @@ async function loadAllSchoolData() {
   }
 
   vnSchoolList = rawVN.map((s, idx) => normalizeVNSchool(s, idx));
-
-  // 2. Tải dữ liệu trường Thế giới
-  let rawGlobal = null;
-  try {
-    const res = await fetch('data/schools_global_top1000.json');
-    if (res.ok) rawGlobal = await res.json();
-  } catch (e) {}
-
-  if (!rawGlobal || !Array.isArray(rawGlobal) || rawGlobal.length === 0) {
-    try {
-      const res = await fetch('../JS/data/schools_global_top1000.json');
-      if (res.ok) rawGlobal = await res.json();
-    } catch (e) {}
+  // Đồng bộ lại vào window.DEFAULT_SCHOOLS_DATA để chatbot và ketqua dùng chung 255 trường
+  if (Array.isArray(rawVN) && rawVN.length > 0) {
+    window.DEFAULT_SCHOOLS_DATA = rawVN;
   }
+
+  // 2. Tải dữ liệu trường Thế giới (Top 1000 trường quốc tế)
+  const globalCandidates = [
+    'data/schools_global_top1000.json',
+    './data/schools_global_top1000.json',
+    '../data/schools_global_top1000.json',
+    '../HTML/data/schools_global_top1000.json',
+    'HTML/data/schools_global_top1000.json',
+    '../JS/data/schools_global_top1000.json',
+    'JS/data/schools_global_top1000.json'
+  ];
+  let rawGlobal = await fetchJsonSafely(globalCandidates);
 
   if (!rawGlobal || !Array.isArray(rawGlobal) || rawGlobal.length === 0) {
     if (Array.isArray(window.DEFAULT_GLOBAL_SCHOOLS_DATA) && window.DEFAULT_GLOBAL_SCHOOLS_DATA.length > 0) {
@@ -2331,6 +2341,10 @@ async function loadAllSchoolData() {
   }
 
   globalSchoolList = rawGlobal.map((s, idx) => normalizeGlobalSchool(s, idx));
+  // Đồng bộ lại vào window.DEFAULT_GLOBAL_SCHOOLS_DATA
+  if (Array.isArray(rawGlobal) && rawGlobal.length > 0) {
+    window.DEFAULT_GLOBAL_SCHOOLS_DATA = rawGlobal;
+  }
 
   // Tự động kiểm tra và tối ưu hóa dữ liệu yêu thích (fix QuotaExceededError)
   migrateAndSyncFavorites();

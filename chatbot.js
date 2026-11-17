@@ -1092,6 +1092,10 @@ function getChatContext() {
     ? window.DEFAULT_SCHOOLS_DATA
     : [];
 
+  const globalSchools = (typeof window !== 'undefined' && Array.isArray(window.DEFAULT_GLOBAL_SCHOOLS_DATA))
+    ? window.DEFAULT_GLOBAL_SCHOOLS_DATA
+    : [];
+
   const customAnswers = (p.customPersonalityAnswers && Array.isArray(p.customPersonalityAnswers))
     ? p.customPersonalityAnswers
     : (typeof read === 'function' ? (read('customPersonalityAnswers') || []) : []);
@@ -1117,6 +1121,7 @@ function getChatContext() {
     bestSubjects,
     lowestSubjects,
     schools,
+    globalSchools,
     customAnswers
   };
 }
@@ -2469,7 +2474,6 @@ function getInitialGreetingMessage() {
     `📋 **Tóm tắt hồ sơ năng lực đã liên thông:**\n` +
     `${traits.join('\n')}\n\n` +
     `Bạn cần mình tư vấn chiến lược xét tuyển, giải tỏa áp lực thi cử hay định hướng gì hôm nay? 💚`;
-}
 }
 
 function initChatHistory() {
