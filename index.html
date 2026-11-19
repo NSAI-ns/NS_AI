@@ -10,8 +10,8 @@
 
 <body>
   <div class="bg-grid"></div>
-<div class="bg-beam"></div>
-<div class="stars"></div>
+  <div class="bg-beam"></div>
+  <div class="stars"></div>
 
   <header class="topbar">
     <a class="brand" href="index.html"><span>NS</span> NS AI</a>
@@ -31,7 +31,7 @@
       <a href="ketqua.html">Kết quả</a>
       <a href="chatbot.html">Chatbot</a>
       <a href="dangnhap.html" class="nav-auth-static">🔑 Đăng nhập</a>
-      <button class="session-reset" onclick="resetAllData()">↻ Phiên mới</button>
+      
     </nav>
   </header>
 
@@ -48,6 +48,7 @@
       <div class="actions">
         <a class="btn primary" href="thongtin.html">🚀 Bắt đầu định hướng</a>
         <a class="btn secondary" href="truonghoc.html">🔎 Tìm trường</a>
+        <button type="button" class="btn secondary" onclick="openShareProfileModal()" title="Tạo link chia sẻ nhanh kết quả">🔗 Tạo link chia sẻ nhanh kết quả</button>
         <a class="btn secondary" href="#homeAuthSection">🔑 Đăng nhập / Tài khoản</a>
         <button class="btn secondary" onclick="resetAllData()">↻ Làm mới toàn bộ dữ liệu</button>
       </div>
@@ -55,20 +56,27 @@
 
     <!-- THANH CÔNG CỤ HỒ SƠ & TÀI KHOẢN GỌN NHẸ (COMPACT AUTH TOOLBAR) -->
     <section class="home-auth-section" id="homeAuthSection" style="width: 100%; max-width: 900px; margin: 0 auto 32px;">
-      <div class="glass home-auth-toolbar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; width: 100%; padding: 16px 22px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(12px); box-shadow: 0 8px 32px rgba(0,0,0,0.25); box-sizing: border-box;">
+      <div class="glass home-auth-toolbar"
+        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; width: 100%; padding: 16px 22px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(12px); box-shadow: 0 8px 32px rgba(0,0,0,0.25); box-sizing: border-box;">
         <!-- Left: User Profile Info & Quick Rename -->
         <div class="home-auth-left" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-          <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #4f46e5); display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4); flex-shrink: 0;">
+          <div
+            style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #4f46e5); display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4); flex-shrink: 0;">
             👤
           </div>
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: #a78bfa; font-weight: 600;">Hồ sơ hiện tại</span>
-              <span id="homeUserBadge" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-weight: 500;">Khách</span>
+              <span
+                style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: #a78bfa; font-weight: 600;">Hồ
+                sơ hiện tại</span>
+              <span id="homeUserBadge"
+                style="font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-weight: 500;">Khách</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px; margin-top: 3px;">
-              <h3 id="homeProfileUsername" style="font-size: 1.05rem; font-weight: 700; margin: 0; color: #fff; white-space: nowrap;">Học sinh</h3>
-              <button type="button" onclick="quickRenameProfile()" title="Đổi tên nhanh" style="background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 0.84rem; padding: 2px 6px; border-radius: 6px; transition: 0.2s; display: inline-flex; align-items: center; gap: 3px;">
+              <h3 id="homeProfileUsername"
+                style="font-size: 1.05rem; font-weight: 700; margin: 0; color: #fff; white-space: nowrap;">Học sinh</h3>
+              <button type="button" onclick="quickRenameProfile()" title="Đổi tên nhanh"
+                style="background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 0.84rem; padding: 2px 6px; border-radius: 6px; transition: 0.2s; display: inline-flex; align-items: center; gap: 3px;">
                 ✏️ Đổi tên
               </button>
             </div>
@@ -77,16 +85,29 @@
 
         <!-- Right: Action Buttons (Save backup, Restore profile, Reset, Manage Account) -->
         <div class="home-auth-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <button type="button" onclick="exportProfile()" class="home-auth-btn" style="height: 38px; padding: 0 14px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #e2e8f0; cursor: pointer; white-space: nowrap; transition: 0.2s; gap: 6px;" title="Xuất file JSON sao lưu hồ sơ">
+          <button type="button" onclick="openShareProfileModal()" class="home-auth-btn share-profile-btn"
+            style="height: 38px; padding: 0 14px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; background: linear-gradient(135deg, #0284c7, #6366f1); border: 1px solid rgba(56, 189, 248, 0.5); color: #fff; cursor: pointer; white-space: nowrap; transition: 0.2s; gap: 6px; box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);"
+            title="Tạo link chia sẻ nhanh kết quả">
+            🔗 Tạo link chia sẻ nhanh kết quả
+          </button>
+          <button type="button" onclick="exportProfile()" class="home-auth-btn"
+            style="height: 38px; padding: 0 14px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #e2e8f0; cursor: pointer; white-space: nowrap; transition: 0.2s; gap: 6px;"
+            title="Xuất file JSON sao lưu hồ sơ">
             💾 Lưu sao lưu
           </button>
-          <label class="home-auth-btn" style="height: 38px; padding: 0 14px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #e2e8f0; cursor: pointer; white-space: nowrap; transition: 0.2s; gap: 6px; margin: 0;" title="Nhập file JSON đã lưu">
+          <label class="home-auth-btn"
+            style="height: 38px; padding: 0 14px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #e2e8f0; cursor: pointer; white-space: nowrap; transition: 0.2s; gap: 6px; margin: 0;"
+            title="Nhập file JSON đã lưu">
             📂 Khôi phục hồ sơ <input type="file" accept=".json" onchange="importProfile(event)" style="display: none;">
           </label>
-          <button type="button" onclick="confirmResetProfile()" class="home-auth-btn" style="height: 38px; padding: 0 14px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; cursor: pointer; white-space: nowrap; transition: 0.2s; gap: 6px;" title="Xóa dữ liệu để làm lại từ đầu">
+          <button type="button" onclick="confirmResetProfile()" class="home-auth-btn"
+            style="height: 38px; padding: 0 14px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; cursor: pointer; white-space: nowrap; transition: 0.2s; gap: 6px;"
+            title="Xóa dữ liệu để làm lại từ đầu">
             🗑️ Đặt lại
           </button>
-          <a href="dangnhap.html" class="home-auth-btn" style="height: 38px; padding: 0 14px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; background: linear-gradient(135deg, #7c3aed, #4f46e5); border: 1px solid rgba(167, 139, 250, 0.4); color: #fff; text-decoration: none; white-space: nowrap; transition: 0.2s; gap: 6px; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);" title="Đăng nhập hoặc đăng ký tài khoản">
+          <a href="dangnhap.html" class="home-auth-btn"
+            style="height: 38px; padding: 0 14px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; background: linear-gradient(135deg, #7c3aed, #4f46e5); border: 1px solid rgba(167, 139, 250, 0.4); color: #fff; text-decoration: none; white-space: nowrap; transition: 0.2s; gap: 6px; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);"
+            title="Đăng nhập hoặc đăng ký tài khoản">
             🔑 Tài khoản
           </a>
         </div>
@@ -133,7 +154,9 @@
           <span id="progressPercent" style="color:#7c3aed;font-weight:700;font-size:1.1rem;">0%</span>
         </div>
         <div style="background:rgba(255,255,255,0.1);border-radius:50px;height:12px;overflow:hidden;">
-          <div id="progressFill" style="height:100%;background:linear-gradient(90deg,#7c3aed,#06b6d4);border-radius:50px;width:0%;transition:width 0.6s ease;"></div>
+          <div id="progressFill"
+            style="height:100%;background:linear-gradient(90deg,#7c3aed,#06b6d4);border-radius:50px;width:0%;transition:width 0.6s ease;">
+          </div>
         </div>
         <p id="progressNote" style="color:#94a3b8;font-size:0.8rem;margin-top:6px;text-align:center;"></p>
       </div>

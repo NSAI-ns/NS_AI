@@ -14,6 +14,7 @@ const chatState = {
   isSending: false,
   fallbackIndex: 0,
   activeRoleplay: null,
+  activeQuiz: null,
   injectedProfile: null // Lưu trữ hồ sơ người dùng được nạp từ LocalStorage
 };
 
@@ -95,10 +96,17 @@ function normalizeQuery(text) {
 
 function formatMsg(text) {
   if (!text) return '';
+  let html = text;
+  // Đổi `code` thành thẻ code có highlight
+  html = html.replace(/`([^`]+)`/g, '<code style="background: rgba(255, 255, 255, 0.12); padding: 1px 6px; border-radius: 4px; font-family: monospace; font-size: 0.9em; color: #38bdf8;">$1</code>');
   // Đổi **in đậm** thành <strong>
-  let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   // Đổi *in nghiêng* thành <em> (chỉ khớp dấu sao đơn độc)
   html = html.replace(/(^|[^*>])\*(?!\*)([^*<]+)\*(?!\*)/g, '$1<em>$2</em>');
+  // Đổi ### Header thành tiêu đề khối nổi bật chuẩn Dark Mode
+  html = html.replace(/^### (.*)$/gm, '<strong style="display: block; font-size: 14px; color: #67e8f9; margin: 12px 0 4px 0; border-bottom: 1px dashed rgba(255, 255, 255, 0.18); padding-bottom: 3px;">$1</strong>');
+  // Đổi --- thành đường phân cách thanh mảnh
+  html = html.replace(/^---$/gm, '<hr style="border: 0; border-top: 1px dashed rgba(255, 255, 255, 0.2); margin: 12px 0;">');
   return html;
 }
 
@@ -205,7 +213,7 @@ function toggleSpeechRecognition() {
   if (!speechRecogInstance) return;
 
   if (isRecogListening) {
-    try { speechRecogInstance.stop(); } catch(e){}
+    try { speechRecogInstance.stop(); } catch (e) { }
     isRecogListening = false;
     updateMicButtonUI(false);
     clearVoiceStatus();
@@ -215,7 +223,7 @@ function toggleSpeechRecognition() {
     } catch (e) {
       console.warn('Speech start caught, restarting...', e);
       speechRecogInstance = initSpeechRecognition();
-      try { speechRecogInstance.start(); } catch(err){ console.error(err); }
+      try { speechRecogInstance.start(); } catch (err) { console.error(err); }
     }
   }
 }
@@ -501,14 +509,14 @@ function loadInjectedUserProfile() {
     let unified = null;
     const rawUnified = localStorage.getItem('ns_ai_user_profile') || localStorage.getItem('ns_test_user_profile');
     if (rawUnified) {
-      try { unified = JSON.parse(rawUnified); } catch (e) {}
+      try { unified = JSON.parse(rawUnified); } catch (e) { }
     }
 
     // 2. Đọc ns_profile (Object lưu trữ hồ sơ độc lập)
     let standaloneProfile = null;
     const rawProfile = localStorage.getItem('ns_profile');
     if (rawProfile) {
-      try { standaloneProfile = JSON.parse(rawProfile); } catch (e) {}
+      try { standaloneProfile = JSON.parse(rawProfile); } catch (e) { }
     }
 
     // 3. Đọc ns_student_info, ns_info, info
@@ -542,36 +550,36 @@ function loadInjectedUserProfile() {
 
     // --- TRÍCH XUẤT TÊN HỌC SINH ---
     const detectedName = (studentInfo && (studentInfo.name || studentInfo.studentName || studentInfo.fullName)) ||
-                         (standaloneProfile && (standaloneProfile.name || standaloneProfile.studentName || standaloneProfile.fullName || (standaloneProfile.info && standaloneProfile.info.name))) ||
-                         (currentUser && (currentUser.name || currentUser.fullName || currentUser.username)) ||
-                         (unified && unified.info && unified.info.name) ||
-                         (p && p.info && p.info.name) || '';
+      (standaloneProfile && (standaloneProfile.name || standaloneProfile.studentName || standaloneProfile.fullName || (standaloneProfile.info && standaloneProfile.info.name))) ||
+      (currentUser && (currentUser.name || currentUser.fullName || currentUser.username)) ||
+      (unified && unified.info && unified.info.name) ||
+      (p && p.info && p.info.name) || '';
     if (detectedName && detectedName !== 'bạn' && detectedName !== 'Học sinh') {
       result.name = detectedName.trim();
     }
 
     // --- TRÍCH XUẤT ĐỊA BÀN & LỚP HỌC ---
     result.province = (studentInfo && studentInfo.province) ||
-                     (standaloneProfile && (standaloneProfile.province || (standaloneProfile.info && standaloneProfile.info.province))) ||
-                     (unified && unified.info && unified.info.province) ||
-                     (p && p.info && p.info.province) || '';
+      (standaloneProfile && (standaloneProfile.province || (standaloneProfile.info && standaloneProfile.info.province))) ||
+      (unified && unified.info && unified.info.province) ||
+      (p && p.info && p.info.province) || '';
 
     result.grade = (studentInfo && studentInfo.grade) ||
-                  (standaloneProfile && (standaloneProfile.grade || (standaloneProfile.info && standaloneProfile.info.grade))) ||
-                  (unified && unified.info && unified.info.grade) ||
-                  (p && p.info && p.info.grade) || '';
+      (standaloneProfile && (standaloneProfile.grade || (standaloneProfile.info && standaloneProfile.info.grade))) ||
+      (unified && unified.info && unified.info.grade) ||
+      (p && p.info && p.info.grade) || '';
 
     result.school = (studentInfo && (studentInfo.school || studentInfo.schoolName)) ||
-                   (standaloneProfile && (standaloneProfile.school || (standaloneProfile.info && standaloneProfile.info.school))) ||
-                   (unified && unified.info && unified.info.school) ||
-                   (p && p.info && p.info.school) || '';
+      (standaloneProfile && (standaloneProfile.school || (standaloneProfile.info && standaloneProfile.info.school))) ||
+      (unified && unified.info && unified.info.school) ||
+      (p && p.info && p.info.school) || '';
 
     // --- TRÍCH XUẤT ĐIỂM SỐ (ns_user_scores, ns_scores...) ---
     let rawScores = null;
     const s1 = localStorage.getItem('ns_user_scores');
     const s2 = localStorage.getItem('ns_scores');
-    if (s1) { try { rawScores = JSON.parse(s1); } catch (e) {} }
-    if (!rawScores && s2) { try { rawScores = JSON.parse(s2); } catch (e) {} }
+    if (s1) { try { rawScores = JSON.parse(s1); } catch (e) { } }
+    if (!rawScores && s2) { try { rawScores = JSON.parse(s2); } catch (e) { } }
     if (!rawScores && standaloneProfile && (standaloneProfile.scores || standaloneProfile.user_scores)) {
       rawScores = standaloneProfile.scores || standaloneProfile.user_scores;
     }
@@ -603,7 +611,7 @@ function loadInjectedUserProfile() {
     let convertedScore = null;
     const rawConv = localStorage.getItem('ns_converted_score');
     if (rawConv) {
-      try { convertedScore = JSON.parse(rawConv); } catch (e) {}
+      try { convertedScore = JSON.parse(rawConv); } catch (e) { }
     }
 
     // Tính toán tổ hợp cao nhất & điểm trung bình
@@ -678,7 +686,7 @@ function loadInjectedUserProfile() {
     const i1 = localStorage.getItem('ns_interests');
     const i2 = localStorage.getItem('ns_hobbies');
     if (i1) { try { interestsRaw = JSON.parse(i1); } catch (e) { interestsRaw = [i1]; } }
-    if (!interestsRaw && i2) { try { interestsRaw = JSON.parse(i2); } catch (e) {} }
+    if (!interestsRaw && i2) { try { interestsRaw = JSON.parse(i2); } catch (e) { } }
     if (!interestsRaw && standaloneProfile && (standaloneProfile.interests || standaloneProfile.hobbies)) {
       interestsRaw = standaloneProfile.interests || standaloneProfile.hobbies;
     }
@@ -707,7 +715,7 @@ function loadInjectedUserProfile() {
     // --- TRÍCH XUẤT MỤC TIÊU & DU HỌC (ns_goals...) ---
     let goalsRaw = null;
     const g1 = localStorage.getItem('ns_goals');
-    if (g1) { try { goalsRaw = JSON.parse(g1); } catch (e) {} }
+    if (g1) { try { goalsRaw = JSON.parse(g1); } catch (e) { } }
     if (!goalsRaw && standaloneProfile && standaloneProfile.goals) {
       goalsRaw = standaloneProfile.goals;
     }
@@ -726,10 +734,10 @@ function loadInjectedUserProfile() {
       result.goals.admissionMethods = Array.isArray(goalsRaw.admissionMethods) ? goalsRaw.admissionMethods : [];
 
       const isAbroad = goalsRaw.studyAbroad === 'Có' ||
-                       goalsRaw.studyAbroad === true ||
-                       goalsRaw.studyAbroad === 'yes' ||
-                       result.goals.admissionMethods.includes('duhoc') ||
-                       Boolean(goalsRaw.studyAbroadDetail && goalsRaw.studyAbroadDetail.enabled);
+        goalsRaw.studyAbroad === true ||
+        goalsRaw.studyAbroad === 'yes' ||
+        result.goals.admissionMethods.includes('duhoc') ||
+        Boolean(goalsRaw.studyAbroadDetail && goalsRaw.studyAbroadDetail.enabled);
 
       result.goals.isStudyAbroad = isAbroad;
       if (goalsRaw.studyAbroadDetail) {
@@ -745,7 +753,7 @@ function loadInjectedUserProfile() {
         if (ana && ana.results && ana.results[0]) {
           result.topCareer = ana.results[0].name;
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     // Đánh giá xem hồ sơ có dữ liệu ý nghĩa hay không
@@ -959,10 +967,10 @@ function generateCrisisSafetyResponse(crisisCheck) {
     <span style="font-size: 32px; line-height: 1; filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.7));">🆘</span>
     <div>
       <div style="font-size: 16.5px; font-weight: 800; color: #fef08a; letter-spacing: 0.02em; text-transform: uppercase;">
-        🆘 HỖ TRỢ TÂM LÝ &amp; BẢO VỆ HỌC SINH KHẨN CẤP
+        🆘 Trung tâm Tham vấn &amp; Hỗ trợ Tâm lý Học đường
       </div>
       <div style="font-size: 12.5px; color: #cbd5e1; margin-top: 2px;">
-        Đường dây nóng quốc gia bảo vệ trẻ em &amp; Can thiệp khủng hoảng tâm lý học đường (Miễn phí 24/7)
+        Đường dây nóng quốc gia bảo vệ trẻ em &amp; Hỗ trợ khủng hoảng tâm lý học đường (Miễn phí 24/7)
       </div>
     </div>
   </div>
@@ -982,25 +990,25 @@ function generateCrisisSafetyResponse(crisisCheck) {
         </div>
       </div>
       <a href="tel:111" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; padding: 9px 14px; background: linear-gradient(135deg, #ef4444, #dc2626); color: #ffffff; font-weight: 700; font-size: 13.5px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4); transition: transform 0.15s ease;">
-        <span>📞</span> Bấm gọi 111 (Miễn phí 24/7)
+        <span>📞</span> Bấm gọi 111 ngay (Miễn phí 24/7)
       </a>
     </div>
 
-    <!-- Hotline 1900 1567 / 1800 1567 -->
-    <div style="background: rgba(15, 23, 42, 0.8); border: 1.5px solid rgba(234, 179, 8, 0.5); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between;">
+    <!-- Hotline Ngày Mai 096 306 1414 -->
+    <div style="background: rgba(15, 23, 42, 0.8); border: 1.5px solid rgba(168, 85, 247, 0.5); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between;">
       <div>
-        <div style="font-size: 12px; text-transform: uppercase; color: #facc15; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-          <span>📞</span> Đường dây nóng tư vấn &amp; can thiệp khủng hoảng
+        <div style="font-size: 12px; text-transform: uppercase; color: #c084fc; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+          <span>🌅</span> Đường dây nóng Ngày Mai hỗ trợ khủng hoảng tâm lý
         </div>
         <div style="font-size: 22px; font-weight: 900; color: #ffffff; letter-spacing: 0.05em; margin-bottom: 4px;">
-          1900 1567 / 1800 1567
+          096 306 1414
         </div>
         <div style="font-size: 12.5px; color: #94a3b8; line-height: 1.45;">
-          Tư vấn tâm lý, can thiệp khủng hoảng và trợ giúp sức khỏe tinh thần thanh thiếu niên.
+          Tổ chức hỗ trợ người trẻ vượt qua khủng hoảng tâm lý, trầm cảm, bế tắc học đường.
         </div>
       </div>
-      <a href="tel:19001567" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; padding: 9px 14px; background: linear-gradient(135deg, #eab308, #ca8a04); color: #ffffff; font-weight: 700; font-size: 13.5px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 14px rgba(234, 179, 8, 0.4); transition: transform 0.15s ease;">
-        <span>📞</span> Bấm gọi 1900 1567 / 1800 1567
+      <a href="tel:0963061414" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; padding: 9px 14px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: #ffffff; font-weight: 700; font-size: 13.5px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4); transition: transform 0.15s ease;">
+        <span>📞</span> Bấm gọi 096 306 1414
       </a>
     </div>
   </div>
@@ -1008,10 +1016,10 @@ function generateCrisisSafetyResponse(crisisCheck) {
   <!-- Lời khuyên ân cần kết nối -->
   <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px; padding: 13px 16px; margin-bottom: 14px; line-height: 1.6; font-size: 13.5px; color: #f1f5f9;">
     <div style="font-weight: 700; color: #fef08a; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-      <span>🫂</span> Hãy chia sẻ ngay với Thầy cô cố vấn, Phòng tham vấn học đường hoặc Cha mẹ/Người thân tin cậy:
+      <span>🫂</span> Lời khuyên ân cần kết nối với thầy cô, phụ huynh, hoặc chuyên viên tư vấn:
     </div>
     <div>
-      Bạn luôn có người đồng hành! Thầy cô, bố mẹ và những người thân yêu luôn sẵn lòng lắng nghe, đồng hành và bảo vệ bạn mà không hề phán xét. Đừng gánh chịu một mình bạn nhé! Hãy nhắn tin hoặc gọi điện cho một người mà bạn cảm thấy an tâm và tin cậy nhất lúc này.
+      Thầy cô chủ nhiệm, bố mẹ, người thân trong gia đình hoặc chuyên viên tư vấn tâm lý học đường tại trường luôn sẵn lòng lắng nghe, đồng hành và bảo vệ bạn mà không hề phán xét. Đừng gánh chịu một mình bạn nhé! Hãy nhắn tin hoặc gọi điện cho một người mà bạn cảm thấy an tâm và tin cậy nhất lúc này.
     </div>
   </div>
 
@@ -1463,6 +1471,64 @@ function answer(q) {
     if (choiceMatch && choiceMatch[1]) {
       const resp = evaluateRoleplayChoice(choiceMatch[1], chatState.activeRoleplay);
       if (resp) return resp;
+    }
+  }
+
+  // 0.0b TRẮC NGHIỆM TÌNH HUỐNG THỰC TẾ THEO TỪNG NGÀNH (đang chờ chọn A/B/C)
+  if (chatState.activeQuiz) {
+    const rawCleanQ = raw.trim().toUpperCase();
+    let picked = null;
+    if (/^[ABC]$/.test(rawCleanQ)) picked = rawCleanQ;
+    else {
+      const m = raw.match(/^(?:chọn|phương án|đáp án|câu)?\s*([abc])\b/i);
+      if (m && m[1]) picked = m[1].toUpperCase();
+    }
+    if (picked) {
+      const quizResp = evaluateCareerQuizChoice(picked);
+      if (quizResp) { recordTopic('career_quiz'); return quizResp; }
+    }
+  }
+
+  // 0.0c BẮT ĐẦU TRẮC NGHIỆM NGÀNH: "thử ngành X" / "trắc nghiệm ngành X"
+  if (/thử ngành|trắc nghiệm ngành|test ngành|thử nghề|trắc nghiệm nghề|kiểm tra ngành|thử tình huống/.test(s)) {
+    let matched = null;
+    for (const key of Object.keys(CAREER_QUIZ_SCENARIOS)) {
+      const mainWord = key.toLowerCase().split(/[\/&(]/)[0].trim();
+      if (mainWord && s.includes(mainWord)) { matched = key; break; }
+    }
+    if (!matched) {
+      const guess = [
+        [/công nghệ|\bit\b|lập trình|phần mềm|code|web/, 'Công nghệ thông tin & Lập trình phần mềm'],
+        [/\bai\b|trí tuệ|dữ liệu|khoa học máy tính/, 'Khoa học máy tính & Trí tuệ nhân tạo (AI)'],
+        [/kinh tế|kinh doanh|marketing|quản trị/, 'Kinh tế / Quản trị kinh doanh & Marketing'],
+        [/tài chính|ngân hàng|kế toán|kiểm toán/, 'Tài chính - Ngân hàng & Kế toán - Kiểm toán'],
+        [/y khoa|bác sĩ|dược|y tế/, 'Y khoa / Dược học & Khoa học sức khỏe'],
+        [/điều dưỡng|y sinh/, 'Điều dưỡng & Kỹ thuật Y sinh'],
+        [/cơ điện|tự động/, 'Kỹ thuật / Cơ điện tử & Tự động hóa'],
+        [/điện|năng lượng/, 'Điện - Điện tử & Năng lượng tái tạo'],
+        [/kiến trúc|nội thất/, 'Kiến trúc & Thiết kế nội thất'],
+        [/xây dựng/, 'Xây dựng & Quản lý dự án'],
+        [/nông nghiệp|thực phẩm/, 'Nông nghiệp công nghệ cao & Công nghệ thực phẩm'],
+        [/môi trường|bền vững/, 'Môi trường & Khoa học bền vững'],
+        [/luật|ngoại giao|pháp/, 'Luật / Ngoại giao & Khoa học xã hội'],
+        [/công an|quân đội|quân sự/, 'Công an & Quân đội'],
+        [/sư phạm|giáo dục|giáo viên/, 'Sư phạm & Quản lý giáo dục'],
+        [/tâm lý|tham vấn/, 'Tâm lý học & Dịch vụ tham vấn / Xã hội'],
+        [/truyền thông|báo chí|\bpr\b/, 'Truyền thông / Báo chí & Quan hệ công chúng (PR)'],
+        [/đồ họa|mỹ thuật|thiết kế/, 'Thiết kế đồ họa / Mỹ thuật số & Đa phương tiện'],
+        [/âm nhạc|biểu diễn|sân khấu/, 'Âm nhạc, Biểu diễn & Nghệ thuật sân khấu'],
+        [/thể thao|vận động/, 'Thể thao & Khoa học vận động'],
+        [/du lịch|khách sạn|nhà hàng/, 'Du lịch / Quản trị khách sạn & Dịch vụ F&B'],
+        [/ngôn ngữ|biên dịch|phiên dịch/, 'Ngôn ngữ học & Biên phiên dịch quốc tế'],
+        [/logistics|chuỗi cung ứng/, 'Logistics & Quản trị chuỗi cung ứng'],
+        [/hàng không|hàng hải/, 'Hàng không & Hàng hải']
+      ].find(([re]) => re.test(s));
+      matched = guess ? guess[1] : null;
+    }
+    if (matched) {
+      recordTopic('career_quiz_start');
+      const prompt = buildCareerQuizPrompt(matched);
+      if (prompt) return prompt;
     }
   }
 
@@ -1928,7 +1994,7 @@ function answer(q) {
 
   // 16. CHỌN NGÀNH PHÙ HỢP / GỢI Ý NGÀNH NGHỀ
   if (/ngành khác|còn ngành nào|ngành tiếp theo|top ngành|danh sách ngành|các ngành phù hợp|xem thêm ngành|ngành thứ 2|ngành thứ hai/.test(s) ||
-      (/chọn ngành|ngành gì|nghề gì|phù hợp|định hướng|ngành nào/.test(s) && chatState.topicCounts.career > 0)) {
+    (/chọn ngành|ngành gì|nghề gì|phù hợp|định hướng|ngành nào/.test(s) && chatState.topicCounts.career > 0)) {
     recordTopic('career');
     if (!c.results || c.results.length === 0) {
       return 'Bạn hãy hoàn thành mục Điểm số, Sở thích và Mục tiêu trước để mình có đủ dữ liệu phân tích nhé!';
@@ -1994,7 +2060,7 @@ function answer(q) {
       const central = ['huế', 'thừa thiên huế', 'đà nẵng', 'quảng nam', 'quảng ngãi', 'bình định', 'phú yên', 'khánh hòa', 'ninh thuận', 'bình thuận', 'quảng trị', 'quảng bình', 'hà tĩnh', 'nghệ an', 'thanh hóa', 'kon tum', 'gia lai', 'đắk lắk', 'đắk nông', 'lâm đồng'];
       const south = ['tp. hồ chí minh', 'hồ chí minh', 'tphcm', 'sài gòn', 'bình dương', 'đồng nai', 'bà rịa - vũng tàu', 'long an', 'tiền giang', 'bến tre', 'trà vinh', 'vĩnh long', 'đồng tháp', 'an giang', 'kiên giang', 'cần thơ', 'hậu giang', 'sóc trăng', 'bạc liêu', 'cà mau', 'tây ninh', 'bình phước'];
       const north = ['hà nội', 'hải phòng', 'quảng ninh', 'bắc ninh', 'thái nguyên', 'nam định', 'phú thọ', 'hải dương', 'vĩnh phúc', 'hưng yên', 'hà nam', 'ninh bình', 'thái bình', 'bắc giang', 'lào cai', 'yên bái', 'điện biên', 'hòa bình', 'lai châu', 'sơn la', 'hà giang', 'cao bằng', 'bắc kạn', 'lạng sơn', 'tuyên quang'];
-      
+
       if (central.some(x => cpLower.includes(x))) {
         targetRegionName = 'Miền Trung & Tây Nguyên';
         targetHubs = ['Huế', 'Đà Nẵng'];
@@ -2021,7 +2087,7 @@ function answer(q) {
       let score = 0;
       const schProv = sch.province.toLowerCase();
       const tProv = targetProvince.toLowerCase();
-      
+
       const isDirectLocal = tProv && (schProv.includes(tProv) || tProv.includes(schProv));
       const isHub = targetHubs.some(h => schProv.includes(h.toLowerCase()));
 
@@ -2040,25 +2106,25 @@ function answer(q) {
           break;
         }
         if ((tmLower.includes('công nghệ') || tmLower.includes('phần mềm') || tmLower.includes('trí tuệ')) &&
-            (mLower.includes('công nghệ') || mLower.includes('máy tính') || mLower.includes('kỹ thuật'))) {
+          (mLower.includes('công nghệ') || mLower.includes('máy tính') || mLower.includes('kỹ thuật'))) {
           score += 45;
           matchedMajor = m;
           break;
         }
         if ((tmLower.includes('kinh tế') || tmLower.includes('quản trị') || tmLower.includes('marketing') || tmLower.includes('tài chính') || tmLower.includes('logistics')) &&
-            (mLower.includes('kinh tế') || mLower.includes('quản trị') || mLower.includes('marketing') || mLower.includes('tài chính'))) {
+          (mLower.includes('kinh tế') || mLower.includes('quản trị') || mLower.includes('marketing') || mLower.includes('tài chính'))) {
           score += 45;
           matchedMajor = m;
           break;
         }
         if ((tmLower.includes('y') || tmLower.includes('dược') || tmLower.includes('sức khỏe')) &&
-            (mLower.includes('y khoa') || mLower.includes('dược') || mLower.includes('điều dưỡng'))) {
+          (mLower.includes('y khoa') || mLower.includes('dược') || mLower.includes('điều dưỡng'))) {
           score += 45;
           matchedMajor = m;
           break;
         }
         if ((tmLower.includes('sư phạm') || tmLower.includes('giáo dục')) &&
-            (mLower.includes('sư phạm') || mLower.includes('ngữ văn') || mLower.includes('toán học'))) {
+          (mLower.includes('sư phạm') || mLower.includes('ngữ văn') || mLower.includes('toán học'))) {
           score += 45;
           matchedMajor = m;
           break;
@@ -2335,7 +2401,7 @@ function getStudentGreetingName() {
         try {
           const parsed = JSON.parse(rawProfile);
           if (parsed && (parsed.name || parsed.studentName)) name = (parsed.name || parsed.studentName).trim();
-        } catch (e) {}
+        } catch (e) { }
       }
     }
     if (!name) {
@@ -2355,125 +2421,76 @@ function getStudentGreetingName() {
       const curUser = typeof getCurrentUser === 'function' ? getCurrentUser() : localStorage.getItem('ns_current_user');
       if (curUser && typeof curUser === 'string' && curUser.trim()) name = curUser.trim();
     }
-  } catch (e) {}
+  } catch (e) { }
   return (name && name !== 'bạn' && name !== 'Học sinh') ? name : 'bạn';
 }
 
 function getInitialGreetingMessage() {
   const profile = (chatState.injectedProfile) || loadInjectedUserProfile();
 
-  let name = '';
-  // 1. ns_info (fullName hoặc name)
-  try {
-    const rawInfo = localStorage.getItem('ns_info') || localStorage.getItem('ns_student_info');
-    if (rawInfo) {
-      const parsed = JSON.parse(rawInfo);
-      if (parsed && (parsed.fullName || parsed.name)) {
-        name = (parsed.fullName || parsed.name).trim();
-      }
-    }
-  } catch (e) {}
-
-  // 2. ns_current_user (username)
-  if (!name) {
-    try {
-      const rawUser = localStorage.getItem('ns_current_user');
-      if (rawUser) {
-        try {
-          const parsed = JSON.parse(rawUser);
-          if (parsed && parsed.username) name = parsed.username.trim();
-        } catch (e) {
-          if (typeof rawUser === 'string' && rawUser.trim()) name = rawUser.trim();
-        }
-      }
-    } catch (e) {}
+  if (!profile || !profile.hasProfile) {
+    const sName = getStudentGreetingName();
+    const salutation = (sName && sName !== 'bạn' && sName !== 'Học sinh') ? `Chào ${sName}!` : 'Chào bạn!';
+    return `${salutation} Mình là NS AI – trợ lý định hướng và tư vấn tâm lý học đường. Mình luôn ở đây để lắng nghe bạn tâm sự về áp lực thi cử, chuyện gia đình, những ngày mệt mỏi hay băn khoăn về chọn ngành, chọn trường. Bạn có thể gõ phím hoặc bấm nút 🎙️ Micro để tâm sự trực tiếp bằng giọng nói nhé! 💚🌌`;
   }
 
-  if (!name && profile.name) name = profile.name;
-  if (!name || name === 'Học sinh' || name === 'guest') name = 'bạn';
+  const name = (profile.name && profile.name !== 'bạn' && profile.name !== 'Học sinh')
+    ? profile.name
+    : getStudentGreetingName();
+  const salutation = (name && name !== 'bạn' && name !== 'Học sinh') ? `Chào **${name}**!` : 'Chào bạn!';
 
-  // Tổ hợp điểm thế mạnh nhất
-  let comboStr = 'A00 (24.0đ)';
-  if (profile.bestCombo && profile.bestCombo.code) {
-    comboStr = `${profile.bestCombo.code} (${profile.bestCombo.score}đ)`;
-  } else {
-    try {
-      const conv = JSON.parse(localStorage.getItem('ns_converted_score'));
-      if (conv && conv.combo) {
-        comboStr = `${conv.combo} (${conv.totalScore || conv.finalScore || '24.0'}đ)`;
-      }
-    } catch (e) {}
+  const traits = [];
+  if (profile.bestCombo) {
+    const avgText = profile.avgScore != null ? ` (Điểm trung bình các môn: **${profile.avgScore}/10**)` : '';
+    traits.push(`• 📊 **Thế mạnh học tập & Tổ hợp:** Tổ hợp cao nhất **${profile.bestCombo.code} (${profile.bestCombo.name})** đạt **${profile.bestCombo.score}đ**${avgText}.`);
+  } else if (profile.scoreCount > 0) {
+    const avgText = profile.avgScore != null ? ` Điểm trung bình: **${profile.avgScore}/10**.` : '';
+    traits.push(`• 📊 **Học lực ghi nhận:** Đã nhập ${profile.scoreCount} môn học.${avgText}`);
   }
 
-  // Mã Holland 3 chữ cái
-  let hollandCode = 'RIA';
   if (profile.hollandCode) {
-    hollandCode = profile.hollandCode;
-  } else {
-    try {
-      const mType = localStorage.getItem('ns_mbtiType');
-      if (mType && typeof mType === 'string' && mType.trim()) {
-        hollandCode = mType.trim().toUpperCase();
-      } else {
-        const mData = JSON.parse(localStorage.getItem('ns_mbtiData'));
-        if (mData && mData.riasec && mData.riasec.topCode) {
-          hollandCode = mData.riasec.topCode;
-        }
-      }
-    } catch (e) {}
+    const titleText = profile.hollandTitle ? ` (Nhóm ${profile.hollandTitle})` : '';
+    traits.push(`• 🧭 **Mã tính cách Holland (RIASEC):** **${profile.hollandCode}**${titleText}.`);
   }
 
-  // Mục tiêu ngành/trường/du học
-  let targetStr = 'các trường Đại học khối Kỹ thuật & Công nghệ';
+  if (profile.interests && profile.interests.length > 0) {
+    const intList = profile.interests.slice(0, 4).join(', ');
+    const customText = profile.customInterests ? `; ${profile.customInterests}` : '';
+    traits.push(`• ❤️ **Sở thích & Đam mê:** ${intList}${customText}.`);
+  } else if (profile.customInterests) {
+    traits.push(`• ❤️ **Sở thích nổi bật:** ${profile.customInterests}.`);
+  }
+
   if (profile.goals) {
     const g = profile.goals;
     if (g.isStudyAbroad) {
-      const c = g.studyAbroadCountry ? ` tại ${g.studyAbroadCountry}` : '';
-      const m = g.dreamMajor ? ` ngành ${g.dreamMajor}` : '';
-      targetStr = `du học quốc tế${c}${m}`;
+      const countryStr = g.studyAbroadCountry ? ` tại **${g.studyAbroadCountry}**` : '';
+      const certStr = g.studyAbroadCert ? ` (Chứng chỉ: **${g.studyAbroadCert}**)` : '';
+      const majorStr = g.dreamMajor ? ` - Ngành **${g.dreamMajor}**` : '';
+      traits.push(`• ✈️ **Định hướng mục tiêu:** **Du học quốc tế**${countryStr}${majorStr}${certStr}.`);
     } else {
-      const m = g.dreamMajor ? `ngành ${g.dreamMajor}` : '';
-      const s = g.dreamSchool ? ` tại ${g.dreamSchool}` : '';
-      if (m || s) targetStr = [m, s].filter(Boolean).join('');
+      const majorStr = g.dreamMajor ? `Ngành **${g.dreamMajor}**` : '';
+      const schoolStr = g.dreamSchool ? ` tại **${g.dreamSchool}**` : '';
+      const targetStr = (majorStr || schoolStr) ? ` (${[majorStr, schoolStr].filter(Boolean).join('')})` : '';
+      traits.push(`• 🎯 **Định hướng mục tiêu:** Xét tuyển đại học trong nước${targetStr}.`);
     }
-  } else {
-    try {
-      const gRaw = JSON.parse(localStorage.getItem('ns_goals'));
-      if (gRaw) {
-        if (gRaw.studyAbroad === 'Có' || (gRaw.studyAbroadDetail && gRaw.studyAbroadDetail.enabled)) {
-          const c = gRaw.studyAbroadDetail && gRaw.studyAbroadDetail.country ? ` tại ${gRaw.studyAbroadDetail.country}` : '';
-          const m = gRaw.dreamMajor ? ` ngành ${gRaw.dreamMajor}` : '';
-          targetStr = `du học quốc tế${c}${m}`;
-        } else {
-          const m = gRaw.dreamMajor ? `ngành ${gRaw.dreamMajor}` : '';
-          const s = gRaw.dreamSchool ? ` tại ${gRaw.dreamSchool}` : '';
-          if (m || s) targetStr = [m, s].filter(Boolean).join('');
-        }
-      }
-    } catch (e) {}
   }
 
-  // Sở thích hàng đầu
-  let hobbyText = '';
-  if (profile.interests && profile.interests.length > 0) {
-    hobbyText = profile.interests.slice(0, 3).join(', ');
-  }
-
-  const traits = [];
-  traits.push(`• 📊 **Thế mạnh tổ hợp:** ${comboStr}`);
-  traits.push(`• 🧭 **Mã tính cách Holland (RIASEC):** [${hollandCode}]${profile.hollandTitle ? ` (${profile.hollandTitle})` : ''}`);
-  if (hobbyText) {
-    traits.push(`• ❤️ **Sở thích nổi bật:** ${hobbyText}`);
-  }
-  traits.push(`• 🎯 **Nguyện vọng hiện tại:** ${targetStr}`);
   if (profile.topCareer) {
-    traits.push(`• 🌟 **Gợi ý nghề nghiệp phù hợp nhất:** ${profile.topCareer}`);
+    traits.push(`• 🌟 **Gợi ý nghề nghiệp phù hợp nhất:** **${profile.topCareer}**.`);
   }
 
-  return `Xin chào **${name}**! Mình là Trợ lý NS AI. Mình đã nắm được hồ sơ năng lực của bạn với thế mạnh tổ hợp **${comboStr}** và mã tính cách Holland **[${hollandCode}]**. Hiện bạn đang quan tâm đến **${targetStr}**.\n\n` +
-    `📋 **Tóm tắt hồ sơ năng lực đã liên thông:**\n` +
-    `${traits.join('\n')}\n\n` +
-    `Bạn cần mình tư vấn chiến lược xét tuyển, giải tỏa áp lực thi cử hay định hướng gì hôm nay? 💚`;
+  const traitsBlock = traits.length > 0 ? traits.join('\n') + '\n\n' : '';
+
+  return `${salutation} 🌟 Mình là **NS AI Assistant** – trợ lý cá nhân hóa về định hướng học đường và đồng hành tâm lý của bạn.\n\n` +
+    `Hệ thống đã nhận diện và đồng bộ đầy đủ hồ sơ của bạn:\n` +
+    `${traitsBlock}` +
+    `Toàn bộ dữ liệu trên đã được nạp sẵn trong phiên làm việc, bạn **không cần phải nhập lại bất kỳ thông tin nào**!\n\n` +
+    `Hôm nay bạn muốn mình hỗ trợ bạn điều gì nhất trên hành trình này? Bạn có thể yêu cầu mình:\n` +
+    `1. 🎯 *Phân tích chi tiết cơ hội xét tuyển theo điểm số & tổ hợp*\n` +
+    `2. ⚖️ *Gợi ý danh sách trường đại học Thử thách (Reach), Vừa sức (Match) và An toàn (Safety)*\n` +
+    `3. 💚 *Tâm sự, giải tỏa áp lực thi cử và duy trì năng lượng học tập*\n\n` +
+    `Hãy gõ câu hỏi hoặc bấm 🎙️ Micro để trò chuyện cùng mình nhé!`;
 }
 
 function initChatHistory() {
@@ -2483,7 +2500,7 @@ function initChatHistory() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY_SESSIONS);
       if (raw) oldSessions = JSON.parse(raw);
-    } catch (e) {}
+    } catch (e) { }
     const cleaned = sanitizeChatSessions(oldSessions);
     saveChatSessions(cleaned);
     localStorage.setItem('ns_chat_empty_init_v6', 'true');

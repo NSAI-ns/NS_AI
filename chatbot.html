@@ -79,9 +79,7 @@
 
         <a class="active" href="chatbot.html">Chatbot</a>
 
-        <button class="session-reset" onclick="resetAllData()">
-            ↻ Phiên mới
-        </button>
+        
 
     </nav>
 
@@ -216,6 +214,23 @@
         <!-- Nhóm 1: Hướng nghiệp & Tuyển sinh -->
         <div class="quick-group">
             <div style="font-size: 12.5px; font-weight: 700; color: #a5b4fc; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                <span>🎯</span> Trắc nghiệm tình huống theo ngành
+            </div>
+            <div class="quick" style="margin: 0;">
+                <button type="button" onclick="quick('thử ngành công nghệ thông tin')">💻 CNTT</button>
+                <button type="button" onclick="quick('thử ngành y khoa')">🩺 Y khoa</button>
+                <button type="button" onclick="quick('thử ngành kinh tế')">📈 Kinh tế</button>
+                <button type="button" onclick="quick('thử ngành sư phạm')">👩‍🏫 Sư phạm</button>
+                <button type="button" onclick="quick('thử ngành luật')">⚖️ Luật</button>
+                <button type="button" onclick="quick('thử ngành thiết kế đồ họa')">🎨 Thiết kế</button>
+                <button type="button" onclick="quick('thử ngành tâm lý')">🧠 Tâm lý</button>
+                <button type="button" onclick="quick('thử ngành logistics')">🚚 Logistics</button>
+            </div>
+        </div>
+
+        <!-- Nhóm 2: Hướng nghiệp & Tuyển sinh -->
+        <div class="quick-group">
+            <div style="font-size: 12.5px; font-weight: 700; color: #a5b4fc; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
                 <span>🎓</span> Hỏi về Hướng nghiệp &amp; Tuyển sinh
             </div>
             <div class="quick" style="margin: 0;">
@@ -344,6 +359,7 @@
 <script src="main.js"></script>
 <!-- phantich.js đã bỏ: bản trong main.js mới hơn, nạp thêm sẽ ghi đè sai -->
 <script src="truonghoc.js"></script>
+<script src="career_quiz.js"></script>
 <script src="chatbot.js"></script>
 
 

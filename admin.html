@@ -141,7 +141,7 @@
           📥 Xuất dữ liệu thực nghiệm (CSV)
         </button>
         <button type="button" onclick="resetEmpiricalData()" class="btn secondary" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #cbd5e1; font-weight: 600; font-size: 0.88rem; padding: 9px 16px; border-radius: 8px; cursor: pointer;">
-          🔄 Nạp lại 120 mẫu chuẩn
+          🔄 Nạp 120 mẫu MÔ PHỎNG (dữ liệu bịa)
         </button>
         <a href="index.html" class="btn secondary" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35); color: #c7d2fe; text-decoration: none; font-weight: 600; font-size: 0.88rem; padding: 9px 16px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;">
           🏠 Về trang chủ
@@ -164,7 +164,7 @@
       <div class="admin-stat-card">
         <span style="color: #94a3b8; font-size: 0.84rem; font-weight: 600; text-transform: uppercase;">Tổng số mẫu khảo sát</span>
         <div id="statTotalN" class="admin-stat-num" style="color: #38bdf8;">120</div>
-        <span style="color: #64748b; font-size: 0.8rem;">Mẫu thực tế ($N \ge 120$)</span>
+        <span style="color: #64748b; font-size: 0.8rem;">Phiếu đã gửi trên máy này (dữ liệu thật nằm trong Google Sheet)</span>
       </div>
 
       <div class="admin-stat-card">
@@ -279,7 +279,9 @@
   <script>
     const EVAL_KEY = 'ns_empirical_evaluations';
 
-    // 1. Tạo 120 bộ dữ liệu thực nghiệm mẫu chuẩn hóa nếu chưa có
+    // 1. Đọc dữ liệu đánh giá THẬT đã gửi trên máy này.
+    //    KHÔNG tự sinh mẫu giả và KHÔNG ghi đè dữ liệu thật.
+    //    Nguồn đầy đủ là Google Sheet nhận từ Apps Script.
     function getOrSeedEmpiricalData() {
       let data = [];
       try {
@@ -287,15 +289,27 @@
         if (raw) data = JSON.parse(raw);
       } catch (e) {}
 
-      if (!Array.isArray(data) || data.length < 20) {
-        data = generateStandardEmpiricalDataset(120);
-        try {
-          localStorage.setItem(EVAL_KEY, JSON.stringify(data));
-        } catch (e) {}
-      }
-      return data;
+      if (!Array.isArray(data)) data = [];
+      // Bản ghi do trang kết quả lưu có dạng { ratings: {...} }, chuẩn hóa về c1/c2/c3
+      return data.map(function (e, i) {
+        if (e && e.ratings) {
+          return {
+            id: e.id || ('eval_' + i),
+            name: e.name || 'Học sinh ẩn danh',
+            school: e.school || '',
+            grade: e.grade || '',
+            c1: Number(e.ratings.usability) || 0,
+            c2: Number(e.ratings.accuracy) || 0,
+            c3: Number(e.ratings.counseling) || 0,
+            comment: e.feedback || '',
+            createdAt: e.timestamp || new Date().toISOString()
+          };
+        }
+        return e;
+      });
     }
 
+    // Giữ hàm sinh mẫu nhưng CHỈ dùng khi bấm nút "Nạp 120 mẫu mô phỏng"
     function generateStandardEmpiricalDataset(count = 120) {
       const schools = [
         'THPT Chuyên Hà Nội - Amsterdam',
@@ -642,12 +656,12 @@
     }
 
     function resetEmpiricalData() {
-      if (confirm('Khởi tạo lại toàn bộ 120 phiếu khảo sát thực nghiệm chuẩn hóa KHKT?')) {
+      if (confirm('Nạp 120 phiếu MÔ PHỎNG (dữ liệu bịa, không phải học sinh thật) để minh hoạ báo cáo?\n\nDữ liệu thật đang có trên máy này sẽ bị GHI ĐÈ.')) {
         const fresh = generateStandardEmpiricalDataset(120);
         localStorage.setItem(EVAL_KEY, JSON.stringify(fresh));
         renderDashboard();
         if (typeof showToast === 'function') {
-          showToast('🔄 Đã nạp lại 120 mẫu thực nghiệm chuẩn!', 'success');
+          showToast('🔄 Đã nạp 120 mẫu MÔ PHỎNG (không phải dữ liệu thật).', 'success');
         }
       }
     }
