@@ -37,9 +37,10 @@ const PROFILE_KEYS = ['info', 'scores', 'hobbies', 'personalityAnswers', 'person
 function syncUnifiedProfile(updatedKey, updatedValue) {
   try {
     let profile = {};
+    // Luôn đọc bản mới nhất từ localStorage trước khi cập nhật để tránh Stale State
     const raw = localStorage.getItem(UNIFIED_PROFILE_KEY) || localStorage.getItem(ALT_PROFILE_KEY);
     if (raw) {
-      try { profile = JSON.parse(raw) || {}; } catch (e) {}
+      try { profile = JSON.parse(raw) || {}; } catch (e) { profile = {}; }
     }
     if (!profile.info) profile.info = {};
     if (!profile.scores) profile.scores = {};
@@ -54,13 +55,63 @@ function syncUnifiedProfile(updatedKey, updatedValue) {
     else if (updatedKey === 'personalityCustomAnswers') profile.personality.customAnswers = updatedValue;
     else if (updatedKey === 'customPersonalityAnswers') profile.personality.customPersonalityAnswers = updatedValue;
     else if (updatedKey === 'personalitySelfReflect') profile.personality.selfReflect = updatedValue;
-    else if (updatedKey === 'mbtiType') profile.personality.mbtiType = updatedValue;
-    else if (updatedKey === 'mbtiData') profile.personality.mbtiData = updatedValue;
-    else if (updatedKey === 'riasecScores') profile.personality.riasecScores = updatedValue;
-    else if (updatedKey === 'riasecTopCode') profile.personality.riasecTopCode = updatedValue;
+    else if (updatedKey === 'mbtiType') {
+      profile.personality.mbtiType = updatedValue;
+      profile.mbtiType = updatedValue;
+    }
+    else if (updatedKey === 'mbtiData') {
+      profile.personality.mbtiData = updatedValue;
+      profile.mbtiData = updatedValue;
+      if (updatedValue && typeof updatedValue === 'object') {
+        if (updatedValue.type) {
+          profile.personality.mbtiType = updatedValue.type;
+          profile.mbtiType = updatedValue.type;
+        }
+        const topCode = updatedValue.riasecTopCode || (updatedValue.riasec && updatedValue.riasec.topCode);
+        if (topCode) {
+          profile.personality.riasecTopCode = topCode;
+          profile.riasecTopCode = topCode;
+        }
+        const scores = updatedValue.riasecScores || (updatedValue.riasec && updatedValue.riasec.scores);
+        if (scores) {
+          profile.personality.riasecScores = scores;
+          profile.riasecScores = scores;
+        }
+      }
+    }
+    else if (updatedKey === 'riasecScores') {
+      profile.personality.riasecScores = updatedValue;
+      profile.riasecScores = updatedValue;
+    }
+    else if (updatedKey === 'riasecTopCode') {
+      profile.personality.riasecTopCode = updatedValue;
+      profile.riasecTopCode = updatedValue;
+    }
     else if (updatedKey === 'techOrientation') profile.personality.techOrientation = updatedValue;
     else if (updatedKey === 'choicePressure') profile.personality.choicePressure = updatedValue;
     else if (updatedKey === 'goals') profile.goals = updatedValue;
+    else if (!updatedKey) {
+      // Nếu không truyền key, đọc và đồng bộ toàn bộ từ các key riêng lẻ vào
+      PROFILE_KEYS.forEach(k => {
+        const val = read(k);
+        if (val !== null && val !== undefined) {
+          if (k === 'info') profile.info = val;
+          else if (k === 'scores') profile.scores = val;
+          else if (k === 'hobbies') profile.hobbies = val;
+          else if (k === 'personalityAnswers') profile.personality.answers = val;
+          else if (k === 'personalityCustomAnswers') profile.personality.customAnswers = val;
+          else if (k === 'customPersonalityAnswers') profile.personality.customPersonalityAnswers = val;
+          else if (k === 'personalitySelfReflect') profile.personality.selfReflect = val;
+          else if (k === 'mbtiType') { profile.personality.mbtiType = val; profile.mbtiType = val; }
+          else if (k === 'mbtiData') { profile.personality.mbtiData = val; profile.mbtiData = val; }
+          else if (k === 'riasecScores') { profile.personality.riasecScores = val; profile.riasecScores = val; }
+          else if (k === 'riasecTopCode') { profile.personality.riasecTopCode = val; profile.riasecTopCode = val; }
+          else if (k === 'techOrientation') profile.personality.techOrientation = val;
+          else if (k === 'choicePressure') profile.personality.choicePressure = val;
+          else if (k === 'goals') profile.goals = val;
+        }
+      });
+    }
 
     profile.lastUpdated = new Date().toISOString();
     const jsonStr = JSON.stringify(profile);
@@ -94,7 +145,9 @@ function getUnifiedProfile() {
       customAnswers: read('personalityCustomAnswers') || {},
       selfReflect: read('personalitySelfReflect') || { strengths: '', idealEnv: '', vision: '' },
       mbtiType: read('mbtiType') || null,
-      mbtiData: read('mbtiData') || null
+      mbtiData: read('mbtiData') || null,
+      riasecScores: read('riasecScores') || null,
+      riasecTopCode: read('riasecTopCode') || null
     },
     goals: read('goals') || { selected: [], admissionMethods: [], other: '' },
     lastUpdated: new Date().toISOString()
@@ -121,7 +174,17 @@ function save(key, value, syncToAccount = true) {
 
 function read(key) {
   try {
-    // 1. Thử lấy từ object hồ sơ thống nhất ns_ai_user_profile
+    // 1. Thử lấy từ key riêng lẻ (NS_PREFIX + key) trước để luôn đọc dữ liệu mới nhất
+    const rawSpecific = localStorage.getItem(NS_PREFIX + key);
+    if (rawSpecific !== null && rawSpecific !== undefined) {
+      try {
+        return JSON.parse(rawSpecific);
+      } catch (e) {
+        return rawSpecific;
+      }
+    }
+
+    // 2. Fallback sang object hồ sơ thống nhất ns_ai_user_profile
     const rawUnified = localStorage.getItem(UNIFIED_PROFILE_KEY) || localStorage.getItem(ALT_PROFILE_KEY);
     if (rawUnified) {
       const u = JSON.parse(rawUnified);
@@ -133,17 +196,16 @@ function read(key) {
         if (key === 'personalityCustomAnswers' && u.personality && u.personality.customAnswers) return u.personality.customAnswers;
         if (key === 'customPersonalityAnswers' && u.personality && u.personality.customPersonalityAnswers) return u.personality.customPersonalityAnswers;
         if (key === 'personalitySelfReflect' && u.personality && u.personality.selfReflect) return u.personality.selfReflect;
-        if (key === 'mbtiType' && u.personality && u.personality.mbtiType) return u.personality.mbtiType;
-        if (key === 'mbtiData' && u.personality && u.personality.mbtiData) return u.personality.mbtiData;
-        if (key === 'riasecScores' && u.personality && u.personality.riasecScores) return u.personality.riasecScores;
-        if (key === 'riasecTopCode' && u.personality && u.personality.riasecTopCode) return u.personality.riasecTopCode;
-        if (key === 'techOrientation' && u.personality && u.personality.techOrientation) return u.personality.techOrientation;
-        if (key === 'choicePressure' && u.personality && u.personality.choicePressure) return u.personality.choicePressure;
+        if (key === 'mbtiType') return (u.personality && u.personality.mbtiType) || u.mbtiType || null;
+        if (key === 'mbtiData') return (u.personality && u.personality.mbtiData) || u.mbtiData || null;
+        if (key === 'riasecScores') return (u.personality && u.personality.riasecScores) || u.riasecScores || null;
+        if (key === 'riasecTopCode') return (u.personality && u.personality.riasecTopCode) || u.riasecTopCode || null;
+        if (key === 'techOrientation') return (u.personality && u.personality.techOrientation) || u.techOrientation || null;
+        if (key === 'choicePressure') return (u.personality && u.personality.choicePressure) || u.choicePressure || null;
         if (key === 'goals' && u.goals) return u.goals;
       }
     }
-    // 2. Fallback sang key riêng lẻ (NS_PREFIX + key)
-    return JSON.parse(localStorage.getItem(NS_PREFIX + key));
+    return null;
   } catch (e) {
     return null;
   }
@@ -230,8 +292,18 @@ function syncCurrentProfileToAccount() {
   if (!acc) return;
 
   if (!acc.profile) acc.profile = {};
+  // Luôn đọc lại hồ sơ mới nhất từ localStorage trước khi lưu vào map tài khoản để tránh Stale State
   PROFILE_KEYS.forEach(k => {
-    const val = read(k);
+    let val = null;
+    try {
+      const rawSpecific = localStorage.getItem(NS_PREFIX + k);
+      if (rawSpecific !== null && rawSpecific !== undefined) {
+        val = JSON.parse(rawSpecific);
+      }
+    } catch (e) {}
+    if (val === null || val === undefined) {
+      val = read(k);
+    }
     if (val !== null && val !== undefined) {
       acc.profile[k] = val;
     }
@@ -522,13 +594,13 @@ function initMouseSpotlight() {
     if (overlay) {
       overlay.style.opacity = '0';
     }
-  });
+  }, { passive: true });
 
   document.addEventListener('mouseenter', () => {
     if (overlay) {
       overlay.style.opacity = '1';
     }
-  });
+  }, { passive: true });
 }
 
 if (document.readyState === 'loading') {
@@ -597,18 +669,24 @@ function getStepGateStatus() {
   }
 
   // 4. Bước 4 - Tính cách (tinhcach.html)
-  // TIÊU CHÍ: Đã có kết quả mbtiType hoặc mbtiData hoặc đã hoàn thành các câu trắc nghiệm
+  // TIÊU CHÍ: Đã có kết quả mbtiType hoặc mbtiData hoặc riasecTopCode hoặc đã hoàn thành trắc nghiệm
   const personalityAnswers = typeof read === 'function' ? read('personalityAnswers') : null;
   const mbtiType = typeof read === 'function' ? read('mbtiType') : null;
   const mbtiData = typeof read === 'function' ? read('mbtiData') : null;
-  const step4Done = (typeof mbtiType === 'string' && mbtiType.trim().length === 4) ||
-                    (mbtiData && typeof mbtiData.type === 'string' && mbtiData.type.trim().length === 4) ||
-                    (Array.isArray(personalityAnswers) && personalityAnswers.filter(x => x !== null && x !== undefined).length >= 10);
-  let step4Detail = 'Chưa làm trắc nghiệm tình huống';
+  const riasecTopCode = typeof read === 'function' ? read('riasecTopCode') : null;
+  const riasecScores = typeof read === 'function' ? read('riasecScores') : null;
+
+  const hasHollandCode = Boolean(riasecTopCode || (mbtiData && (mbtiData.riasecTopCode || (mbtiData.riasec && mbtiData.riasec.topCode))));
+  const hasMbtiType = (typeof mbtiType === 'string' && mbtiType.trim().length === 4) ||
+                      (mbtiData && typeof mbtiData.type === 'string' && mbtiData.type.trim().length === 4);
+  const hasAnswers = (Array.isArray(personalityAnswers) && personalityAnswers.filter(x => x !== null && x !== undefined).length >= 10);
+
+  const step4Done = hasMbtiType || hasHollandCode || Boolean(mbtiData) || Boolean(riasecScores) || hasAnswers;
+  let step4Detail = 'Chưa làm trắc nghiệm tính cách';
   if (step4Done) {
-    const code = mbtiType || (mbtiData && mbtiData.type) || 'MBTI';
-    const trait = (mbtiData && mbtiData.title) ? ` - ${mbtiData.title}` : '';
-    step4Detail = `[${code}]${trait} (Đã làm 12 câu tình huống SJT)`;
+    const code = riasecTopCode || (mbtiData && (mbtiData.riasecTopCode || (mbtiData.riasec && mbtiData.riasec.topCode))) || mbtiType || (mbtiData && mbtiData.type) || 'RIASEC';
+    const trait = (mbtiData && mbtiData.title) ? ` - ${mbtiData.title}` : (mbtiData && mbtiData.name ? ` - ${mbtiData.name}` : '');
+    step4Detail = `[${code}]${trait} (Đã hoàn thành trắc nghiệm tính cách)`;
   }
 
   // 5. Bước 5 - Mục tiêu & Nguyện vọng (muctieu.html)
@@ -951,10 +1029,17 @@ function updateHomeShareButtonState() {
 // Tự động dọn dẹp dữ liệu trắc nghiệm tính cách không hợp lệ (ví dụ: mảng chữ cái demo cũ)
 (function sanitizePersonalityData() {
   try {
+    // Nếu đã có mbtiData hoặc riasecScores hợp lệ, TUYỆT ĐỐI không xóa
+    if (read('mbtiData') || read('riasecScores') || read('riasecTopCode')) {
+      return;
+    }
+
     const rawAnswers = read('personalityAnswers');
     if (rawAnswers) {
-      // Nếu dữ liệu không phải mảng, không đủ 10 câu hoặc có chứa phần tử không phải số 0-4 (như 'A', 'B' từ dữ liệu demo cũ)
-      if (!Array.isArray(rawAnswers) || rawAnswers.length < 10 || rawAnswers.some(a => typeof a !== 'number' || a < 0 || a > 4)) {
+      // Chỉ dọn dẹp nếu dữ liệu chứa kiểu không phải số (như 'A', 'B' từ demo cũ) hoặc NaN
+      // Hỗ trợ cả 0-4 (SJT cũ) lẫn 1-5 (RIASEC Likert mới)
+      const hasInvalidElements = Array.isArray(rawAnswers) && rawAnswers.some(a => typeof a !== 'number' || isNaN(a) || a < 0 || a > 5);
+      if (!Array.isArray(rawAnswers) || hasInvalidElements) {
         localStorage.removeItem(NS_PREFIX + 'personalityAnswers');
         localStorage.removeItem(NS_PREFIX + 'mbtiType');
         localStorage.removeItem(NS_PREFIX + 'mbtiData');
@@ -1222,12 +1307,19 @@ function handleTopbarResize() {
     }
   }
 }
-window.addEventListener('resize', handleTopbarResize);
+window.addEventListener('resize', handleTopbarResize, { passive: true });
 window.addEventListener('orientationchange', () => {
   if (window.innerWidth <= 992) {
     updateTopbarUI(true);
   }
-});
+}, { passive: true });
+
+// Trợ thủ đăng ký sự kiện cuộn & chạm luôn gắn cờ { passive: true } tối ưu 60fps trên mobile
+function addPassiveEventListener(target, eventType, listener) {
+  if (!target || typeof target.addEventListener !== 'function') return;
+  target.addEventListener(eventType, listener, { passive: true });
+}
+window.addPassiveEventListener = addPassiveEventListener;
 
 // Khi click ra ngoài topbar: tự động thu gọn lại nếu đang mở
 document.addEventListener('click', (e) => {
@@ -1666,12 +1758,81 @@ function getProfile() {
     ? values.reduce((a,b) => a + b, 0) / values.length
     : null;
 
-  const mbti = computeMBTI(answers);
+  // 1. ƯU TIÊN SỐ 1: Sử dụng trực tiếp mbtiData đã lưu từ tinhcach.html (chứa mã Holland RIASEC chuẩn)
+  const savedMbtiData = read('mbtiData');
+  const savedMbtiType = read('mbtiType');
+  const savedRiasecScores = read('riasecScores');
+  const savedRiasecTopCode = read('riasecTopCode');
+
+  let mbti = null;
+  let riasec = null;
   let personality = 'đang được xác định';
 
+  // Kiểm tra xem answers có phải mảng điểm Likert 1-5 (18 hoặc 36 câu RIASEC) không
+  const isLikertAnswers = Array.isArray(answers) && (
+    answers.length > 12 ||
+    answers.some(val => typeof val === 'number' && (val === 5 || (val >= 1 && val <= 5 && !answers.includes(0))))
+  );
+
+  if (savedMbtiData && typeof savedMbtiData === 'object') {
+    // Sử dụng trực tiếp kết quả chính thức đã lưu
+    mbti = Object.assign({}, savedMbtiData);
+    
+    // Đảm bảo thông tin RIASEC được bảo toàn nguyên vẹn
+    if (savedMbtiData.riasec) {
+      riasec = savedMbtiData.riasec;
+    } else if (savedRiasecScores || savedRiasecTopCode) {
+      riasec = {
+        scores: savedRiasecScores || {},
+        topCode: savedRiasecTopCode || 'RIA',
+        name: `Nhóm ${savedRiasecTopCode || 'RIA'}`,
+        desc: ''
+      };
+      mbti.riasec = riasec;
+    }
+
+    if (savedMbtiType && !mbti.type) {
+      mbti.type = savedMbtiType;
+    }
+  } else if (!isLikertAnswers && Array.isArray(answers) && answers.length >= 4) {
+    // TUYỆT ĐỐI KHÔNG gọi computeMBTI(answers) khi answers là mảng điểm Likert 1-5 (18/36 câu RIASEC)
+    // Chỉ tính toán computeMBTI khi ĐÚNG là bài trắc nghiệm tình huống 12 câu lựa chọn A-D (0-3) cũ
+    mbti = computeMBTI(answers);
+    if (mbti) {
+      riasec = mbti.riasec || null;
+    }
+  } else if (savedMbtiType || savedRiasecTopCode) {
+    // Fallback nếu đã lưu mã loại tính cách hoặc mã Holland
+    const type = savedMbtiType || 'INTJ';
+    const infoMeta = (typeof MBTI_INFO !== 'undefined' && MBTI_INFO[type]) ? MBTI_INFO[type] : { title: 'Nhóm tính cách đa diện', desc: '' };
+    mbti = {
+      type: type,
+      title: infoMeta.title,
+      desc: infoMeta.desc,
+      vietnameseTrait: 'đa diện'
+    };
+    if (savedRiasecTopCode || savedRiasecScores) {
+      riasec = {
+        scores: savedRiasecScores || {},
+        topCode: savedRiasecTopCode || 'RIA',
+        name: `Nhóm ${savedRiasecTopCode || 'RIA'}`,
+        desc: ''
+      };
+      mbti.riasec = riasec;
+    }
+  }
+
   if (mbti) {
-    personality = `[MBTI: ${mbti.type}] ${mbti.vietnameseTrait}`;
-  } else {
+    if (mbti.vietnameseTrait) {
+      personality = `[MBTI: ${mbti.type || 'MBTI'}] ${mbti.vietnameseTrait}`;
+    } else if (mbti.title) {
+      personality = `[MBTI: ${mbti.type || 'MBTI'}] ${mbti.title}`;
+    } else if (riasec && riasec.topCode) {
+      personality = `[RIASEC: ${riasec.topCode}] ${riasec.name || ''}`;
+    } else {
+      personality = `[MBTI: ${mbti.type || 'MBTI'}]`;
+    }
+  } else if (!isLikertAnswers && Array.isArray(answers) && answers.length > 0) {
     const counts = {logic: 0, people: 0, creative: 0, patient: 0};
     answers.forEach(a => {
       if (a === 0) counts.logic++;
@@ -1687,7 +1848,7 @@ function getProfile() {
         people: 'thiên về giao tiếp và hợp tác',
         creative: 'thiên về sáng tạo và thử nghiệm',
         patient: 'thiên về kiên trì và ổn định'
-      }[top[0]];
+      }[top[0]] || 'đa diện';
     }
   }
 
@@ -1702,7 +1863,7 @@ function getProfile() {
     avg,
     personality,
     mbti,
-    riasec: mbti ? mbti.riasec : null,
+    riasec: riasec || (mbti ? mbti.riasec : null),
     techTrend: mbti ? mbti.techTrend : null,
     choicePressure: mbti ? mbti.choicePressure : null,
     scoreCount: values.length
@@ -2494,8 +2655,22 @@ if (typeof window !== 'undefined') {
     let hollandCode = typeof read === 'function' ? read('riasecTopCode') : null;
     let mbtiType = typeof read === 'function' ? read('mbtiType') : null;
     let riasecScores = typeof read === 'function' ? read('riasecScores') : null;
+    const savedMbtiData = typeof read === 'function' ? read('mbtiData') : null;
 
-    if (typeof computeMBTI === 'function' && Array.isArray(answers) && answers.length > 0) {
+    if (savedMbtiData && typeof savedMbtiData === 'object') {
+      if (!hollandCode && savedMbtiData.riasecTopCode) hollandCode = savedMbtiData.riasecTopCode;
+      if (!hollandCode && savedMbtiData.riasec && savedMbtiData.riasec.topCode) hollandCode = savedMbtiData.riasec.topCode;
+      if (!mbtiType && savedMbtiData.type) mbtiType = savedMbtiData.type;
+      if (!riasecScores && savedMbtiData.riasecScores) riasecScores = savedMbtiData.riasecScores;
+      if (!riasecScores && savedMbtiData.riasec && savedMbtiData.riasec.scores) riasecScores = savedMbtiData.riasec.scores;
+    }
+
+    const isLikertAnswers = Array.isArray(answers) && (
+      answers.length > 12 ||
+      answers.some(val => typeof val === 'number' && (val === 5 || (val >= 1 && val <= 5 && !answers.includes(0))))
+    );
+
+    if (!savedMbtiData && !isLikertAnswers && typeof computeMBTI === 'function' && Array.isArray(answers) && answers.length >= 4) {
       try {
         const computed = computeMBTI(answers);
         if (computed) {

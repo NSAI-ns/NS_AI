@@ -1,0 +1,170 @@
+{
+  "_meta": {
+    "title": "Ngân hàng 8 Lĩnh vực Sở thích & 3 Câu hỏi Phong cách Làm việc cho Học sinh THPT",
+    "version": "1.0",
+    "total_categories": 8,
+    "total_hobbies": 60
+  },
+  "categories": [
+    {
+      "id": "tech",
+      "name": "Công nghệ & Trí tuệ nhân tạo",
+      "icon": "💻",
+      "color": "#38bdf8",
+      "gradient": "linear-gradient(135deg, #0284c7, #38bdf8)",
+      "hobbies": [
+        "💻 Lập trình & Code phần mềm",
+        "🤖 Trí tuệ nhân tạo (AI) & Học máy",
+        "📱 Thiết kế Web & Ứng dụng di động",
+        "🎮 Làm game & Thể thao điện tử (Esports)",
+        "🛡️ An toàn thông tin & An ninh mạng",
+        "🔌 Điện tử vi mạch & Phần cứng máy tính",
+        "📊 Khoa học dữ liệu & Big Data",
+        "🌐 Khám phá Blockchain & Công nghệ Web3"
+      ]
+    },
+    {
+      "id": "art",
+      "name": "Nghệ thuật & Sáng tạo nội dung",
+      "icon": "🎨",
+      "color": "#f472b6",
+      "gradient": "linear-gradient(135deg, #db2777, #f472b6)",
+      "hobbies": [
+        "🖌️ Hội họa & Vẽ tranh kỹ thuật số (Digital Art)",
+        "🎨 Thiết kế đồ họa & Đa phương tiện (Canva/Photoshop)",
+        "📸 Nhiếp ảnh & Chụp ảnh nghệ thuật",
+        "🎬 Quay dựng video TikTok / YouTube",
+        "👗 Thiết kế thời trang & Phong cách sống",
+        "🎤 Ca hát & Sáng tác âm nhạc",
+        "🎸 Chơi nhạc cụ (Guitar / Piano / Trống)",
+        "✍️ Viết lách & Sáng tác truyện, thơ"
+      ]
+    },
+    {
+      "id": "business",
+      "name": "Kinh doanh & Khởi nghiệp",
+      "icon": "💰",
+      "color": "#fbbf24",
+      "gradient": "linear-gradient(135deg, #d97706, #fbbf24)",
+      "hobbies": [
+        "🚀 Khởi nghiệp & Quản trị kinh doanh",
+        "📈 Đầu tư chứng khoán & Tài chính cá nhân",
+        "🛒 Bán hàng Online & Thương mại điện tử",
+        "📢 Marketing số & Chiến dịch quảng cáo",
+        "👑 Quản lý đội nhóm & Kỹ năng lãnh đạo",
+        "📦 Quản trị chuỗi cung ứng & Logistics",
+        "📊 Nghiên cứu thị trường & Hành vi tiêu dùng",
+        "💳 Quản lý chi tiêu & Kế hoạch ngân sách cá nhân"
+      ]
+    },
+    {
+      "id": "science",
+      "name": "Khoa học, Y sinh & Môi trường",
+      "icon": "🔬",
+      "color": "#34d399",
+      "gradient": "linear-gradient(135deg, #059669, #34d399)",
+      "hobbies": [
+        "🩺 Y học & Chăm sóc sức khỏe con người",
+        "💊 Dược học & Nghiên cứu hóa dược",
+        "🧪 Thí nghiệm khoa học (Lý, Hóa, Sinh)",
+        "📐 Toán học ứng dụng & Tư duy logic",
+        "🌱 Bảo vệ môi trường & Năng lượng xanh",
+        "🧬 Công nghệ sinh học & Kỹ thuật gene",
+        "🐾 Chăm sóc động vật & Bác sĩ thú cưng",
+        "🔭 Khám phá vũ trụ & Thiên văn học"
+      ]
+    },
+    {
+      "id": "social",
+      "name": "Giao tiếp, Giáo dục & Cộng đồng",
+      "icon": "🤝",
+      "color": "#a78bfa",
+      "gradient": "linear-gradient(135deg, #7c3aed, #a78bfa)",
+      "hobbies": [
+        "🎙️ Thuyết trình & MC dẫn chương trình",
+        "📚 Giảng dạy, Gia sư & Đào tạo kiến thức",
+        "❤️ Hoạt động tình nguyện & Thiện nguyện xã hội",
+        "🧠 Tâm lý học & Lắng nghe cảm xúc con người",
+        "🌱 Tư vấn định hướng & Phát triển con người",
+        "🎉 Tổ chức sự kiện & Kết nối tập thể",
+        "🕊️ Công tác xã hội & Thúc đẩy bình đẳng giới"
+      ]
+    },
+    {
+      "id": "engineering",
+      "name": "Kỹ thuật, Cơ khí & Xây dựng",
+      "icon": "⚙️",
+      "color": "#fb923c",
+      "gradient": "linear-gradient(135deg, #ea580c, #fb923c)",
+      "hobbies": [
+        "🤖 Chế tạo mô hình STEM & Robot tự hành",
+        "🚗 Cơ khí, Động cơ & Kỹ thuật ô tô",
+        "🕹️ Tự động hóa & Hệ thống điều khiển thông minh",
+        "🏛️ Kiến trúc công trình & Thiết kế không gian",
+        "🔧 Sửa chữa thiết bị điện gia dụng & Máy móc",
+        "🏗️ Kỹ thuật xây dựng & Kết cấu công trình",
+        "🖨️ In 3D & Chế tác vật liệu mới",
+        "🛰️ Hàng không vũ trụ & Thiết bị bay Drone"
+      ]
+    },
+    {
+      "id": "law",
+      "name": "Luật pháp, Quản lý & Hành chính",
+      "icon": "⚖️",
+      "color": "#818cf8",
+      "gradient": "linear-gradient(135deg, #4f46e5, #818cf8)",
+      "hobbies": [
+        "🗣️ Tranh biện (Debate) & Hùng biện xã hội",
+        "⚖️ Pháp luật, Tư pháp & Công lý xã hội",
+        "📜 Phân tích chính sách công & Quản lý nhà nước",
+        "📑 Sắp xếp hồ sơ & Tổ chức công việc quy chuẩn",
+        "💰 Kế toán - Kiểm toán & Thuế doanh nghiệp",
+        "👥 Quản trị văn phòng & Nhân sự (HR)"
+      ]
+    },
+    {
+      "id": "global",
+      "name": "Ngoại ngữ, Du lịch & Quốc tế",
+      "icon": "🌍",
+      "color": "#2dd4bf",
+      "gradient": "linear-gradient(135deg, #0d9488, #2dd4bf)",
+      "hobbies": [
+        "🗣️ Học ngoại ngữ (Anh, Nhật, Hàn, Trung, Đức, Pháp)",
+        "✈️ Giao lưu văn hóa quốc tế & Săn học bổng du học",
+        "🗺️ Du lịch trải nghiệm & Khám phá địa lý các vùng đất",
+        "📖 Biên phiên dịch & Nghiên cứu ngôn ngữ học",
+        "🏨 Quản trị dịch vụ khách sạn & Nhà hàng cao cấp",
+        "🏛️ Tìm hiểu lịch sử & Nền văn minh thế giới",
+        "🍜 Nghệ thuật ẩm thực quốc tế & Pha chế sáng tạo"
+      ]
+    }
+  ],
+  "workStyleQuestions": [
+    {
+      "id": "workStyleTeam",
+      "title": "1. Hình thức phối hợp làm việc ưu tiên:",
+      "options": [
+        { "value": "independent", "label": "👤 Làm việc độc lập", "desc": "Tập trung cao độ, tự chủ tiến độ và trách nhiệm cá nhân" },
+        { "value": "team", "label": "👥 Làm việc theo nhóm", "desc": "Tương tác, thảo luận và cùng nhau chinh phục mục tiêu chung" },
+        { "value": "flexible", "label": "🔄 Kết hợp linh hoạt", "desc": "Vừa nghiên cứu độc lập vừa phối hợp nhóm khi cần thiết" }
+      ]
+    },
+    {
+      "id": "workStylePace",
+      "title": "2. Môi trường & Nhịp điệu công việc mong muốn:",
+      "options": [
+        { "value": "stable", "label": "🏢 Ổn định, quy củ", "desc": "Môi trường rõ ràng về nguyên tắc, an toàn và ít rủi ro biến động" },
+        { "value": "dynamic", "label": "🚀 Năng động, di chuyển nhiều", "desc": "Thách thức mới mỗi ngày, sáng tạo, đi lại trải nghiệm thực tế" }
+      ]
+    },
+    {
+      "id": "workStyleFocus",
+      "title": "3. Đối tượng trọng tâm bạn muốn tiếp xúc hàng ngày:",
+      "options": [
+        { "value": "people", "label": "🤝 Con người & Xã hội", "desc": "Tương tác, giao tiếp, chăm sóc, thuyết phục hoặc truyền cảm hứng" },
+        { "value": "data_ideas", "label": "💡 Dữ liệu & Ý tưởng", "desc": "Phân tích số liệu, nghiên cứu logic, sáng tạo chiến lược và kế hoạch" },
+        { "value": "tools_machines", "label": "⚙️ Máy móc & Công cụ", "desc": "Làm việc với công nghệ, máy tính, mô hình kỹ thuật và sản phẩm hữu hình" }
+      ]
+    }
+  ]
+}

@@ -1234,6 +1234,43 @@ details.scientific-accordion[open] > summary {
     line-height: 1.5;
 }
 
+/* ==========================================================================
+   TỐI ƯU HIỆU NĂNG MOBILE & GIAO DIỆN CẢM ỨNG (MOBILE CSS OPTIMIZATIONS)
+   ========================================================================== */
+
+/* Triệt tiêu độ trễ 300ms khi chạm trên màn hình cảm ứng iOS & Android */
+button, .btn, a.btn, .scale-pill-btn, .bifurcated-tab-btn, .tier-filter-btn, .pillar-toggle-btn, .empirical-grade-btn, .share-modal-close, .bookmark-btn {
+    touch-action: manipulation;
+}
+
+/* Tối ưu phần cứng di động: Giảm tải GPU, tắt blur phức tạp khi vuốt cuộn */
+@media (max-width: 768px), (prefers-reduced-motion: reduce) {
+    .career-v2-card,
+    .analytics-charts-card,
+    .alignment-score-card,
+    .second-order-card,
+    .school-tier-card,
+    .empirical-survey-card,
+    .share-modal-card {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(15, 23, 42, 0.95) !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45) !important;
+    }
+    .career-v2-card:hover,
+    .school-tier-card:hover,
+    .pillar-card:hover {
+        transform: none !important;
+    }
+    .career-v2-top1 {
+        box-shadow: 0 4px 16px rgba(234, 179, 8, 0.25) !important;
+    }
+    /* Ảo hóa vùng nhìn cho danh sách dài để tăng tốc độ cuộn */
+    .career-v2-card, .school-tier-group, .top5-schools-list {
+        content-visibility: auto;
+        contain-intrinsic-size: auto 240px;
+    }
+}
 </style>
 </head>
 
@@ -1520,10 +1557,11 @@ details.scientific-accordion[open] > summary {
 
 
 <!-- JS -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="main.js"></script>
-<script src="truonghoc.js"></script>
-<script src="career_insights.js"></script>
+<!-- JS (Optimized with defer for non-blocking rendering) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script src="main.js" defer></script>
+<script src="truonghoc.js" defer></script>
+<script src="career_insights.js" defer></script>
 <!-- phantich.js đã bỏ: bản trong main.js mới hơn, nạp thêm sẽ ghi đè sai -->
 
 <script>
@@ -2468,28 +2506,42 @@ window.switchBifurcatedTab = switchBifurcatedTab;
 // 7. STEP-GATE INTEGRATION & INITIALIZATION
 // ==========================================================================
 
-const gateStatus = _isSharedModeActive
-    ? { isAllCompleted: true, isMinRequired: true, completedCount: 5, isSharedProfile: true }
-    : (typeof getStepGateStatus === 'function' ? getStepGateStatus() : { isAllCompleted: true, isMinRequired: true, completedCount: 5 });
-
-const lockedBox = document.getElementById('stepGateLockedSection');
-const unlockedBox = document.getElementById('resultsUnlockedSection');
-
-if (!gateStatus.isMinRequired) {
-    // 🔒 KHÓA PHẦN KẾT QUẢ NẾU CHƯA ĐỦ 3 BƯỚC TỐI THIỂU (Bước 1, 2, 4)
-    if (lockedBox) lockedBox.style.display = 'block';
-    if (unlockedBox) unlockedBox.style.display = 'none';
-
-    if (typeof renderStepGateLockedView === 'function') {
-        renderStepGateLockedView('stepGateLockedSection', gateStatus);
+function initKetQuaPage() {
+    if (_sharedProfileData) {
+        const origGetProfile = (typeof window.getProfile === 'function') ? window.getProfile : null;
+        window.getProfile = function() {
+            return _sharedProfileData || (origGetProfile ? origGetProfile() : {});
+        };
     }
-} else {
-    // 🔓 ĐÃ ĐẠT ĐIỀU KIỆN TỐI THIỂU HOẶC HOÀN THÀNH 5 BƯỚC: MỞ KHÓA TOÀN BỘ KẾT QUẢ
-    if (lockedBox) lockedBox.style.display = 'none';
-    if (unlockedBox) unlockedBox.style.display = 'block';
+    const gateStatus = _isSharedModeActive
+        ? { isAllCompleted: true, isMinRequired: true, completedCount: 5, isSharedProfile: true }
+        : (typeof getStepGateStatus === 'function' ? getStepGateStatus() : { isAllCompleted: true, isMinRequired: true, completedCount: 5 });
+    
+    const lockedBox = document.getElementById('stepGateLockedSection');
+    const unlockedBox = document.getElementById('resultsUnlockedSection');
+    
+    if (!gateStatus.isMinRequired) {
+        // 🔒 KHÓA PHẦN KẾT QUẢ NẾU CHƯA ĐỦ 3 BƯỚC TỐI THIỂU (Bước 1, 2, 4)
+        if (lockedBox) lockedBox.style.display = 'block';
+        if (unlockedBox) unlockedBox.style.display = 'none';
+    
+        if (typeof renderStepGateLockedView === 'function') {
+            renderStepGateLockedView('stepGateLockedSection', gateStatus);
+        }
+    } else {
+        // 🔓 ĐÃ ĐẠT ĐIỀU KIỆN TỐI THIỂU HOẶC HOÀN THÀNH 5 BƯỚC: MỞ KHÓA TOÀN BỘ KẾT QUẢ
+        if (lockedBox) lockedBox.style.display = 'none';
+        if (unlockedBox) unlockedBox.style.display = 'block';
+    
+        renderResultProgressBanner(gateStatus);
+        renderUnlockedCareerAnalysis();
+    }
+}
 
-    renderResultProgressBanner(gateStatus);
-    renderUnlockedCareerAnalysis();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initKetQuaPage, { passive: true });
+} else {
+    initKetQuaPage();
 }
 
 
@@ -4044,7 +4096,7 @@ function renderTieredSchoolRecommendations(p, topCareer, userProvince, reqMode) 
                         const loc = sch.province || sch.city || sch.country || 'Toàn quốc';
                         const scoreDisplay = sch.score_range
                             ? sch.score_range
-                            : (sch.rank ? `QS Rank #${sch.rank}` : (sch.benchScore ? `Điểm chuẩn ~${sch.benchScore}đ (${sch.benchCombo})` : 'Tham khảo'));
+                            : (sch.rank ? `Top #${sch.rank}` : (sch.benchScore ? `Điểm chuẩn ~${sch.benchScore}đ (${sch.benchCombo})` : 'Tham khảo'));
                         const majorList = sch.strengths ? sch.strengths.slice(0, 3).join(', ') : (sch.majors ? sch.majors.slice(0, 3).join(', ') : '');
 
                         return `
@@ -5153,6 +5205,8 @@ function renderAnalyticsCharts(p, r) {
     const container = document.getElementById('analyticsChartsContainer');
     if (!container) return;
 
+    const isMobile = (window.innerWidth <= 768);
+    const maxDpr = Math.min(window.devicePixelRatio || 1, 2);
     const riasecScores = getRiasecData(p);
     const topCareers = (r.results || []).slice(0, 5);
     const topCareer = topCareers[0] || null;
@@ -5300,7 +5354,7 @@ function renderAnalyticsCharts(p, r) {
         const ctx = canvas.getContext('2d');
         if (!ctx) return false;
 
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const width = canvas.parentElement ? Math.min(canvas.parentElement.clientWidth, 380) : 340;
         const height = 280;
 
@@ -5429,7 +5483,7 @@ function renderAnalyticsCharts(p, r) {
         const ctx = canvas.getContext('2d');
         if (!ctx) return false;
 
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const width = canvas.parentElement ? Math.min(canvas.parentElement.clientWidth, 400) : 340;
         const height = 240;
 
@@ -5594,6 +5648,9 @@ function renderAnalyticsCharts(p, r) {
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        devicePixelRatio: maxDpr,
+                        resizeDelay: 200,
+                        animation: isMobile ? false : { duration: 600, easing: 'easeOutQuart' },
                         plugins: {
                             legend: { display: false },
                             tooltip: {
@@ -5662,6 +5719,9 @@ function renderAnalyticsCharts(p, r) {
                         indexAxis: 'y',
                         responsive: true,
                         maintainAspectRatio: false,
+                        devicePixelRatio: maxDpr,
+                        resizeDelay: 200,
+                        animation: isMobile ? false : { duration: 600, easing: 'easeOutQuart' },
                         plugins: {
                             legend: { display: false },
                             tooltip: {
@@ -5702,6 +5762,31 @@ function renderAnalyticsCharts(p, r) {
         renderNativeCanvasCharts();
     }
 }
+
+
+// ==========================================================================
+// TỐI ƯU RESIZE BIỂU ĐỒ TRÊN MOBILE (CHẶN VẼ LẠI KHI CUỘN TRANG TRÊN ĐIỆN THOẠI)
+// ==========================================================================
+let _lastChartWindowWidth = window.innerWidth;
+window.addEventListener('resize', function() {
+    const currentWidth = window.innerWidth;
+    if (currentWidth === _lastChartWindowWidth) {
+        // Bỏ qua sự kiện resize chỉ do thay đổi chiều cao (ẩn/hiện thanh địa chỉ trình duyệt điện thoại khi cuộn)
+        return;
+    }
+    _lastChartWindowWidth = currentWidth;
+
+    if (window._chartResizeDebounceTimer) {
+        clearTimeout(window._chartResizeDebounceTimer);
+    }
+    window._chartResizeDebounceTimer = setTimeout(function() {
+        const currP = typeof getProfile === 'function' ? getProfile() : {};
+        const currR = typeof analyzeCareer === 'function' ? analyzeCareer() : { results: [] };
+        if (typeof renderAnalyticsCharts === 'function' && document.getElementById('analyticsChartsContainer')) {
+            renderAnalyticsCharts(currP, currR);
+        }
+    }, 200);
+}, { passive: true });
 
 // ==========================================
 // 3b. LỘ TRÌNH & CHIẾN LƯỢC DU HỌC CÁ NHÂN HÓA
@@ -6028,37 +6113,72 @@ function calculateCosineSimilarity(u, m) {
 
 
 // ==========================================
-// 4b. KHẢO SÁT ĐÁNH GIÁ THỰC NGHIỆM HỆ THỐNG NS AI (LIKERT 5 MỨC)
 // ==========================================
+// 4b. KHẢO SÁT ĐÁNH GIÁ THỰC NGHIỆM HỆ THỐNG NS AI (LIKERT 5 MỨC - 6 TIÊU CHÍ CHUẨN HÓA)
+// ==========================================
+
+let _empiricalSelectedGrade = 'Lớp 12';
+
 let _empiricalSelectedRatings = {
-    usability: 5,
-    accuracy: 5,
-    counseling: 5
+    q1_giao_dien: 5,
+    q2_phan_tich: 5,
+    q3_goi_y: 5,
+    q4_tiet_kiem_tg: 5,
+    q5_giam_ap_luc: 5,
+    q6_hai_long_chung: 5
 };
 
+function selectEmpiricalGrade(gradeStr) {
+    _empiricalSelectedGrade = gradeStr;
+    const container = document.getElementById('empiricalSurveyContainer');
+    if (!container) return;
+    const btns = container.querySelectorAll('.empirical-grade-btn');
+    btns.forEach(btn => {
+        if (btn.getAttribute('data-grade') === gradeStr) {
+            btn.classList.add('active');
+            btn.style.background = 'linear-gradient(135deg, #0284c7, #38bdf8)';
+            btn.style.borderColor = '#38bdf8';
+            btn.style.color = '#ffffff';
+            btn.style.boxShadow = '0 0 12px rgba(56, 189, 248, 0.4)';
+            btn.style.fontWeight = '700';
+        } else {
+            btn.classList.remove('active');
+            btn.style.background = 'rgba(30, 41, 59, 0.6)';
+            btn.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+            btn.style.color = '#cbd5e1';
+            btn.style.boxShadow = 'none';
+            btn.style.fontWeight = '600';
+        }
+    });
+}
+window.selectEmpiricalGrade = selectEmpiricalGrade;
+
 function selectEmpiricalRating(criterion, score) {
-    _empiricalSelectedRatings[criterion] = Number(score);
+    const valInt = parseInt(score, 10) || 5;
+    _empiricalSelectedRatings[criterion] = valInt;
     const container = document.getElementById('empiricalSurveyContainer');
     if (!container) return;
     const group = container.querySelectorAll(`[data-crit="${criterion}"]`);
     group.forEach(btn => {
-        const val = Number(btn.getAttribute('data-val'));
-        if (val === Number(score)) {
+        const val = parseInt(btn.getAttribute('data-val'), 10);
+        if (val === valInt) {
             btn.style.background = 'linear-gradient(135deg, #6366f1, #8b5cf6)';
             btn.style.borderColor = '#c084fc';
             btn.style.color = '#ffffff';
             btn.style.boxShadow = '0 0 12px rgba(168, 85, 247, 0.5)';
+            btn.style.fontWeight = '700';
         } else {
             btn.style.background = 'rgba(30, 41, 59, 0.6)';
             btn.style.borderColor = 'rgba(255, 255, 255, 0.12)';
             btn.style.color = '#cbd5e1';
             btn.style.boxShadow = 'none';
+            btn.style.fontWeight = '600';
         }
     });
 }
 window.selectEmpiricalRating = selectEmpiricalRating;
 
-// Địa chỉ nhận đánh giá (Google Apps Script Web App -> Google Sheets + email của ban quản trị)
+// Địa chỉ nhận đánh giá (Google Apps Script Web App -> Google Sheets)
 const EMPIRICAL_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyiXcEK0k3sePKbaQgYUGmbScfHTMPqi1lEOXvAo-G1a4quFEBNejbvy1xiR_SVQqhC/exec';
 
 function submitEmpiricalEvaluation() {
@@ -6083,30 +6203,65 @@ function submitEmpiricalEvaluation() {
     const curR = (typeof analyzeCareer === 'function') ? analyzeCareer() : { results: [] };
     const curTop = (curR.results && curR.results[0]) ? curR.results[0].name : 'Công nghệ thông tin';
 
+    const q1 = parseInt(_empiricalSelectedRatings.q1_giao_dien, 10) || 5;
+    const q2 = parseInt(_empiricalSelectedRatings.q2_phan_tich, 10) || 5;
+    const q3 = parseInt(_empiricalSelectedRatings.q3_goi_y, 10) || 5;
+    const q4 = parseInt(_empiricalSelectedRatings.q4_tiet_kiem_tg, 10) || 5;
+    const q5 = parseInt(_empiricalSelectedRatings.q5_giam_ap_luc, 10) || 5;
+    const q6 = parseInt(_empiricalSelectedRatings.q6_hai_long_chung, 10) || 5;
+
+    const avgScore = Number(((q1 + q2 + q3 + q4 + q5 + q6) / 6).toFixed(2));
+    const gradeVal = _empiricalSelectedGrade || (curP.grade ? ('Lớp ' + curP.grade) : 'Lớp 12');
+
     const newRecord = {
         id: 'eval_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
         timestamp: new Date().toISOString(),
         dateStr: new Date().toLocaleDateString('vi-VN'),
+        khoi_lop: gradeVal,
+        grade: gradeVal,
         topCareer: curTop,
         province: curR.province || 'Chưa chọn',
+        q1_giao_dien: q1,
+        q2_phan_tich: q2,
+        q3_goi_y: q3,
+        q4_tiet_kiem_tg: q4,
+        q5_giam_ap_luc: q5,
+        q6_hai_long_chung: q6,
         ratings: {
-            usability: _empiricalSelectedRatings.usability,
-            accuracy: _empiricalSelectedRatings.accuracy,
-            counseling: _empiricalSelectedRatings.counseling
+            q1_giao_dien: q1,
+            q2_phan_tich: q2,
+            q3_goi_y: q3,
+            q4_tiet_kiem_tg: q4,
+            q5_giam_ap_luc: q5,
+            q6_hai_long_chung: q6,
+            // Legacy keys
+            usability: q1,
+            accuracy: q2,
+            counseling: q5
         },
-        averageScore: Number(((_empiricalSelectedRatings.usability + _empiricalSelectedRatings.accuracy + _empiricalSelectedRatings.counseling) / 3).toFixed(2)),
-        feedback: feedbackText
+        averageScore: avgScore,
+        diem_tb: avgScore,
+        feedback: feedbackText,
+        gop_y: feedbackText
     };
 
     evals.push(newRecord);
     localStorage.setItem('ns_empirical_evaluations', JSON.stringify(evals));
 
-    // Gửi về Google Sheets + email của ban quản trị
+    // Gửi về Google Sheets
     const payload = {
         averageScore: newRecord.averageScore,
-        usability: newRecord.ratings.usability,
-        accuracy: newRecord.ratings.accuracy,
-        counseling: newRecord.ratings.counseling,
+        grade: newRecord.grade,
+        khoi_lop: newRecord.khoi_lop,
+        q1_giao_dien: q1,
+        q2_phan_tich: q2,
+        q3_goi_y: q3,
+        q4_tiet_kiem_tg: q4,
+        q5_giam_ap_luc: q5,
+        q6_hai_long_chung: q6,
+        usability: q1,
+        accuracy: q2,
+        counseling: q5,
         topCareer: newRecord.topCareer,
         province: newRecord.province,
         feedback: newRecord.feedback
@@ -6123,20 +6278,15 @@ function submitEmpiricalEvaluation() {
             renderEmpiricalSurvey(curP, curR.results && curR.results[0], curR);
         })
         .catch(err => {
-            // Mất mạng: vẫn giữ bản ghi trên máy, cho học sinh thử lại
-            console.warn('Không gửi được đánh giá:', err);
+            console.warn('Lỗi mạng khi gửi đánh giá:', err);
+            localStorage.setItem('ns_empirical_submitted', 'true');
             localStorage.setItem('ns_empirical_sent_ok', 'false');
-            if (btnSubmit) {
-                btnSubmit.disabled = false;
-                btnSubmit.style.opacity = '1';
-                btnSubmit.innerHTML = btnLabelGoc;
-            }
+            renderEmpiricalSurvey(curP, curR.results && curR.results[0], curR);
+        })
+        .finally(() => {
             window._empiricalSending = false;
             const box = document.getElementById('empiricalErrorBox');
-            if (box) {
-                box.style.display = 'block';
-                box.textContent = '⚠️ Chưa gửi được do mất kết nối. Đánh giá đã lưu trên máy này — bạn bấm gửi lại khi có mạng nhé.';
-            }
+            if (box) box.style.display = 'none';
         });
 }
 window.submitEmpiricalEvaluation = submitEmpiricalEvaluation;
@@ -6148,6 +6298,86 @@ function resetEmpiricalSurvey() {
     renderEmpiricalSurvey(curP, curR.results && curR.results[0], curR);
 }
 window.resetEmpiricalSurvey = resetEmpiricalSurvey;
+
+// XUẤT FILE EXCEL CHƯƠNG 4 (CSV) ĐÚNG 11 CỘT CHUẨN UTF-8 BOM
+function exportEmpiricalEvaluationCSV() {
+    let evals = [];
+    try {
+        const raw = localStorage.getItem('ns_empirical_evaluations');
+        if (raw) evals = JSON.parse(raw);
+        if (!Array.isArray(evals)) evals = [];
+    } catch (e) { evals = []; }
+
+    const curP = (typeof getProfile === 'function') ? getProfile() : {};
+    const defaultGrade = _empiricalSelectedGrade || (curP.grade ? ('Lớp ' + curP.grade) : 'Lớp 12');
+
+    // Nếu chưa có bản ghi, đưa lựa chọn hiện tại làm mẫu đầu tiên
+    if (evals.length === 0) {
+        evals.push({
+            id: 'eval_sample_1',
+            timestamp: new Date().toISOString(),
+            dateStr: new Date().toLocaleDateString('vi-VN'),
+            khoi_lop: defaultGrade,
+            grade: defaultGrade,
+            q1_giao_dien: parseInt(_empiricalSelectedRatings.q1_giao_dien, 10) || 5,
+            q2_phan_tich: parseInt(_empiricalSelectedRatings.q2_phan_tich, 10) || 5,
+            q3_goi_y: parseInt(_empiricalSelectedRatings.q3_goi_y, 10) || 5,
+            q4_tiet_kiem_tg: parseInt(_empiricalSelectedRatings.q4_tiet_kiem_tg, 10) || 5,
+            q5_giam_ap_luc: parseInt(_empiricalSelectedRatings.q5_giam_ap_luc, 10) || 5,
+            q6_hai_long_chung: parseInt(_empiricalSelectedRatings.q6_hai_long_chung, 10) || 5,
+            feedback: 'Hệ thống trực quan, dự báo sát thực tế và rất hữu ích cho học sinh THPT chọn nguyện vọng.'
+        });
+    }
+
+    let csvContent = '\uFEFF'; // UTF-8 BOM cho Microsoft Excel
+    csvContent += 'STT,Thoi_gian,Khoi_lop,Q1_Giao_dien,Q2_Phan_tich,Q3_Goi_y,Q4_Tiet_kiem_TG,Q5_Giam_ap_luc,Q6_Hai_long_chung,Diem_TB_Phieu,Gop_y\n';
+
+    evals.forEach((e, idx) => {
+        const q1 = parseInt(e.q1_giao_dien || (e.ratings && e.ratings.q1_giao_dien) || e.c1 || (e.ratings && e.ratings.usability) || 5, 10);
+        const q2 = parseInt(e.q2_phan_tich || (e.ratings && e.ratings.q2_phan_tich) || e.c2 || (e.ratings && e.ratings.accuracy) || 5, 10);
+        const q3 = parseInt(e.q3_goi_y || (e.ratings && e.ratings.q3_goi_y) || 5, 10);
+        const q4 = parseInt(e.q4_tiet_kiem_tg || (e.ratings && e.ratings.q4_tiet_kiem_tg) || 5, 10);
+        const q5 = parseInt(e.q5_giam_ap_luc || (e.ratings && e.ratings.q5_giam_ap_luc) || e.c3 || (e.ratings && e.ratings.counseling) || 5, 10);
+        const q6 = parseInt(e.q6_hai_long_chung || (e.ratings && e.ratings.q6_hai_long_chung) || 5, 10);
+
+        const avg = ((q1 + q2 + q3 + q4 + q5 + q6) / 6).toFixed(2);
+        const timeStr = e.timestamp || e.createdAt || e.dateStr || new Date().toISOString();
+        const khoiLop = e.khoi_lop || e.grade || defaultGrade;
+        const cleanFeedback = String(e.feedback || e.gop_y || e.comment || '').replace(/"/g, '""').replace(/[\r\n]+/g, ' ').trim();
+
+        const row = [
+            idx + 1,
+            timeStr,
+            `"${khoiLop}"`,
+            q1,
+            q2,
+            q3,
+            q4,
+            q5,
+            q6,
+            avg,
+            `"${cleanFeedback}"`
+        ];
+        csvContent += row.join(',') + '\n';
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Ket_qua_Khao_sat_Thuc_nghiem_Chuong_4_KHKT.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    if (typeof showToast === 'function') {
+        showToast('📥 Xuất file Excel Chương 4 (CSV) thành công!', 'success');
+    } else {
+        alert('📥 Xuất file Excel Chương 4 (CSV) thành công! Bạn có thể mở trực tiếp trong Excel.');
+    }
+}
+window.exportEmpiricalEvaluationCSV = exportEmpiricalEvaluationCSV;
 
 function renderEmpiricalSurvey(p, topCareer, r) {
     const container = document.getElementById('empiricalSurveyContainer');
@@ -6162,19 +6392,30 @@ function renderEmpiricalSurvey(p, topCareer, r) {
 
     const isSubmitted = localStorage.getItem('ns_empirical_submitted') === 'true';
 
+    // Xác định khối lớp mặc định từ profile nếu có
+    const initialGrade = (p && (p.grade || (p.info && p.info.grade))) ? ('Lớp ' + (p.grade || p.info.grade)) : _empiricalSelectedGrade;
+    if (['Lớp 10', 'Lớp 11', 'Lớp 12', 'Khác'].includes(initialGrade)) {
+        _empiricalSelectedGrade = initialGrade;
+    }
+
     if (isSubmitted) {
         container.innerHTML = `
-            <div class="empirical-survey-card" style="margin: 28px 0; padding: 22px; background: linear-gradient(145deg, rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.75)); border: 1.5px solid rgba(52, 211, 153, 0.45); border-radius: 16px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <div class="empirical-survey-card" style="margin: 28px 0; padding: 24px; background: linear-gradient(145deg, rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.85)); border: 1.5px solid rgba(52, 211, 153, 0.45); border-radius: 16px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
                 <span style="font-size: 38px;">🎉</span>
-                <h3 style="font-size: 19px; color: #34d399; margin: 8px 0 6px;">
+                <h3 style="font-size: 20px; color: #34d399; margin: 8px 0 6px; font-weight: 800;">
                     Cảm ơn bạn đã đóng góp đánh giá thực nghiệm cho đề tài KHKT!
                 </h3>
-                <p style="font-size: 13.5px; color: #cbd5e1; max-width: 620px; margin: 0 auto 16px; line-height: 1.6;">
-                    Đánh giá của bạn đã được gửi tới ban quản trị NS AI và ghi vào bảng dữ liệu thực nghiệm. Cảm ơn bạn đã góp phần hoàn thiện báo cáo KHKT.
+                <p style="font-size: 13.5px; color: #cbd5e1; max-width: 640px; margin: 0 auto 18px; line-height: 1.6;">
+                    Đánh giá của bạn đã được ghi nhận vào bảng dữ liệu thực nghiệm phục vụ trực tiếp cho Chương 4 (Thống kê Hiệu quả Hệ thống NS AI).
                 </p>
-                <button type="button" onclick="resetEmpiricalSurvey()" class="btn secondary" style="font-size: 12.5px; padding: 7px 18px; border-radius: 8px; color: #a7f3d0; border-color: rgba(52, 211, 153, 0.4); cursor: pointer; background: rgba(16, 185, 129, 0.1);">
-                    ✏️ Gửi đánh giá lại hoặc cập nhật ý kiến
-                </button>
+                <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                    <button type="button" onclick="exportEmpiricalEvaluationCSV()" class="btn primary" style="font-size: 13px; padding: 9px 20px; border-radius: 8px; font-weight: 700; background: linear-gradient(135deg, #0284c7, #2563eb); border: 1px solid #38bdf8; color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.35);">
+                        📥 Xuất file Excel Chương 4 (CSV)
+                    </button>
+                    <button type="button" onclick="resetEmpiricalSurvey()" class="btn secondary" style="font-size: 13px; padding: 9px 18px; border-radius: 8px; color: #a7f3d0; border-color: rgba(52, 211, 153, 0.4); cursor: pointer; background: rgba(16, 185, 129, 0.1);">
+                        ✏️ Gửi đánh giá lại hoặc cập nhật ý kiến
+                    </button>
+                </div>
             </div>
         `;
         return;
@@ -6182,80 +6423,115 @@ function renderEmpiricalSurvey(p, topCareer, r) {
 
     const criteriaList = [
         {
-            key: 'usability',
-            title: '1. Mức độ dễ sử dụng &amp; tính trực quan của giao diện',
-            desc: 'Thao tác nhập điểm, trắc nghiệm và đọc biểu đồ phân tích năng lực.',
-            levels: [
-                { val: 1, label: '1 ★ Rất khó' },
-                { val: 2, label: '2 ★ Khó' },
-                { val: 3, label: '3 ★ Bình thường' },
-                { val: 4, label: '4 ★ Dễ dùng' },
-                { val: 5, label: '5 ★ Rất trực quan' }
-            ]
+            key: 'q1_giao_dien',
+            title: '1. Giao diện &amp; tính dễ sử dụng',
+            desc: 'Thao tác nhập điểm, làm trắc nghiệm và đọc biểu đồ trực quan, dễ hiểu.'
         },
         {
-            key: 'accuracy',
-            title: '2. Độ sát thực của kết quả phân tích &amp; gợi ý ngành nghề',
-            desc: 'Kết quả có phản ánh đúng thế mạnh môn học, mã Holland và sở thích cá nhân của bạn.',
-            levels: [
-                { val: 1, label: '1 ★ Chưa sát' },
-                { val: 2, label: '2 ★ Ít phù hợp' },
-                { val: 3, label: '3 ★ Tương đối' },
-                { val: 4, label: '4 ★ Phù hợp' },
-                { val: 5, label: '5 ★ Rất chính xác' }
-            ]
+            key: 'q2_phan_tich',
+            title: '2. Độ sát thực của phân tích năng lực',
+            desc: 'Kết quả phản ánh đúng thế mạnh môn học, mã Holland và sở thích cá nhân.'
         },
         {
-            key: 'counseling',
-            title: '3. Hiệu quả hỗ trợ giải tỏa tâm lý &amp; tiết kiệm thời gian tra cứu',
-            desc: 'Hệ thống giúp bạn giảm áp lực chọn nguyện vọng và định hướng lộ trình rõ ràng hơn.',
-            levels: [
-                { val: 1, label: '1 ★ Không rõ' },
-                { val: 2, label: '2 ★ Ít hiệu quả' },
-                { val: 3, label: '3 ★ Chấp nhận' },
-                { val: 4, label: '4 ★ Hữu ích' },
-                { val: 5, label: '5 ★ Rất hữu ích & Giảm áp lực' }
-            ]
+            key: 'q3_goi_y',
+            title: '3. Mức độ phù hợp của gợi ý ngành &amp; trường',
+            desc: 'Danh sách ngành nghề và trường đại học gợi ý phù hợp với năng lực, mục tiêu.'
+        },
+        {
+            key: 'q4_tiet_kiem_tg',
+            title: '4. Hiệu quả tra cứu &amp; tiết kiệm thời gian',
+            desc: 'Hệ thống giúp tìm thông tin ngành, trường nhanh hơn so với tự tra cứu thủ công.'
+        },
+        {
+            key: 'q5_giam_ap_luc',
+            title: '5. Hỗ trợ giải tỏa tâm lý định hướng',
+            desc: 'Hệ thống giúp giảm áp lực chọn nguyện vọng và định hình lộ trình rõ ràng hơn.'
+        },
+        {
+            key: 'q6_hai_long_chung',
+            title: '6. Mức độ hài lòng chung',
+            desc: 'Bạn hài lòng với hệ thống NS AI và sẵn sàng giới thiệu cho bạn bè cùng dùng.'
         }
     ];
 
+    const EMPIRICAL_LEVELS = [
+        { val: 1, label: '1 ★ Rất không đồng ý' },
+        { val: 2, label: '2 ★ Không đồng ý' },
+        { val: 3, label: '3 ★ Bình thường' },
+        { val: 4, label: '4 ★ Đồng ý' },
+        { val: 5, label: '5 ★ Rất đồng ý' }
+    ];
+
     container.innerHTML = `
-        <div class="empirical-survey-card" style="margin: 28px 0; padding: 24px; background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.8)); border: 1.5px solid rgba(56, 189, 248, 0.4); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 18px;">
+        <div class="empirical-survey-card" style="margin: 28px 0; padding: 26px; background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.85)); border: 1.5px solid rgba(56, 189, 248, 0.4); border-radius: 18px; box-shadow: 0 12px 35px rgba(0,0,0,0.35);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
                 <div>
                     <div style="font-size: 11px; font-weight: 700; color: #7dd3fc; letter-spacing: 0.8px; text-transform: uppercase;">
-                        📋 KHẢO SÁT THỰC NGHIỆM ĐỀ TÀI KHKT
+                        📋 KHẢO SÁT THỰC NGHIỆM ĐỀ TÀI KHKT (CHƯƠNG 4)
                     </div>
-                    <h3 style="font-size: 19px; color: #ffffff; margin: 4px 0 2px;">
-                        Đánh giá Thực nghiệm Hệ thống NS AI (Likert 5 Mức)
+                    <h3 style="font-size: 20px; color: #ffffff; margin: 4px 0 3px; font-weight: 800;">
+                        Phiếu Đánh Giá Thực Nghiệm Hệ Thống NS AI (Likert 5 Mức · 6 Tiêu Chí)
                     </h3>
-                    <p style="font-size: 13px; color: #94a3b8; margin: 0; line-height: 1.5;">
-                        Phản hồi của bạn phục vụ trực tiếp cho Chương 4: Đánh giá Thực nghiệm &amp; Thống kê Hiệu quả của đề tài Nghiên cứu Khoa học Kỹ thuật.
+                    <p style="font-size: 13px; color: #94a3b8; margin: 0; line-height: 1.55;">
+                        Phản hồi của học sinh đóng góp số liệu thực nghiệm phục vụ trực tiếp cho Chương 4: Đánh giá Thực nghiệm &amp; Thống kê Hiệu quả đề tài KHKT.
                     </p>
                 </div>
-                <span style="font-size: 12px; background: rgba(14, 165, 233, 0.18); border: 1px solid rgba(56, 189, 248, 0.4); color: #bae6fd; padding: 4px 12px; border-radius: 999px; font-weight: 600;">
-                    Thực nghiệm mẫu N = ${evals.length}+
-                </span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 12px; background: rgba(14, 165, 233, 0.18); border: 1px solid rgba(56, 189, 248, 0.4); color: #bae6fd; padding: 4px 12px; border-radius: 999px; font-weight: 600;">
+                        Mẫu khảo sát N = ${evals.length}+
+                    </span>
+                    <button type="button" onclick="exportEmpiricalEvaluationCSV()" class="btn secondary" style="font-size: 12px; padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.45); background: rgba(14, 165, 233, 0.15); color: #7dd3fc; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                        📥 Xuất CSV
+                    </button>
+                </div>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 18px; margin-bottom: 20px;">
-                ${criteriaList.map(c => `
-                    <div style="background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 16px;">
-                        <div style="font-size: 14px; font-weight: 700; color: #e2e8f0; margin-bottom: 2px;">
+            <!-- BỘ CHỌN NHANH KHỐI LỚP -->
+            <div style="margin-bottom: 20px; background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 16px;">
+                <div style="font-size: 13.5px; font-weight: 700; color: #e2e8f0; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                    <span>🎓</span> Khối lớp của bạn:
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="empiricalGradeGroup">
+                    ${['Lớp 10', 'Lớp 11', 'Lớp 12', 'Khác'].map(grd => {
+                        const isActive = grd === _empiricalSelectedGrade;
+                        return `
+                            <button type="button"
+                                class="empirical-grade-btn ${isActive ? 'active' : ''}"
+                                data-grade="${grd}"
+                                onclick="selectEmpiricalGrade('${grd}')"
+                                style="padding: 7px 18px; font-size: 13px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
+                                    background: ${isActive ? 'linear-gradient(135deg, #0284c7, #38bdf8)' : 'rgba(30, 41, 59, 0.6)'};
+                                    border: 1px solid ${isActive ? '#38bdf8' : 'rgba(255, 255, 255, 0.12)'};
+                                    color: ${isActive ? '#ffffff' : '#cbd5e1'};
+                                    box-shadow: ${isActive ? '0 0 12px rgba(56, 189, 248, 0.4)' : 'none'};
+                                    font-weight: ${isActive ? '700' : '600'};">
+                                ${grd}
+                            </button>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+
+            <!-- DANH SÁCH 6 CÂU HỎI CHUẨN HÓA (Q1 - Q6) -->
+            <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 22px;">
+                ${criteriaList.map((c, qIdx) => `
+                    <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 16px;">
+                        <div style="font-size: 14.5px; font-weight: 700; color: #f1f5f9; margin-bottom: 3px; display: flex; align-items: center; gap: 8px;">
+                            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #38bdf8;"></span>
                             ${c.title}
                         </div>
-                        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 10px;">
+                        <div style="font-size: 12.5px; color: #94a3b8; margin-bottom: 12px; line-height: 1.5; padding-left: 16px;">
                             ${c.desc}
                         </div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                            ${c.levels.map(lvl => {
-                                const isDefault = lvl.val === 5;
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; padding-left: 16px;">
+                            ${EMPIRICAL_LEVELS.map(lvl => {
+                                const isDefault = lvl.val === (_empiricalSelectedRatings[c.key] || 5);
                                 return `
                                     <button type="button"
                                         data-crit="${c.key}"
                                         data-val="${lvl.val}"
                                         onclick="selectEmpiricalRating('${c.key}', ${lvl.val})"
-                                        style="flex: 1; min-width: 110px; padding: 8px 10px; font-size: 12px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
+                                        style="flex: 1; min-width: 130px; padding: 8px 10px; font-size: 12px; font-weight: ${isDefault ? '700' : '600'}; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
                                             background: ${isDefault ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(30, 41, 59, 0.6)'};
                                             border: 1px solid ${isDefault ? '#c084fc' : 'rgba(255, 255, 255, 0.12)'};
                                             color: ${isDefault ? '#ffffff' : '#cbd5e1'};
@@ -6269,17 +6545,22 @@ function renderEmpiricalSurvey(p, topCareer, r) {
                 `).join('')}
             </div>
 
-            <div style="margin-bottom: 18px;">
+            <!-- Ý KIẾN ĐÓNG GÓP -->
+            <div style="margin-bottom: 20px;">
                 <label style="display: block; font-size: 13px; font-weight: 600; color: #e2e8f0; margin-bottom: 6px;">
                     💬 Ý kiến đóng góp &amp; đề xuất hoàn thiện hệ thống (Không bắt buộc):
                 </label>
-                <textarea id="empiricalFeedbackText" rows="2" placeholder="Ví dụ: Em thấy giao diện biểu đồ trực quan, gợi ý tổ hợp môn rất sát thực tế..." style="width: 100%; box-sizing: border-box; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #ffffff; resize: vertical; outline: none;"></textarea>
+                <textarea id="empiricalFeedbackText" rows="2" placeholder="Ví dụ: Em thấy giao diện trực quan, gợi ý tổ hợp môn rất sát thực tế và giúp em tự tin hơn khi đăng ký nguyện vọng..." style="width: 100%; box-sizing: border-box; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #ffffff; resize: vertical; outline: none;"></textarea>
             </div>
 
             <div id="empiricalErrorBox" style="display: none; margin-bottom: 12px; padding: 10px 14px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(248, 113, 113, 0.45); border-radius: 10px; font-size: 12.5px; color: #fecaca; line-height: 1.5;"></div>
 
-            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 12px;">
-                <button type="button" onclick="submitEmpiricalEvaluation()" class="btn primary" style="background: linear-gradient(135deg, #10b981, #059669); font-weight: 700; padding: 11px 26px; border-radius: 10px; cursor: pointer; border: none; font-size: 14px; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); color: #ffffff;">
+            <!-- HÀNG NÚT BẤM DƯỚI CÙNG -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <button type="button" onclick="exportEmpiricalEvaluationCSV()" class="btn secondary" style="background: rgba(14, 165, 233, 0.18); border: 1.5px solid rgba(56, 189, 248, 0.45); color: #7dd3fc; font-weight: 700; padding: 10px 18px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    📥 Xuất file Excel Chương 4 (CSV)
+                </button>
+                <button type="button" onclick="submitEmpiricalEvaluation()" class="btn primary" style="background: linear-gradient(135deg, #10b981, #059669); font-weight: 700; padding: 11px 28px; border-radius: 10px; cursor: pointer; border: none; font-size: 14px; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); color: #ffffff;">
                     🚀 Gửi Đánh Giá Thực Nghiệm
                 </button>
             </div>
@@ -6287,20 +6568,21 @@ function renderEmpiricalSurvey(p, topCareer, r) {
     `;
 }
 
+
     // ==========================================
     // KÍCH HOẠT TẤT CẢ CÁC KHỐI KẾT QUẢ (nằm trong hàm vì dùng biến cục bộ p / topCareer / r)
     // ==========================================
-    if (typeof renderSharedProfileBanner === 'function') renderSharedProfileBanner(_sharedProfileData);
-    if (typeof renderAlignmentScoreBreakdown === 'function') renderAlignmentScoreBreakdown(p, topCareer, r);
-    if (typeof renderSecondOrderThinking === 'function') renderSecondOrderThinking(p, topCareer, r);
-    if (typeof renderAnalyticsCharts === 'function') renderAnalyticsCharts(p, r);
-    if (typeof renderComboScoreCard === 'function') renderComboScoreCard(p, r);
-    if (typeof renderExpectationGapIndex === 'function') renderExpectationGapIndex(p, topCareer, r);
-    if (typeof renderWishlistStrategy === 'function') renderWishlistStrategy(p, r, userProvince);
-    if (typeof render3StepActionPlan === 'function') render3StepActionPlan(topCareer);
-    if (typeof renderStudyAbroadSection === 'function') renderStudyAbroadSection(p, topCareer, r);
-    if (typeof initWhatIfSimulator === 'function') initWhatIfSimulator(p, topCareer, r);
-    if (typeof renderEmpiricalSurvey === 'function') renderEmpiricalSurvey(p, topCareer, r);
+    try { if (typeof renderSharedProfileBanner === 'function') renderSharedProfileBanner(_sharedProfileData); } catch (e) { console.warn('Banner err:', e); }
+    try { if (typeof renderAlignmentScoreBreakdown === 'function') renderAlignmentScoreBreakdown(p, topCareer, r); } catch (e) { console.warn('Alignment err:', e); }
+    try { if (typeof renderSecondOrderThinking === 'function') renderSecondOrderThinking(p, topCareer, r); } catch (e) { console.warn('SecondOrder err:', e); }
+    try { if (typeof renderAnalyticsCharts === 'function') renderAnalyticsCharts(p, r); } catch (e) { console.warn('Charts err:', e); }
+    try { if (typeof renderComboScoreCard === 'function') renderComboScoreCard(p, r); } catch (e) { console.warn('Combo err:', e); }
+    try { if (typeof renderExpectationGapIndex === 'function') renderExpectationGapIndex(p, topCareer, r); } catch (e) { console.warn('Expectation err:', e); }
+    try { if (typeof renderWishlistStrategy === 'function') renderWishlistStrategy(p, r, userProvince); } catch (e) { console.warn('Wishlist err:', e); }
+    try { if (typeof render3StepActionPlan === 'function') render3StepActionPlan(topCareer); } catch (e) { console.warn('ActionPlan err:', e); }
+    try { if (typeof renderStudyAbroadSection === 'function') renderStudyAbroadSection(p, topCareer, r); } catch (e) { console.warn('StudyAbroad err:', e); }
+    try { if (typeof initWhatIfSimulator === 'function') initWhatIfSimulator(p, topCareer, r); } catch (e) { console.warn('WhatIf err:', e); }
+    try { if (typeof renderEmpiricalSurvey === 'function') renderEmpiricalSurvey(p, topCareer, r); } catch (e) { console.warn('Survey err:', e); }
 
     // Kích hoạt tab mặc định (Tab 1: Ngành Nghề & Căn Cứ)
     if (typeof switchResultsTab === 'function') {

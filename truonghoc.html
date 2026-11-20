@@ -413,6 +413,38 @@
         padding: 16px !important;
     }
 }
+.school-load-more-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 28px 0 16px;
+    width: 100%;
+}
+.school-load-more-btn {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(124, 58, 237, 0.35));
+    border: 1.5px solid rgba(167, 139, 250, 0.5);
+    color: #ffffff;
+    padding: 12px 28px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 18px rgba(79, 70, 229, 0.3);
+}
+.school-load-more-btn:hover {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.45), rgba(124, 58, 237, 0.55));
+    border-color: #c7d2fe;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(99, 102, 241, 0.5);
+}
+.school-load-more-btn:active {
+    transform: translateY(0);
+}
 </style>
 </head>
 
@@ -477,7 +509,7 @@
 <!-- ================= HUY HIỆU & DISCLAIMER MINH BẠCH DỮ LIỆU TĨNH ================= -->
 <div style="margin: 12px 0 16px;">
     <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(99, 102, 241, 0.18); border: 1px solid rgba(129, 140, 248, 0.45); border-radius: 999px; font-size: 13px; font-weight: 600; color: #c7d2fe;">
-        📅 Dữ liệu tuyển sinh mới nhất & Xếp hạng QS World University Rankings
+        📅 Dữ liệu tuyển sinh mới nhất &amp; Xếp hạng đại học thế giới (OpenAlex Citation Rank)
     </span>
 </div>
 
@@ -584,7 +616,7 @@
         </select>
     </div>
     <div class="school-filter-group">
-        <label for="filterRank">🏆 Khoảng thứ hạng QS</label>
+        <label for="filterRank">🏆 Khoảng thứ hạng quốc tế</label>
         <select id="filterRank">
             <option value="">Tất cả thứ hạng</option>
             <option value="top100">Top 100 thế giới</option>
@@ -625,6 +657,7 @@
 <!-- ================= DANH SÁCH TRƯỜNG & PHÂN TRANG ================= -->
 <div id="schoolsSection">
     <div id="schools" class="school-grid"></div>
+    <div id="schoolLoadMoreWrap" class="school-load-more-wrap" style="display: none;"></div>
     <div id="schoolPagination" class="school-pagination"></div>
 </div>
 
@@ -688,7 +721,7 @@
                 <p class="eyebrow" style="margin: 0 0 4px; color: #a78bfa;">⚖️ ĐỐI CHIẾU ĐA CHIỀU (TỐI ĐA 3 TRƯỜNG)</p>
                 <h2 style="font-size: 22px; margin: 0 0 6px; color: #ffffff;">Bảng so sánh trường Đại học & Cao đẳng</h2>
                 <p style="font-size: 13px; color: #94a3b8; margin: 0;">
-                    Đối chiếu trực diện 7 tiêu chí: Tên &amp; Mã trường, Loại hình, Điểm chuẩn &amp; Thứ hạng QS, Tổ hợp &amp; Yêu cầu đầu vào, Khu vực địa lý, Ngành đào tạo mũi nhọn, và Cổng tuyển sinh chính thức
+                    Đối chiếu trực diện 7 tiêu chí: Tên &amp; Mã trường, Loại hình, Điểm chuẩn &amp; Thứ hạng quốc tế (OpenAlex), Tổ hợp &amp; Yêu cầu đầu vào, Khu vực địa lý, Ngành đào tạo mũi nhọn, và Cổng tuyển sinh chính thức
                 </p>
             </div>
             <button class="modal-close" onclick="closeSchoolCompareModal()" title="Đóng bảng so sánh">×</button>

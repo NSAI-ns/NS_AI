@@ -99,7 +99,7 @@
     <a href="sothich.html" class="btn secondary">
       ← Quay lại Bước 3 (Sở thích)
     </a>
-    <button type="button" class="btn primary" onclick="finishRIASECTest()">
+    <button type="button" class="btn primary" id="btnFinishRIASEC" onclick="finishRIASECTest(event)">
       📊 Xem kết quả phân tích &amp; Mã Holland ➡️
     </button>
   </div>
@@ -276,10 +276,37 @@ const RIASEC_BANK = {
 };
 
 // ========================================================
-// TRẠNG THÁI HIỆN TẠI (STATE)
+// TRẠNG THÁI HIỆN TẠI (STATE) & TẢI DỮ LIỆU
 // ========================================================
 let currentTestMode = 'quick'; // 'quick' (18 câu) hoặc 'full' (36 câu)
 let currentAnswers = {}; // { 'R1': 4, 'R2': 5, ... }
+let questionsLoaded = true; // Sẵn sàng với dữ liệu fallback RIASEC_BANK
+
+// Tải câu hỏi từ data/riasec_questions.json với fallback RIASEC_BANK
+async function loadRiasecQuestions() {
+  try {
+    const res = await fetch('data/riasec_questions.json');
+    if (!res.ok) {
+      console.warn('HTTP error khi tải data/riasec_questions.json:', res.status);
+      return;
+    }
+    const data = await res.json();
+    if (data && Array.isArray(data.questions) && data.questions.length > 0) {
+      RIASEC_BANK.questions = data.questions;
+      if (data._meta && data._meta.scale) {
+        RIASEC_BANK.meta = RIASEC_BANK.meta || {};
+        RIASEC_BANK.meta.scale = data._meta.scale;
+      }
+      if (data.explanations && typeof data.explanations === 'object') {
+        RIASEC_BANK.explanations = data.explanations;
+      }
+    }
+  } catch (err) {
+    console.info('Sử dụng dữ liệu RIASEC_BANK dự phòng (fallback):', err && err.message);
+  } finally {
+    questionsLoaded = true;
+  }
+}
 
 // Kiểm tra hiển thị banner điểm số từ bước trước
 (function checkScoresBanner() {
@@ -295,28 +322,98 @@ let currentAnswers = {}; // { 'R1': 4, 'R2': 5, ... }
   } catch (err) {}
 })();
 
-// Khôi phục câu trả lời tạm thời từ LocalStorage Draft
+// Đồng bộ giao diện nút chọn chế độ Quick / Full
+function updateModeSwitcherUI(mode) {
+  const btnQ = document.getElementById('btnModeQuick');
+  const btnF = document.getElementById('btnModeFull');
+  const pTitle = document.getElementById('progressTitle');
+  if (btnQ) btnQ.classList.toggle('active', mode === 'quick');
+  if (btnF) btnF.classList.toggle('active', mode === 'full');
+  if (pTitle) {
+    pTitle.textContent = mode === 'quick' ? 'Tiến trình làm bài test nhanh:' : 'Tiến trình làm bài test chuyên sâu:';
+  }
+}
+
+// Khôi phục câu trả lời hoặc kết quả đã lưu từ LocalStorage
 function restoreDraftOrSaved() {
   try {
+    let savedData = null;
+    if (typeof read === 'function') {
+      try { savedData = read('mbtiData'); } catch (e) {}
+    }
+    if (!savedData) {
+      try {
+        const raw = localStorage.getItem('ns_mbtiData');
+        if (raw && raw !== 'null' && raw !== 'undefined') {
+          savedData = JSON.parse(raw);
+        }
+      } catch (e) {}
+    }
+
     const draftStr = localStorage.getItem('ns_personality_draft');
+    let draft = null;
     if (draftStr) {
-      const draft = JSON.parse(draftStr);
-      if (draft && draft.answers) {
-        currentAnswers = draft.answers;
-        if (draft.mode === 'full' || draft.mode === 'quick') {
-          currentTestMode = draft.mode;
+      try { draft = JSON.parse(draftStr); } catch (e) {}
+    }
+
+    // 1. Nếu đã có kết quả chính thức đã lưu (savedData)
+    if (savedData && savedData.riasec && savedData.riasec.scores) {
+      // Dọn dẹp bản nháp draft cũ nếu còn sót lại do lỗi phiên bản trước
+      localStorage.removeItem('ns_personality_draft');
+
+      if (savedData.mode === 'full' || savedData.mode === 'quick') {
+        currentTestMode = savedData.mode;
+      }
+
+      // Khôi phục các câu trả lời đã làm
+      currentAnswers = {};
+      if (savedData.answers && typeof savedData.answers === 'object') {
+        currentAnswers = { ...savedData.answers };
+      } else if (savedData.riasec && savedData.riasec.answersMap && typeof savedData.riasec.answersMap === 'object') {
+        currentAnswers = { ...savedData.riasec.answersMap };
+      } else {
+        let pAnswers = typeof read === 'function' ? read('personalityAnswers') : null;
+        if (!pAnswers) {
+          try {
+            const rawP = localStorage.getItem('ns_personalityAnswers');
+            if (rawP && rawP !== 'null') pAnswers = JSON.parse(rawP);
+          } catch (e) {}
+        }
+        if (Array.isArray(pAnswers) && pAnswers.length > 0) {
+          const qs = getActiveQuestions();
+          pAnswers.forEach((sc, idx) => {
+            if (qs[idx]) currentAnswers[qs[idx].id] = sc;
+          });
         }
       }
-    } else {
-      // Nếu không có draft nhưng đã lưu mbtiData trước đó
-      const savedData = typeof read === 'function' ? read('mbtiData') : null;
-      if (savedData && savedData.riasec && savedData.riasec.scores) {
-        // Có kết quả cũ -> tự động vẽ lại kết quả
-        renderResultsView(savedData);
-      }
+
+      updateModeSwitcherUI(currentTestMode);
+      renderQuestions();
+      updateProgressBar();
+      renderResultsView(savedData);
+      return;
     }
+
+    // 2. Nếu đang làm dở (có bản nháp ns_personality_draft)
+    if (draft && draft.answers && typeof draft.answers === 'object') {
+      currentAnswers = { ...draft.answers };
+      if (draft.mode === 'full' || draft.mode === 'quick') {
+        currentTestMode = draft.mode;
+      }
+      updateModeSwitcherUI(currentTestMode);
+      renderQuestions();
+      updateProgressBar();
+      return;
+    }
+
+    // 3. Chưa có dữ liệu nào (bắt đầu mới)
+    updateModeSwitcherUI(currentTestMode);
+    renderQuestions();
+    updateProgressBar();
   } catch (e) {
-    console.error('Error restoring RIASEC draft:', e);
+    console.error('Error restoring RIASEC draft or saved:', e);
+    renderQuestions();
+    updateProgressBar();
   }
 }
 
@@ -333,15 +430,8 @@ function switchTestMode(mode) {
   if (mode === currentTestMode) return;
   currentTestMode = mode;
 
-  // Cập nhật giao diện nút switcher
-  document.getElementById('btnModeQuick').classList.toggle('active', mode === 'quick');
-  document.getElementById('btnModeFull').classList.toggle('active', mode === 'full');
-  document.getElementById('progressTitle').textContent = mode === 'quick' ? 'Tiến trình làm bài test nhanh:' : 'Tiến trình làm bài test chuyên sâu:';
-
-  // Lưu chế độ vào draft
+  updateModeSwitcherUI(mode);
   saveDraft();
-
-  // Render lại câu hỏi
   renderQuestions();
   updateProgressBar();
 }
@@ -349,6 +439,7 @@ function switchTestMode(mode) {
 // Render toàn bộ câu hỏi
 function renderQuestions() {
   const container = document.getElementById('questionsContainer');
+  if (!container) return;
   const activeQuestions = getActiveQuestions();
   const total = activeQuestions.length;
 
@@ -371,8 +462,12 @@ function renderQuestions() {
 
         <div class="riasec-scale-row">
           ${[1, 2, 3, 4, 5].map(score => {
-            const sc = RIASEC_BANK.meta.scale[score];
-            const isSel = val === score;
+            const sc = (RIASEC_BANK.meta && RIASEC_BANK.meta.scale && RIASEC_BANK.meta.scale[score]) || {
+              score: score,
+              label: score === 1 ? 'Rất không thích' : score === 2 ? 'Không thích' : score === 3 ? 'Bình thường' : score === 4 ? 'Thích' : 'Rất thích',
+              emoji: score === 1 ? '😠' : score === 2 ? '🙁' : score === 3 ? '😐' : score === 4 ? '🙂' : '🤩'
+            };
+            const isSel = Number(val) === score;
             return `
               <div class="scale-pill-btn ${isSel ? 'selected' : ''}" 
                    id="scaleBtn_${q.id}_${score}"
@@ -404,7 +499,7 @@ function selectScaleAnswer(questionId, score, index) {
   const card = document.getElementById(`riasecCard${index}`);
   if (card) card.classList.add('answered');
 
-  // Lưu draft
+  // Tự động lưu bản nháp ngay lập tức
   saveDraft();
   updateProgressBar();
 
@@ -429,7 +524,9 @@ function saveDraft() {
       timestamp: Date.now()
     };
     localStorage.setItem('ns_personality_draft', JSON.stringify(draft));
-  } catch (e) {}
+  } catch (e) {
+    console.warn('Lỗi khi lưu ns_personality_draft:', e);
+  }
 }
 
 // Cập nhật thanh tiến trình
@@ -460,6 +557,11 @@ function resetPersonalityAnswers() {
   if (!confirm('Bạn có muốn đặt lại toàn bộ câu trả lời trắc nghiệm Holland RIASEC để làm lại từ đầu không?')) return;
   currentAnswers = {};
   localStorage.removeItem('ns_personality_draft');
+  localStorage.removeItem('ns_personalityAnswers');
+  localStorage.removeItem('ns_mbtiType');
+  localStorage.removeItem('ns_mbtiData');
+  localStorage.removeItem('ns_riasecScores');
+  localStorage.removeItem('ns_riasecTopCode');
   
   if (typeof save === 'function') {
     save('personalityAnswers', []);
@@ -467,6 +569,13 @@ function resetPersonalityAnswers() {
     save('mbtiData', null);
     save('riasecScores', null);
     save('riasecTopCode', null);
+  }
+
+  // Khôi phục nút nộp bài về trạng thái ban đầu
+  const submitBtn = document.getElementById('btnFinishRIASEC') || document.querySelector('button[onclick*="finishRIASECTest"]');
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '📊 Xem kết quả phân tích &amp; Mã Holland ➡️';
   }
 
   // Ẩn vùng kết quả nếu có
@@ -485,23 +594,55 @@ function resetPersonalityAnswers() {
 // ========================================================
 // TÍNH TOÁN KẾT QUẢ & MÃ HOLLAND RIASEC
 // ========================================================
-function finishRIASECTest() {
+function finishRIASECTest(event) {
+  if (event && typeof event.preventDefault === 'function') {
+    event.preventDefault();
+  }
+
+  // Chống click đúp (Double-click prevention) & trạng thái tải (loading state)
+  const submitBtn = (event && event.currentTarget) || document.getElementById('btnFinishRIASEC') || document.querySelector('button[onclick*="finishRIASECTest"]');
+  let originalBtnHtml = '';
+  if (submitBtn) {
+    if (submitBtn.disabled) return;
+    submitBtn.disabled = true;
+    originalBtnHtml = submitBtn.innerHTML;
+    submitBtn.innerHTML = '⏳ Đang lưu &amp; phân tích kết quả...';
+  }
+
+  const resetBtnState = () => {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnHtml;
+    }
+  };
+
+  // Đảm bảo dữ liệu câu hỏi đã sẵn sàng trước khi cho phép nộp bài
   const activeQuestions = getActiveQuestions();
+  if (!questionsLoaded || !activeQuestions || activeQuestions.length === 0) {
+    const msg = 'Dữ liệu câu hỏi đang được khởi tạo, vui lòng thử lại sau vài giây!';
+    if (typeof showToast === 'function') showToast(msg, 'warning');
+    else alert(msg);
+    resetBtnState();
+    return;
+  }
+
   const total = activeQuestions.length;
 
   // Kiểm tra câu nào chưa trả lời
   for (let i = 0; i < total; i++) {
     const q = activeQuestions[i];
     if (currentAnswers[q.id] === undefined || currentAnswers[q.id] === null) {
+      const msg = `Bạn hãy trả lời câu hỏi số ${i + 1} (${q.groupName}) nhé!`;
       if (typeof showToast === 'function') {
-        showToast(`Bạn hãy trả lời câu hỏi số ${i + 1} (${q.groupName}) nhé!`, 'error');
+        showToast(msg, 'error');
       } else {
-        alert(`Bạn hãy trả lời câu hỏi số ${i + 1} (${q.groupName}) nhé!`);
+        alert(msg);
       }
       const targetCard = document.getElementById(`riasecCard${i}`);
       if (targetCard) {
         targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
+      resetBtnState();
       return;
     }
   }
@@ -511,7 +652,7 @@ function finishRIASECTest() {
   const answerArray = [];
 
   activeQuestions.forEach(q => {
-    const s = currentAnswers[q.id] || 3;
+    const s = Number(currentAnswers[q.id]) || 3;
     scores[q.group] = (scores[q.group] || 0) + s;
     answerArray.push(s);
   });
@@ -522,37 +663,103 @@ function finishRIASECTest() {
   const topCode = top3.join('');
 
   // Tên đầy đủ
-  const groupNames = top3.map(l => RIASEC_BANK.explanations[l].name.split(' - ')[0]).join(' · ');
+  const groupNames = top3.map(l => (RIASEC_BANK.explanations[l]?.name || l).split(' - ')[0]).join(' · ');
   const fullName = `Nhóm ${groupNames} (${topCode})`;
-  const topDesc = `Bạn có xu hướng vượt trội ở 3 nhóm: ${top3.map(l => RIASEC_BANK.explanations[l].name).join(', ')}.`;
+  const topDesc = `Bạn có xu hướng vượt trội ở 3 nhóm: ${top3.map(l => RIASEC_BANK.explanations[l]?.name || l).join(', ')}.`;
 
   const mbtiData = {
     type: topCode,
     title: fullName,
     desc: topDesc,
+    mode: currentTestMode,
+    answers: { ...currentAnswers },
     riasec: {
       scores: scores,
       sorted: sorted,
       top3: top3,
       topCode: topCode,
       name: fullName,
-      desc: topDesc
+      desc: topDesc,
+      answersMap: { ...currentAnswers }
     }
   };
 
-  // Lưu chuẩn vào LocalStorage
-  if (typeof save === 'function') {
-    save('personalityAnswers', answerArray);
-    save('mbtiType', topCode);
-    save('mbtiData', mbtiData);
-    save('riasecScores', scores);
-    save('riasecTopCode', topCode);
-  } else {
-    localStorage.setItem('ns_personalityAnswers', JSON.stringify(answerArray));
-    localStorage.setItem('ns_mbtiType', topCode);
-    localStorage.setItem('ns_mbtiData', JSON.stringify(mbtiData));
-    localStorage.setItem('ns_riasecScores', JSON.stringify(scores));
-    localStorage.setItem('ns_riasecTopCode', topCode);
+  // Lưu vào LocalStorage có bọc try/catch xử lý QuotaExceededError
+  try {
+    if (typeof save === 'function') {
+      save('personalityAnswers', answerArray);
+      save('mbtiType', topCode);
+      save('mbtiData', mbtiData);
+      save('riasecScores', scores);
+      save('riasecTopCode', topCode);
+    } else {
+      localStorage.setItem('ns_personalityAnswers', JSON.stringify(answerArray));
+      localStorage.setItem('ns_mbtiType', JSON.stringify(topCode));
+      localStorage.setItem('ns_mbtiData', JSON.stringify(mbtiData));
+      localStorage.setItem('ns_riasecScores', JSON.stringify(scores));
+      localStorage.setItem('ns_riasecTopCode', JSON.stringify(topCode));
+    }
+  } catch (err) {
+    console.error('Lỗi khi lưu kết quả trắc nghiệm RIASEC:', err);
+    const isQuota = err && (
+      err.name === 'QuotaExceededError' ||
+      err.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+      err.code === 22 ||
+      err.code === 1014 ||
+      (typeof err.message === 'string' && err.message.toLowerCase().includes('quota'))
+    );
+    const errMsg = isQuota
+      ? 'Bộ nhớ trình duyệt (localStorage) đã đầy. Vui lòng dọn dẹp bớt dữ liệu trình duyệt hoặc đăng nhập lại để lưu trữ!'
+      : 'Có lỗi xảy ra khi lưu kết quả trắc nghiệm: ' + (err.message || 'Lỗi không xác định');
+    if (typeof showToast === 'function') {
+      showToast(errMsg, 'error');
+    } else {
+      alert(errMsg);
+    }
+    resetBtnState();
+    return;
+  }
+
+  // Xác minh dữ liệu đã ghi thành công (Save Verification)
+  let verified = false;
+  try {
+    const vMbti = localStorage.getItem('ns_mbtiData');
+    const vScores = localStorage.getItem('ns_riasecScores');
+    const vTopCode = localStorage.getItem('ns_riasecTopCode');
+
+    if (vMbti && vScores && vTopCode) {
+      const parsedMbti = JSON.parse(vMbti);
+      const parsedScores = JSON.parse(vScores);
+      let parsedTopCode = vTopCode;
+      try { parsedTopCode = JSON.parse(vTopCode); } catch (e) {}
+
+      if (parsedMbti && parsedMbti.riasec && typeof parsedScores === 'object' && parsedTopCode) {
+        verified = true;
+      }
+    }
+  } catch (vErr) {
+    console.error('Save verification error:', vErr);
+    verified = false;
+  }
+
+  if (!verified) {
+    const vFailMsg = 'Lỗi xác thực dữ liệu: Không thể xác minh kết quả đã được lưu an toàn vào hệ thống. Vui lòng thử lại!';
+    if (typeof showToast === 'function') {
+      showToast(vFailMsg, 'error');
+    } else {
+      alert(vFailMsg);
+    }
+    resetBtnState();
+    return;
+  }
+
+  // XÁC MINH THÀNH CÔNG: Xóa bản nháp ns_personality_draft
+  localStorage.removeItem('ns_personality_draft');
+
+  // Khôi phục nút với nhãn cập nhật
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '📊 Cập nhật lại kết quả &amp; Mã Holland ➡️';
   }
 
   // Hiển thị giao diện kết quả trực quan
@@ -582,10 +789,19 @@ function renderResultsView(mbtiData) {
   const scores = riasec.scores || { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
   const top3 = riasec.top3 || ['R', 'I', 'A'];
 
+  // Cập nhật nhãn nút nộp bài thành "Cập nhật lại kết quả"
+  const submitBtn = document.getElementById('btnFinishRIASEC') || document.querySelector('button[onclick*="finishRIASECTest"]');
+  if (submitBtn) {
+    submitBtn.innerHTML = '📊 Cập nhật lại kết quả &amp; Mã Holland ➡️';
+  }
+
   // Điền tiêu đề & badge
-  document.getElementById('resHollandCode').textContent = topCode;
-  document.getElementById('resHollandTitle').textContent = riasec.name || `Nhóm Holland: ${topCode}`;
-  document.getElementById('resHollandDesc').textContent = riasec.desc || '';
+  const codeEl = document.getElementById('resHollandCode');
+  const titleEl = document.getElementById('resHollandTitle');
+  const descEl = document.getElementById('resHollandDesc');
+  if (codeEl) codeEl.textContent = topCode;
+  if (titleEl) titleEl.textContent = riasec.name || `Nhóm Holland: ${topCode}`;
+  if (descEl) descEl.textContent = riasec.desc || '';
 
   // Điền max score text
   const maxPossible = currentTestMode === 'quick' ? 15 : 30;
@@ -619,7 +835,7 @@ function renderResultsView(mbtiData) {
           <div class="decode-prop">
             <strong>🎓 Top ngành nghề tiêu biểu:</strong>
             <div class="decode-majors-wrap">
-              ${exp.topMajors.map(m => `<span class="major-pill">${m}</span>`).join('')}
+              ${(exp.topMajors || []).map(m => `<span class="major-pill">${m}</span>`).join('')}
             </div>
           </div>
         </div>
@@ -779,10 +995,9 @@ function drawRiasecRadar(canvasId, scores, maxScore) {
 }
 
 // Khởi tạo trang khi tải xong DOM
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadRiasecQuestions();
   restoreDraftOrSaved();
-  renderQuestions();
-  updateProgressBar();
 });
 </script>
 

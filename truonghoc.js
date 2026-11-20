@@ -8,8 +8,14 @@ let vnSchoolList = [];
 let globalSchoolList = [];
 let filteredSchoolList = [];
 let currentSchoolPage = 1;
-const SCHOOLS_PER_PAGE = 20;
-let schoolSearchDebounceTimer = null;
+const SCHOOLS_PER_PAGE = 24; // 24 thẻ mỗi trang / chunk (chia đều lưới 2, 3, 4 cột)
+let visibleSchoolCount = 24;
+let schoolFilterDebounceTimer = null;
+
+// Quản lý trạng thái lazy-load dữ liệu thế giới
+let isGlobalDataLoaded = false;
+let isGlobalDataLoading = false;
+let globalLoadPromise = null;
 
 // Quản lý so sánh trường học (Tối đa 3 trường)
 let selectedCompareSchoolIds = [];
@@ -30,13 +36,21 @@ function removeVietnameseTones(str) {
 }
 
 /**
- * Tìm trường trong dataset theo ID (hỗ trợ cả trường VN và Thế giới)
+ * Tìm trường trong dataset theo ID (hỗ trợ cả trường VN và Thế giới, fallback cache)
  */
 function findSchoolById(id) {
   if (!id) return null;
   const target = String(id).trim().toLowerCase();
-  return vnSchoolList.find(s => s.id && s.id.toLowerCase() === target) ||
-         globalSchoolList.find(s => s.id && s.id.toLowerCase() === target) || null;
+  let school = vnSchoolList.find(s => s.id && s.id.toLowerCase() === target) ||
+               globalSchoolList.find(s => s.id && s.id.toLowerCase() === target);
+  if (!school && Array.isArray(window.DEFAULT_GLOBAL_SCHOOLS_DATA)) {
+    const raw = window.DEFAULT_GLOBAL_SCHOOLS_DATA.find((s, idx) => {
+      const gId = s.id || ('global_' + String(idx + 1).padStart(3, '0'));
+      return gId.toLowerCase() === target;
+    });
+    if (raw) school = normalizeGlobalSchool(raw, 0);
+  }
+  return school || null;
 }
 
 /**
@@ -45,8 +59,13 @@ function findSchoolById(id) {
 function findSchoolByName(name) {
   if (!name) return null;
   const target = String(name).trim().toLowerCase();
-  return vnSchoolList.find(s => s.name && s.name.trim().toLowerCase() === target) ||
-         globalSchoolList.find(s => s.name && s.name.trim().toLowerCase() === target) || null;
+  let school = vnSchoolList.find(s => s.name && s.name.trim().toLowerCase() === target) ||
+               globalSchoolList.find(s => s.name && s.name.trim().toLowerCase() === target);
+  if (!school && Array.isArray(window.DEFAULT_GLOBAL_SCHOOLS_DATA)) {
+    const raw = window.DEFAULT_GLOBAL_SCHOOLS_DATA.find(s => s.name && s.name.trim().toLowerCase() === target);
+    if (raw) school = normalizeGlobalSchool(raw, 0);
+  }
+  return school || null;
 }
 
 /**
@@ -539,7 +558,7 @@ function renderComparisonDock() {
       const s = findSchoolById(id);
       if (s) {
         const icon = s.isGlobal ? '🌍' : '🏫';
-        const badgeText = s.isGlobal ? `QS #${s.rank}` : (s.code || s.type || 'VN');
+        const badgeText = s.isGlobal ? `Top #${s.rank}` : (s.code || s.type || 'VN');
         slotsHtml += `
           <div class="dock-slot-item">
             <span>${icon}</span>
@@ -582,12 +601,18 @@ function scrollToSchoolGrid() {
 /**
  * Mở modal so sánh trường học
  */
-function openSchoolCompareModal() {
+async function openSchoolCompareModal() {
   if (!Array.isArray(selectedCompareSchoolIds) || selectedCompareSchoolIds.length === 0) {
     if (typeof showToast === 'function') {
       showToast('Vui lòng chọn ít nhất 1 trường để so sánh.', 'warning');
     }
     return;
+  }
+
+  // Nếu có trường quốc tế trong danh sách so sánh mà chưa nạp data thế giới -> nạp trước
+  const hasGlobal = selectedCompareSchoolIds.some(id => String(id).startsWith('global_') || !vnSchoolList.some(s => s.id === id));
+  if (hasGlobal && (!globalSchoolList || globalSchoolList.length === 0)) {
+    await ensureGlobalSchoolDataLoaded();
   }
 
   renderComparisonModalContent();
@@ -631,7 +656,7 @@ function renderComparisonModalContent() {
   // Header các cột trường
   const headerColsHtml = schools.map(s => {
     const isBookmarked = isSchoolBookmarked(s.id);
-    const badgeText = s.isGlobal ? `🏆 QS #${s.rank}` : (s.code ? `Mã: ${s.code}` : (s.type || 'Công lập'));
+    const badgeText = s.isGlobal ? `🏆 Top #${s.rank}` : (s.code ? `Mã: ${s.code}` : (s.type || 'Công lập'));
     return `
       <th class="col-school">
         <div class="compare-school-header">
@@ -697,7 +722,7 @@ function renderComparisonModalContent() {
   // Row 1: Tên & Mã trường
   const nameCodeRowHtml = schools.map(s => {
     const codeBadge = s.isGlobal 
-      ? `<span class="school-badge school-badge-rank" style="font-size:11px;">🏆 QS #${s.rank}</span>`
+      ? `<span class="school-badge school-badge-rank" style="font-size:11px;">🏆 Top #${s.rank}</span>`
       : `<span class="school-badge school-badge-primary" style="font-size:11px;">Mã: ${s.code || 'Chưa cập nhật'}</span>`;
     return `
       <td>
@@ -732,11 +757,11 @@ function renderComparisonModalContent() {
       return `
         <td>
           <div style="margin-bottom:6px;">
-            <span style="color:#94a3b8;font-size:12px;">Xếp hạng QS World Rankings:</span>
+            <span style="color:#94a3b8;font-size:12px;">${s.ranking_source || 'Xếp hạng toàn cầu'}:</span>
             <div style="font-size:18px;font-weight:800;color:#fef08a;margin-top:2px;">🏆 Top #${s.rank} Thế giới</div>
           </div>
           <span style="display:inline-block;padding:2px 8px;border-radius:6px;background:rgba(234,179,8,0.15);color:#fde047;font-size:11.5px;font-weight:600;">
-            THE &amp; QS Global Tier
+            ${s.ranking_source || 'OpenAlex Citation Rank'}
           </span>
         </td>
       `;
@@ -869,7 +894,7 @@ function renderComparisonModalContent() {
             ${typeRowHtml}
           </tr>
           <tr>
-            <th class="col-feature">📊 Tiêu chí 3: Điểm chuẩn / Thứ hạng QS</th>
+            <th class="col-feature">📊 Tiêu chí 3: Điểm chuẩn / Thứ hạng quốc tế</th>
             ${scoreRowHtml}
           </tr>
           <tr>
@@ -1073,7 +1098,83 @@ function normalizeGlobalSchool(s, idx) {
 }
 
 /**
- * Khởi tạo và tải dữ liệu trường học bất đồng bộ
+ * Helper tải JSON an toàn qua nhiều đường dẫn tương đối (tương thích GitHub Pages & local)
+ */
+async function fetchJsonSafely(paths) {
+  for (let i = 0; i < paths.length; i++) {
+    try {
+      const res = await fetch(paths[i]);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return data;
+      }
+    } catch (e) {}
+  }
+  return null;
+}
+
+/**
+ * Lazy-load: Nạp dữ liệu Top 1.000 Đại học Thế giới chỉ khi người dùng cần
+ * Có bộ nhớ đệm (in-memory cache) tránh fetch lặp lại khi chuyển đổi giữa các tab
+ */
+async function ensureGlobalSchoolDataLoaded() {
+  if (isGlobalDataLoaded && Array.isArray(globalSchoolList) && globalSchoolList.length > 0) {
+    return globalSchoolList;
+  }
+  if (globalLoadPromise) {
+    return globalLoadPromise;
+  }
+
+  // Tái sử dụng dữ liệu từ window.DEFAULT_GLOBAL_SCHOOLS_DATA nếu đã có sẵn trong bộ nhớ
+  if (Array.isArray(window.DEFAULT_GLOBAL_SCHOOLS_DATA) && window.DEFAULT_GLOBAL_SCHOOLS_DATA.length > 0) {
+    globalSchoolList = window.DEFAULT_GLOBAL_SCHOOLS_DATA.map((s, idx) => normalizeGlobalSchool(s, idx));
+    isGlobalDataLoaded = true;
+    return globalSchoolList;
+  }
+
+  isGlobalDataLoading = true;
+  globalLoadPromise = (async () => {
+    try {
+      const globalCandidates = [
+        'data/schools_global_top1000.json',
+        './data/schools_global_top1000.json',
+        '../data/schools_global_top1000.json',
+        '../HTML/data/schools_global_top1000.json',
+        'HTML/data/schools_global_top1000.json',
+        '../JS/data/schools_global_top1000.json',
+        'JS/data/schools_global_top1000.json',
+        'schools_global_top1000.json',
+        './schools_global_top1000.json'
+      ];
+      let rawGlobal = await fetchJsonSafely(globalCandidates);
+
+      if (!rawGlobal || !Array.isArray(rawGlobal) || rawGlobal.length === 0) {
+        console.error('[NS AI] KHONG TAI DUOC data/schools_global_top1000.json. Kiem tra file co bi loi JSON/BOM khong.', globalCandidates);
+        if (Array.isArray(window.DEFAULT_GLOBAL_SCHOOLS_DATA) && window.DEFAULT_GLOBAL_SCHOOLS_DATA.length > 0) {
+          rawGlobal = window.DEFAULT_GLOBAL_SCHOOLS_DATA;
+          console.warn('[NS AI] Dang dung du lieu du phong chi co', rawGlobal.length, 'truong.');
+        } else {
+          rawGlobal = [];
+        }
+      }
+
+      globalSchoolList = rawGlobal.map((s, idx) => normalizeGlobalSchool(s, idx));
+      if (Array.isArray(rawGlobal) && rawGlobal.length > 0) {
+        window.DEFAULT_GLOBAL_SCHOOLS_DATA = rawGlobal;
+      }
+      isGlobalDataLoaded = true;
+      return globalSchoolList;
+    } finally {
+      isGlobalDataLoading = false;
+      globalLoadPromise = null;
+    }
+  })();
+
+  return globalLoadPromise;
+}
+
+/**
+ * Khởi tạo và tải dữ liệu trường học Việt Nam (Lazy-load trường Quốc tế khi người dùng chuyển Tab)
  */
 async function loadAllSchoolData() {
   const container = document.getElementById('schools');
@@ -1082,26 +1183,12 @@ async function loadAllSchoolData() {
       <div class="school-loading-state" style="grid-column: 1 / -1;">
         <div class="school-spinner"></div>
         <p style="color:#cbd5e1;font-weight:600;margin:0 0 6px;">Đang tải cơ sở dữ liệu trường học...</p>
-        <span style="font-size:12.5px;color:#94a3b8;">Đang nạp danh mục trường Việt Nam và quốc tế...</span>
+        <span style="font-size:12.5px;color:#94a3b8;">Đang nạp 255+ trường Đại học &amp; Cao đẳng Việt Nam...</span>
       </div>
     `;
   }
 
-  // Helper tải JSON an toàn qua nhiều đường dẫn tương đối (tương thích GitHub Pages & local)
-  async function fetchJsonSafely(paths) {
-    for (let i = 0; i < paths.length; i++) {
-      try {
-        const res = await fetch(paths[i]);
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) return data;
-        }
-      } catch (e) {}
-    }
-    return null;
-  }
-
-  // 1. Tải dữ liệu trường Việt Nam (hỗ trợ 255 trường đầy đủ)
+  // 1. Tải duy nhất dữ liệu trường Việt Nam (255 trường đầy đủ) khi khởi động trang
   const vnCandidates = [
     'data/schools_vn.json',
     './data/schools_vn.json',
@@ -1110,13 +1197,11 @@ async function loadAllSchoolData() {
     'HTML/data/schools_vn.json',
     '../JS/data/schools_vn.json',
     'JS/data/schools_vn.json',
-    // GitHub: file da bi upload phang o goc repo (cung cap voi truonghoc.html)
     'schools_vn.json',
     './schools_vn.json'
   ];
   let rawVN = await fetchJsonSafely(vnCandidates);
 
-  // GitHub Pages: neu van khong thay file, in ra dung URL da thu de biet dang o dau
   if (!rawVN) {
     console.error('[NS AI] Da thu cac duong dan VN:', vnCandidates.map(p => new URL(p, location.href).href));
   }
@@ -1137,54 +1222,30 @@ async function loadAllSchoolData() {
     window.DEFAULT_SCHOOLS_DATA = rawVN;
   }
 
-  // 2. Tải dữ liệu trường Thế giới (Top 1000 trường quốc tế)
-  const globalCandidates = [
-    'data/schools_global_top1000.json',
-    './data/schools_global_top1000.json',
-    '../data/schools_global_top1000.json',
-    '../HTML/data/schools_global_top1000.json',
-    'HTML/data/schools_global_top1000.json',
-    '../JS/data/schools_global_top1000.json',
-    'JS/data/schools_global_top1000.json',
-    // GitHub: file da bi upload phang o goc repo (cung cap voi truonghoc.html)
-    'schools_global_top1000.json',
-    './schools_global_top1000.json'
-  ];
-  let rawGlobal = await fetchJsonSafely(globalCandidates);
-
-  if (!rawGlobal || !Array.isArray(rawGlobal) || rawGlobal.length === 0) {
-    console.error('[NS AI] KHONG TAI DUOC data/schools_global_top1000.json. Kiem tra file co bi loi JSON/BOM khong.', globalCandidates);
-    if (Array.isArray(window.DEFAULT_GLOBAL_SCHOOLS_DATA) && window.DEFAULT_GLOBAL_SCHOOLS_DATA.length > 0) {
-      rawGlobal = window.DEFAULT_GLOBAL_SCHOOLS_DATA;
-      console.warn('[NS AI] Dang dung du lieu du phong chi co', rawGlobal.length, 'truong.');
-    } else {
-      rawGlobal = [];
-    }
-  }
-
-  globalSchoolList = rawGlobal.map((s, idx) => normalizeGlobalSchool(s, idx));
-  // Đồng bộ lại vào window.DEFAULT_GLOBAL_SCHOOLS_DATA
-  if (Array.isArray(rawGlobal) && rawGlobal.length > 0) {
-    window.DEFAULT_GLOBAL_SCHOOLS_DATA = rawGlobal;
-  }
+  // 2. KHÔNG tải trước data/schools_global_top1000.json ở đây.
+  // Dữ liệu Top 1.000 Quốc tế sẽ được nạp theo cơ chế lazy-load khi chuyển Tab.
 
   // Tự động kiểm tra và tối ưu hóa dữ liệu yêu thích (fix QuotaExceededError)
   migrateAndSyncFavorites();
   updateFavoriteCountBadge();
   renderComparisonDock();
 
-  // Cập nhật dòng đếm số trường THẬT đang có trong dữ liệu (không dùng số ước lượng)
+  // Cập nhật dòng đếm số trường
   const loadingNote = document.querySelector('.school-loading-state span');
   if (loadingNote) loadingNote.remove();
+
+  // Khởi tạo hiển thị ban đầu 24 trường (chunked rendering)
+  currentSchoolPage = 1;
+  visibleSchoolCount = SCHOOLS_PER_PAGE;
 
   // Áp dụng bộ lọc và render lần đầu
   applySchoolFilters();
 }
 
 /**
- * Chuyển đổi giữa 2 Tab: 'vn' và 'global'
+ * Chuyển đổi giữa 2 Tab: 'vn' và 'global' (kèm lazy-load dữ liệu quốc tế)
  */
-function switchSchoolTab(tab) {
+async function switchSchoolTab(tab) {
   if (currentSchoolTab === tab) return;
   currentSchoolTab = tab;
 
@@ -1209,6 +1270,27 @@ function switchSchoolTab(tab) {
   }
 
   currentSchoolPage = 1;
+  visibleSchoolCount = SCHOOLS_PER_PAGE;
+
+  // Nếu chuyển sang tab Quốc tế mà chưa có dữ liệu trong bộ nhớ -> Lazy load ngay
+  if (tab === 'global' && !isGlobalDataLoaded) {
+    const container = document.getElementById('schools');
+    const countLabel = document.getElementById('schoolCountLabel');
+    if (countLabel) {
+      countLabel.innerHTML = 'Đang tải dữ liệu Top 1.000 Đại học Thế giới...';
+    }
+    if (container) {
+      container.innerHTML = `
+        <div class="school-loading-state" style="grid-column: 1 / -1;">
+          <div class="school-spinner"></div>
+          <p style="color:#cbd5e1;font-weight:600;margin:0 0 6px;">Đang tải cơ sở dữ liệu Top 1.000 Đại học Thế giới...</p>
+          <span style="font-size:12.5px;color:#94a3b8;">Xếp hạng học thuật OpenAlex &amp; Yêu cầu du học...</span>
+        </div>
+      `;
+    }
+    await ensureGlobalSchoolDataLoaded();
+  }
+
   applySchoolFilters();
 }
 
@@ -1216,6 +1298,7 @@ function switchSchoolTab(tab) {
  * Xóa ô tìm kiếm
  */
 function clearSchoolSearch() {
+  clearTimeout(schoolFilterDebounceTimer);
   const qInput = document.getElementById('q');
   const clearBtn = document.getElementById('searchClearBtn');
   if (qInput) {
@@ -1223,6 +1306,8 @@ function clearSchoolSearch() {
     qInput.focus();
   }
   if (clearBtn) clearBtn.style.display = 'none';
+  currentSchoolPage = 1;
+  visibleSchoolCount = SCHOOLS_PER_PAGE;
   applySchoolFilters();
 }
 
@@ -1230,6 +1315,7 @@ function clearSchoolSearch() {
  * Đặt lại tất cả các bộ lọc
  */
 function resetSchoolFilters() {
+  clearTimeout(schoolFilterDebounceTimer);
   const qInput = document.getElementById('q');
   const clearBtn = document.getElementById('searchClearBtn');
   if (qInput) qInput.value = '';
@@ -1259,6 +1345,7 @@ function resetSchoolFilters() {
   if (strength) strength.value = '';
 
   currentSchoolPage = 1;
+  visibleSchoolCount = SCHOOLS_PER_PAGE;
   applySchoolFilters();
   if (typeof showToast === 'function') {
     showToast('Đã đặt lại tất cả bộ lọc tìm kiếm.', 'info');
@@ -1401,7 +1488,14 @@ function applySchoolFilters() {
     });
 
   } else {
-    // Tab Global
+    // Tab Global: nếu dữ liệu chưa tải xong, chờ lazy-load hoàn tất
+    if (!isGlobalDataLoaded) {
+      ensureGlobalSchoolDataLoaded().then(() => {
+        applySchoolFilters();
+      });
+      return;
+    }
+
     const countryVal = document.getElementById('filterCountry')?.value || '';
     const rankVal = document.getElementById('filterRank')?.value || '';
     const strengthVal = document.getElementById('filterStrength')?.value || '';
@@ -1450,12 +1544,204 @@ function applySchoolFilters() {
 }
 
 /**
- * Hiển thị danh sách thẻ trường kèm phân trang
+ * Debounce bộ lọc và tìm kiếm (250ms - 300ms)
+ * Tránh giật lag và giảm thiểu thao tác lọc/vẽ DOM lặp lại liên tục khi người dùng gõ phím hoặc đổi dropdown
+ */
+function debouncedApplySchoolFilters(delay = 250) {
+  clearTimeout(schoolFilterDebounceTimer);
+  schoolFilterDebounceTimer = setTimeout(() => {
+    currentSchoolPage = 1;
+    visibleSchoolCount = SCHOOLS_PER_PAGE;
+    applySchoolFilters();
+  }, delay);
+}
+
+/**
+ * Render HTML cho một thẻ trường học (dùng chung cho cả renderSchoolList và loadMoreSchools)
+ */
+function renderSchoolCardHtml(s) {
+  const bookmarked = isSchoolBookmarked(s.id);
+  const isCompared = isSchoolSelectedForCompare(s.id);
+
+  const compareBtnHtml = `
+    <button
+      type="button"
+      class="school-compare-btn ${isCompared ? 'active' : ''}"
+      data-compare-id="${s.id}"
+      onclick="handleCompareCardClick(event, '${s.id}')"
+      title="${isCompared ? 'Bỏ chọn khỏi so sánh' : 'Chọn so sánh (tối đa 3 trường)'}"
+    >
+      <span>⚖️</span>
+      <span class="compare-btn-text">${isCompared ? 'Đang so sánh' : '+ So sánh'}</span>
+    </button>
+  `;
+
+  const bookmarkBtnHtml = `
+    <button
+      type="button"
+      class="school-bookmark-btn ${bookmarked ? 'bookmarked' : ''}"
+      data-school-id="${s.id}"
+      data-school-name="${encodeURIComponent(s.name)}"
+      onclick="handleSchoolBookmarkClick(event, '${encodeURIComponent(s.name)}', ${s.isGlobal})"
+      title="${bookmarked ? 'Bấm để bỏ lưu khỏi danh sách nguyện vọng' : 'Lưu vào danh sách nguyện vọng'}"
+    >
+      ${bookmarked ? '⭐ Đã lưu' : '☆ Lưu mục tiêu'}
+    </button>
+  `;
+
+  if (!s.isGlobal) {
+    // Thẻ trường Việt Nam
+    const majorsHtml = (s.majors || []).slice(0, 4).map(m => `<span class="school-bench-chip" style="background:rgba(255,255,255,0.08);color:#e2e8f0;">${m}</span>`).join('');
+    const combosHtml = (s.combinations || []).slice(0, 4).join(', ');
+    const typeBadge = getVNSchoolTypeBadge(s.type);
+
+    return `
+      <article class="school-card ${isCompared ? 'card-selected-compare' : ''}" data-school-card-id="${s.id}">
+        <div class="school-card-header">
+          <div>
+            <span class="school-logo">🏫</span>
+            <div class="school-badge-row">
+              ${s.code ? `<span class="school-badge school-badge-primary">Mã: ${s.code}</span>` : ''}
+              <span class="school-badge ${typeBadge.cls}">${typeBadge.icon} ${typeBadge.text}</span>
+              <span class="school-badge school-badge-info">${s.region ? 'Miền ' + s.region : (s.province || 'Việt Nam')}</span>
+            </div>
+          </div>
+          <div class="school-card-header-actions" style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            ${compareBtnHtml}
+            ${bookmarkBtnHtml}
+          </div>
+        </div>
+
+        <h3 style="font-size: 17px; margin: 4px 0 8px; color: #ffffff; line-height: 1.4;">
+          ${s.name}
+        </h3>
+
+        <p class="school-location" style="font-size: 13px; margin: 0 0 10px;">
+          📍 ${s.province ? s.province : 'Chưa xác định'} ${s.region ? '· Vùng ' + s.region : ''}
+        </p>
+
+        <p style="font-size: 13.5px; line-height: 1.5; color: #cbd5e1; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+          ${s.description}
+        </p>
+
+        <div style="margin: 10px 0; font-size: 13px;">
+          <b style="color: #a78bfa;">Ngành tiêu biểu:</b>
+          <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;">
+            ${majorsHtml || '<span style="color:#64748b;">Đa ngành đào tạo</span>'}
+          </div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.035); padding: 10px 12px; border-radius: 10px; margin: 12px 0; font-size: 12.5px; border: 1px solid rgba(255,255,255,0.06);">
+          ${s.score_range ? `<div style="margin-bottom: 4px;"><span style="color:#94a3b8;">Khung điểm chuẩn:</span> <strong style="color:#fde047;">${s.score_range}đ</strong></div>` : ''}
+          <div><span style="color:#94a3b8;">Tổ hợp xét tuyển:</span> <span style="color:#c7d2fe; font-weight:600;">${combosHtml || 'A00, A01, D01'}</span></div>
+        </div>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; padding-top: 8px;">
+          <button
+            type="button"
+            class="btn small primary"
+            style="padding: 7px 14px; font-size: 12.5px;"
+            onclick="showSchoolModalById('${s.id}', false)">
+            🔍 Xem chi tiết
+          </button>
+          <button
+            type="button"
+            class="btn small btn-compare-action ${isCompared ? 'primary' : 'secondary'}"
+            data-compare-id="${s.id}"
+            style="padding: 7px 12px; font-size: 12.5px;"
+            onclick="handleCompareCardClick(event, '${s.id}')">
+            ⚖️ ${isCompared ? 'Đang so sánh' : 'So sánh'}
+          </button>
+          <a
+            href="${s.website}"
+            target="_blank"
+            rel="noopener"
+            class="btn small secondary"
+            style="text-decoration: none; font-size: 12.5px; padding: 7px 12px;">
+            🌐 Cổng tuyển sinh
+          </a>
+        </div>
+      </article>
+    `;
+  } else {
+    // Thẻ trường Thế giới (Du học)
+    const strengthsHtml = (s.strengths || []).slice(0, 4).map(st => `<span class="school-bench-chip" style="background:rgba(99,102,241,0.15);color:#c7d2fe;">${st}</span>`).join('');
+
+    return `
+      <article class="school-card ${isCompared ? 'card-selected-compare' : ''}" data-school-card-id="${s.id}">
+        <div class="school-card-header">
+          <div>
+            <span class="school-logo">🌍</span>
+            <div class="school-badge-row">
+              <span class="school-badge school-badge-rank">🏆 Top #${s.rank}</span>
+              <span class="school-badge school-badge-info">${s.country}</span>
+              <span class="school-badge school-badge-primary">${s.continent}</span>
+            </div>
+          </div>
+          <div class="school-card-header-actions" style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            ${compareBtnHtml}
+            ${bookmarkBtnHtml}
+          </div>
+        </div>
+
+        <h3 style="font-size: 17px; margin: 4px 0 8px; color: #ffffff; line-height: 1.4;">
+          ${s.name}
+        </h3>
+
+        <p class="school-location" style="font-size: 13px; margin: 0 0 10px;">
+          📍 ${s.city ? s.city + ', ' : ''}${s.country}
+        </p>
+
+        <div style="margin: 10px 0; font-size: 13px;">
+          <b style="color: #67e8f9;">Ngành thế mạnh hàng đầu:</b>
+          <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;">
+            ${strengthsHtml || '<span style="color:#64748b;">Đa ngành quốc tế</span>'}
+          </div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.035); padding: 10px 12px; border-radius: 10px; margin: 12px 0; font-size: 12.5px; border: 1px solid rgba(255,255,255,0.06);">
+          <div style="margin-bottom: 4px;"><span style="color:#94a3b8;">Yêu cầu đầu vào:</span> <span style="color:#f1f5f9;">${s.requirements}</span></div>
+          <div><span style="color:#94a3b8;">Học bổng:</span> <span style="color:#4ade80;">${s.scholarship_info}</span></div>
+        </div>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; padding-top: 8px;">
+          <button
+            type="button"
+            class="btn small primary"
+            style="padding: 7px 14px; font-size: 12.5px;"
+            onclick="showSchoolModalById('${s.id}', true)">
+            🔍 Xem chi tiết
+          </button>
+          <button
+            type="button"
+            class="btn small btn-compare-action ${isCompared ? 'primary' : 'secondary'}"
+            data-compare-id="${s.id}"
+            style="padding: 7px 12px; font-size: 12.5px;"
+            onclick="handleCompareCardClick(event, '${s.id}')">
+            ⚖️ ${isCompared ? 'Đang so sánh' : 'So sánh'}
+          </button>
+          <a
+            href="${s.website}"
+            target="_blank"
+            rel="noopener"
+            class="btn small secondary"
+            style="text-decoration: none; font-size: 12.5px; padding: 7px 12px;">
+            🌐 Website trường
+          </a>
+        </div>
+      </article>
+    `;
+  }
+}
+
+/**
+ * Hiển thị danh sách thẻ trường kèm phân trang và xem thêm (chunked rendering)
  */
 function renderSchoolList() {
   const container = document.getElementById('schools');
   const countLabel = document.getElementById('schoolCountLabel');
   const paginationContainer = document.getElementById('schoolPagination');
+  const loadMoreContainer = document.getElementById('schoolLoadMoreWrap');
 
   if (!container) return;
 
@@ -1465,20 +1751,12 @@ function renderSchoolList() {
   if (currentSchoolPage > totalPages) currentSchoolPage = totalPages;
   if (currentSchoolPage < 1) currentSchoolPage = 1;
 
-  // Cập nhật nhãn đếm
-  if (countLabel) {
-    const tabName = currentSchoolTab === 'vn' ? 'Đại học & Cao đẳng Việt Nam' : 'Đại học Thế giới';
-    if (total === 0) {
-      countLabel.innerHTML = `Không tìm thấy trường nào phù hợp trong <b>${tabName}</b>`;
-    } else {
-      const startIndex = (currentSchoolPage - 1) * SCHOOLS_PER_PAGE + 1;
-      const endIndex = Math.min(startIndex + SCHOOLS_PER_PAGE - 1, total);
-      countLabel.innerHTML = `Hiển thị <b>${startIndex} – ${endIndex}</b> trong tổng số <b>${total}</b> trường tìm thấy (Trang <b>${currentSchoolPage}/${totalPages}</b>)`;
-    }
-  }
-
   // Trường hợp danh sách rỗng
   if (total === 0) {
+    if (countLabel) {
+      const tabName = currentSchoolTab === 'vn' ? 'Đại học & Cao đẳng Việt Nam' : 'Đại học Thế giới';
+      countLabel.innerHTML = `Không tìm thấy trường nào phù hợp trong <b>${tabName}</b>`;
+    }
     container.innerHTML = `
       <div class="school-empty-state" style="grid-column: 1 / -1;">
         <div style="font-size: 40px; margin-bottom: 12px;">🔍</div>
@@ -1491,192 +1769,65 @@ function renderSchoolList() {
         </button>
       </div>
     `;
+    if (loadMoreContainer) {
+      loadMoreContainer.style.display = 'none';
+      loadMoreContainer.innerHTML = '';
+    }
     if (paginationContainer) paginationContainer.innerHTML = '';
     return;
   }
 
-  // Cắt trang 20 trường
-  const startIndex = (currentSchoolPage - 1) * SCHOOLS_PER_PAGE;
-  const pageItems = filteredSchoolList.slice(startIndex, startIndex + SCHOOLS_PER_PAGE);
+  // Giới hạn visibleSchoolCount tối đa bằng total
+  if (visibleSchoolCount > total) visibleSchoolCount = total;
+  if (visibleSchoolCount < Math.min(SCHOOLS_PER_PAGE, total)) {
+    visibleSchoolCount = Math.min(SCHOOLS_PER_PAGE, total);
+  }
 
-  // Render thẻ trường
-  container.innerHTML = pageItems.map(s => {
-    const bookmarked = isSchoolBookmarked(s.id);
-    const isCompared = isSchoolSelectedForCompare(s.id);
+  // Cập nhật nhãn đếm
+  if (countLabel) {
+    countLabel.innerHTML = `Hiển thị <b>1 – ${visibleSchoolCount}</b> trong tổng số <b>${total}</b> trường tìm thấy (Đã tải <b>${visibleSchoolCount}/${total}</b> · Trang <b>${currentSchoolPage}/${totalPages}</b>)`;
+  }
 
-    const compareBtnHtml = `
-      <button
-        type="button"
-        class="school-compare-btn ${isCompared ? 'active' : ''}"
-        data-compare-id="${s.id}"
-        onclick="handleCompareCardClick(event, '${s.id}')"
-        title="${isCompared ? 'Bỏ chọn khỏi so sánh' : 'Chọn so sánh (tối đa 3 trường)'}"
-      >
-        <span>⚖️</span>
-        <span class="compare-btn-text">${isCompared ? 'Đang so sánh' : '+ So sánh'}</span>
-      </button>
-    `;
+  // Lấy danh sách trường hiển thị đợt này (chunked 24 trường)
+  const itemsToRender = filteredSchoolList.slice(0, visibleSchoolCount);
 
-    const bookmarkBtnHtml = `
-      <button
-        type="button"
-        class="school-bookmark-btn ${bookmarked ? 'bookmarked' : ''}"
-        data-school-id="${s.id}"
-        data-school-name="${encodeURIComponent(s.name)}"
-        onclick="handleSchoolBookmarkClick(event, '${encodeURIComponent(s.name)}', ${s.isGlobal})"
-        title="${bookmarked ? 'Bấm để bỏ lưu khỏi danh sách nguyện vọng' : 'Lưu vào danh sách nguyện vọng'}"
-      >
-        ${bookmarked ? '⭐ Đã lưu' : '☆ Lưu mục tiêu'}
-      </button>
-    `;
+  // Render thẻ trường vào DOM trong một lần duy nhất (zero-jank)
+  container.innerHTML = itemsToRender.map(s => renderSchoolCardHtml(s)).join('');
 
-    if (!s.isGlobal) {
-      // Thẻ trường Việt Nam
-      const majorsHtml = (s.majors || []).slice(0, 4).map(m => `<span class="school-bench-chip" style="background:rgba(255,255,255,0.08);color:#e2e8f0;">${m}</span>`).join('');
-      const combosHtml = (s.combinations || []).slice(0, 4).join(', ');
-      const typeBadge = getVNSchoolTypeBadge(s.type);
+  // Render nút Xem thêm 24 trường và thanh phân trang
+  renderSchoolLoadMoreAndPagination(total, SCHOOLS_PER_PAGE, currentSchoolPage, visibleSchoolCount);
+}
 
-      return `
-        <article class="school-card ${isCompared ? 'card-selected-compare' : ''}" data-school-card-id="${s.id}">
-          <div class="school-card-header">
-            <div>
-              <span class="school-logo">🏫</span>
-              <div class="school-badge-row">
-                ${s.code ? `<span class="school-badge school-badge-primary">Mã: ${s.code}</span>` : ''}
-                <span class="school-badge ${typeBadge.cls}">${typeBadge.icon} ${typeBadge.text}</span>
-                <span class="school-badge school-badge-info">${s.region ? 'Miền ' + s.region : (s.province || 'Việt Nam')}</span>
-              </div>
-            </div>
-            <div class="school-card-header-actions" style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-              ${compareBtnHtml}
-              ${bookmarkBtnHtml}
-            </div>
-          </div>
+/**
+ * Tải thêm 24 trường tiếp theo vào DOM (zero-jank append qua insertAdjacentHTML)
+ */
+function loadMoreSchools() {
+  const container = document.getElementById('schools');
+  const countLabel = document.getElementById('schoolCountLabel');
+  if (!container) return;
 
-          <h3 style="font-size: 17px; margin: 4px 0 8px; color: #ffffff; line-height: 1.4;">
-            ${s.name}
-          </h3>
+  const total = filteredSchoolList.length;
+  if (visibleSchoolCount >= total) return;
 
-          <p class="school-location" style="font-size: 13px; margin: 0 0 10px;">
-            📍 ${s.province ? s.province : 'Chưa xác định'} ${s.region ? '· Vùng ' + s.region : ''}
-          </p>
+  const nextStart = visibleSchoolCount;
+  const nextEnd = Math.min(nextStart + SCHOOLS_PER_PAGE, total);
+  const nextSlice = filteredSchoolList.slice(nextStart, nextEnd);
 
-          <p style="font-size: 13.5px; line-height: 1.5; color: #cbd5e1; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-            ${s.description}
-          </p>
+  visibleSchoolCount = nextEnd;
+  currentSchoolPage = Math.ceil(visibleSchoolCount / SCHOOLS_PER_PAGE);
 
-          <div style="margin: 10px 0; font-size: 13px;">
-            <b style="color: #a78bfa;">Ngành tiêu biểu:</b>
-            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;">
-              ${majorsHtml || '<span style="color:#64748b;">Đa ngành đào tạo</span>'}
-            </div>
-          </div>
+  // Nối thêm thẻ mới qua insertAdjacentHTML (không vẽ lại toàn bộ DOM đã có)
+  const newCardsHtml = nextSlice.map(s => renderSchoolCardHtml(s)).join('');
+  container.insertAdjacentHTML('beforeend', newCardsHtml);
 
-          <div style="background: rgba(255,255,255,0.035); padding: 10px 12px; border-radius: 10px; margin: 12px 0; font-size: 12.5px; border: 1px solid rgba(255,255,255,0.06);">
-            ${s.score_range ? `<div style="margin-bottom: 4px;"><span style="color:#94a3b8;">Khung điểm chuẩn:</span> <strong style="color:#fde047;">${s.score_range}đ</strong></div>` : ''}
-            <div><span style="color:#94a3b8;">Tổ hợp xét tuyển:</span> <span style="color:#c7d2fe; font-weight:600;">${combosHtml || 'A00, A01, D01'}</span></div>
-          </div>
+  // Cập nhật nhãn đếm
+  const totalPages = Math.max(1, Math.ceil(total / SCHOOLS_PER_PAGE));
+  if (countLabel) {
+    countLabel.innerHTML = `Hiển thị <b>1 – ${visibleSchoolCount}</b> trong tổng số <b>${total}</b> trường tìm thấy (Đã tải <b>${visibleSchoolCount}/${total}</b> · Trang <b>${currentSchoolPage}/${totalPages}</b>)`;
+  }
 
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; padding-top: 8px;">
-            <button
-              type="button"
-              class="btn small primary"
-              style="padding: 7px 14px; font-size: 12.5px;"
-              onclick="showSchoolModalById('${s.id}', false)">
-              🔍 Xem chi tiết
-            </button>
-            <button
-              type="button"
-              class="btn small btn-compare-action ${isCompared ? 'primary' : 'secondary'}"
-              data-compare-id="${s.id}"
-              style="padding: 7px 12px; font-size: 12.5px;"
-              onclick="handleCompareCardClick(event, '${s.id}')">
-              ⚖️ ${isCompared ? 'Đang so sánh' : 'So sánh'}
-            </button>
-            <a
-              href="${s.website}"
-              target="_blank"
-              rel="noopener"
-              class="btn small secondary"
-              style="text-decoration: none; font-size: 12.5px; padding: 7px 12px;">
-              🌐 Cổng tuyển sinh
-            </a>
-          </div>
-        </article>
-      `;
-    } else {
-      // Thẻ trường Thế giới (Du học)
-      const strengthsHtml = (s.strengths || []).slice(0, 4).map(st => `<span class="school-bench-chip" style="background:rgba(99,102,241,0.15);color:#c7d2fe;">${st}</span>`).join('');
-
-      return `
-        <article class="school-card ${isCompared ? 'card-selected-compare' : ''}" data-school-card-id="${s.id}">
-          <div class="school-card-header">
-            <div>
-              <span class="school-logo">🌍</span>
-              <div class="school-badge-row">
-                <span class="school-badge school-badge-rank">🏆 QS #${s.rank}</span>
-                <span class="school-badge school-badge-info">${s.country}</span>
-                <span class="school-badge school-badge-primary">${s.continent}</span>
-              </div>
-            </div>
-            <div class="school-card-header-actions" style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-              ${compareBtnHtml}
-              ${bookmarkBtnHtml}
-            </div>
-          </div>
-
-          <h3 style="font-size: 17px; margin: 4px 0 8px; color: #ffffff; line-height: 1.4;">
-            ${s.name}
-          </h3>
-
-          <p class="school-location" style="font-size: 13px; margin: 0 0 10px;">
-            📍 ${s.city ? s.city + ', ' : ''}${s.country}
-          </p>
-
-          <div style="margin: 10px 0; font-size: 13px;">
-            <b style="color: #67e8f9;">Ngành thế mạnh hàng đầu:</b>
-            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;">
-              ${strengthsHtml || '<span style="color:#64748b;">Đa ngành quốc tế</span>'}
-            </div>
-          </div>
-
-          <div style="background: rgba(255,255,255,0.035); padding: 10px 12px; border-radius: 10px; margin: 12px 0; font-size: 12.5px; border: 1px solid rgba(255,255,255,0.06);">
-            <div style="margin-bottom: 4px;"><span style="color:#94a3b8;">Yêu cầu đầu vào:</span> <span style="color:#f1f5f9;">${s.requirements}</span></div>
-            <div><span style="color:#94a3b8;">Học bổng:</span> <span style="color:#4ade80;">${s.scholarship_info}</span></div>
-          </div>
-
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; padding-top: 8px;">
-            <button
-              type="button"
-              class="btn small primary"
-              style="padding: 7px 14px; font-size: 12.5px;"
-              onclick="showSchoolModalById('${s.id}', true)">
-              🔍 Xem chi tiết
-            </button>
-            <button
-              type="button"
-              class="btn small btn-compare-action ${isCompared ? 'primary' : 'secondary'}"
-              data-compare-id="${s.id}"
-              style="padding: 7px 12px; font-size: 12.5px;"
-              onclick="handleCompareCardClick(event, '${s.id}')">
-              ⚖️ ${isCompared ? 'Đang so sánh' : 'So sánh'}
-            </button>
-            <a
-              href="${s.website}"
-              target="_blank"
-              rel="noopener"
-              class="btn small secondary"
-              style="text-decoration: none; font-size: 12.5px; padding: 7px 12px;">
-              🌐 Website trường
-            </a>
-          </div>
-        </article>
-      `;
-    }
-  }).join('');
-
-  // Render phân trang
-  renderSchoolPagination(total, SCHOOLS_PER_PAGE, currentSchoolPage);
+  // Cập nhật lại nút xem thêm và phân trang
+  renderSchoolLoadMoreAndPagination(total, SCHOOLS_PER_PAGE, currentSchoolPage, visibleSchoolCount);
 }
 
 /**
@@ -1691,81 +1842,137 @@ function handleSchoolBookmarkClick(event, encodedName, isGlobal) {
 }
 
 /**
- * Render thanh phân trang
+ * Render nút "Xem thêm 24 trường" và thanh phân trang
  */
-function renderSchoolPagination(totalItems, itemsPerPage, currentPage) {
-  const container = document.getElementById('schoolPagination');
-  if (!container) return;
+function renderSchoolLoadMoreAndPagination(totalItems, itemsPerPage, currentPage, visibleCount) {
+  let loadMoreContainer = document.getElementById('schoolLoadMoreWrap');
+  const paginationContainer = document.getElementById('schoolPagination');
 
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  if (totalPages <= 1) {
-    container.innerHTML = '';
-    return;
+  if (!loadMoreContainer && paginationContainer) {
+    loadMoreContainer = document.createElement('div');
+    loadMoreContainer.id = 'schoolLoadMoreWrap';
+    loadMoreContainer.className = 'school-load-more-wrap';
+    paginationContainer.parentNode.insertBefore(loadMoreContainer, paginationContainer);
   }
 
-  let html = `
-    <button
-      type="button"
-      class="page-btn"
-      ${currentPage === 1 ? 'disabled' : ''}
-      onclick="goToSchoolPage(${currentPage - 1})"
-      title="Trang trước"
-    >
-      « Trước
-    </button>
-  `;
+  const remaining = Math.max(0, totalItems - visibleCount);
 
-  // Hiển thị các số trang thông minh
-  const pageNumbers = [];
-  if (totalPages <= 7) {
-    for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
-  } else {
-    pageNumbers.push(1);
-    if (currentPage > 3) pageNumbers.push('...');
-    const start = Math.max(2, currentPage - 1);
-    const end = Math.min(totalPages - 1, currentPage + 1);
-    for (let i = start; i <= end; i++) pageNumbers.push(i);
-    if (currentPage < totalPages - 2) pageNumbers.push('...');
-    pageNumbers.push(totalPages);
-  }
-
-  pageNumbers.forEach(p => {
-    if (p === '...') {
-      html += `<span class="page-ellipsis">...</span>`;
-    } else {
-      html += `
+  // 1. Render nút "Xem thêm 24 trường"
+  if (loadMoreContainer) {
+    if (remaining > 0) {
+      const nextBatchSize = Math.min(itemsPerPage, remaining);
+      loadMoreContainer.style.display = 'flex';
+      loadMoreContainer.innerHTML = `
         <button
           type="button"
-          class="page-btn ${p === currentPage ? 'active' : ''}"
-          onclick="goToSchoolPage(${p})"
+          class="school-load-more-btn"
+          onclick="loadMoreSchools()"
+          title="Tải thêm ${nextBatchSize} trường vào danh sách"
         >
-          ${p}
+          <span>⬇️ Xem thêm ${nextBatchSize} trường</span>
+          <span style="font-size:12px;opacity:0.85;font-weight:500;">(Còn ${remaining} trường)</span>
         </button>
       `;
+    } else {
+      loadMoreContainer.style.display = 'none';
+      loadMoreContainer.innerHTML = '';
     }
-  });
+  }
 
-  html += `
-    <button
-      type="button"
-      class="page-btn"
-      ${currentPage === totalPages ? 'disabled' : ''}
-      onclick="goToSchoolPage(${currentPage + 1})"
-      title="Trang sau"
-    >
-      Sau »
-    </button>
-  `;
+  // 2. Render thanh phân trang
+  if (paginationContainer) {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    if (totalPages <= 1) {
+      paginationContainer.innerHTML = '';
+      return;
+    }
 
-  container.innerHTML = html;
+    let html = `
+      <button
+        type="button"
+        class="page-btn"
+        ${currentPage === 1 ? 'disabled' : ''}
+        onclick="goToSchoolPage(${currentPage - 1})"
+        title="Trang trước"
+      >
+        « Trước
+      </button>
+    `;
+
+    // Hiển thị các số trang thông minh
+    const pageNumbers = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+    } else {
+      pageNumbers.push(1);
+      if (currentPage > 3) pageNumbers.push('...');
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pageNumbers.push(i);
+      if (currentPage < totalPages - 2) pageNumbers.push('...');
+      pageNumbers.push(totalPages);
+    }
+
+    pageNumbers.forEach(p => {
+      if (p === '...') {
+        html += `<span class="page-ellipsis" style="color:#94a3b8;padding:0 6px;">...</span>`;
+      } else {
+        html += `
+          <button
+            type="button"
+            class="page-btn ${p === currentPage ? 'active' : ''}"
+            onclick="goToSchoolPage(${p})"
+          >
+            ${p}
+          </button>
+        `;
+      }
+    });
+
+    html += `
+      <button
+        type="button"
+        class="page-btn"
+        ${currentPage === totalPages ? 'disabled' : ''}
+        onclick="goToSchoolPage(${currentPage + 1})"
+        title="Trang sau"
+      >
+        Sau »
+      </button>
+    `;
+
+    paginationContainer.innerHTML = html;
+  }
 }
 
 /**
  * Chuyển trang và cuộn mượt về đầu danh sách trường
  */
 function goToSchoolPage(page) {
+  const total = filteredSchoolList.length;
+  const totalPages = Math.max(1, Math.ceil(total / SCHOOLS_PER_PAGE));
+  if (page < 1) page = 1;
+  if (page > totalPages) page = totalPages;
+
   currentSchoolPage = page;
-  renderSchoolList();
+  const startIndex = (page - 1) * SCHOOLS_PER_PAGE;
+  const endIndex = Math.min(startIndex + SCHOOLS_PER_PAGE, total);
+
+  const container = document.getElementById('schools');
+  const countLabel = document.getElementById('schoolCountLabel');
+  if (container) {
+    const pageItems = filteredSchoolList.slice(startIndex, endIndex);
+    container.innerHTML = pageItems.map(s => renderSchoolCardHtml(s)).join('');
+  }
+
+  visibleSchoolCount = endIndex;
+
+  if (countLabel) {
+    countLabel.innerHTML = `Hiển thị <b>${startIndex + 1} – ${endIndex}</b> trong tổng số <b>${total}</b> trường tìm thấy (Trang <b>${currentSchoolPage}/${totalPages}</b>)`;
+  }
+
+  renderSchoolLoadMoreAndPagination(total, SCHOOLS_PER_PAGE, currentSchoolPage, visibleSchoolCount);
+
   const section = document.getElementById('schoolsSection');
   if (section) {
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1775,7 +1982,10 @@ function goToSchoolPage(page) {
 /**
  * Hiển thị Modal chi tiết trường
  */
-function showSchoolModalById(schoolId, isGlobal) {
+async function showSchoolModalById(schoolId, isGlobal) {
+  if (isGlobal && (!globalSchoolList || globalSchoolList.length === 0)) {
+    await ensureGlobalSchoolDataLoaded();
+  }
   const list = isGlobal ? globalSchoolList : vnSchoolList;
   const s = list.find(item => item.id === schoolId) || null;
   if (!s) return;
@@ -1873,7 +2083,7 @@ function showSchoolModalById(schoolId, isGlobal) {
       <p class="eyebrow">GLOBAL UNIVERSITY PROFILE</p>
       <h2 style="font-size: 24px; margin: 4px 0 8px; color:#ffffff;">${s.name}</h2>
       <p class="school-location" style="font-size: 14px; margin-bottom: 16px;">
-        🏆 <b>QS World Ranking: #${s.rank}</b> · 📍 ${s.city ? s.city + ', ' : ''}${s.country} (${s.continent})
+        🏆 <b>${s.ranking_source || 'OpenAlex Citation Rank'}: #${s.rank}</b> · 📍 ${s.city ? s.city + ', ' : ''}${s.country} (${s.continent})
       </p>
 
       <div class="detail-grid">
@@ -1975,28 +2185,33 @@ function updateProfileHint() {
  * Khởi tạo toàn bộ trang Tra cứu trường học
  */
 function initSchoolSearchEngine() {
-  // Gắn sự kiện debounce tìm kiếm 250ms
+  // Gắn sự kiện debounce tìm kiếm 250ms cho ô nhập từ khóa
   const qInput = document.getElementById('q');
   if (qInput) {
-    qInput.addEventListener('input', function() {
-      clearTimeout(schoolSearchDebounceTimer);
-      schoolSearchDebounceTimer = setTimeout(() => {
+    qInput.addEventListener('input', () => {
+      debouncedApplySchoolFilters(250);
+    });
+    qInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        clearTimeout(schoolFilterDebounceTimer);
         currentSchoolPage = 1;
+        visibleSchoolCount = SCHOOLS_PER_PAGE;
         applySchoolFilters();
-      }, 250);
+      }
     });
   }
 
-  // Gắn sự kiện thay đổi select bộ lọc VN
+  // Gắn sự kiện debounce 250ms cho tất cả các select bộ lọc VN
   ['filterRegion', 'filterTypeVN', 'filterCombo', 'filterScoreRange'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.addEventListener('change', () => { currentSchoolPage = 1; applySchoolFilters(); });
+    if (el) el.addEventListener('change', () => debouncedApplySchoolFilters(250));
   });
 
-  // Gắn sự kiện thay đổi select bộ lọc Global
+  // Gắn sự kiện debounce 250ms cho tất cả các select bộ lọc Global
   ['filterCountry', 'filterRank', 'filterStrength'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.addEventListener('change', () => { currentSchoolPage = 1; applySchoolFilters(); });
+    if (el) el.addEventListener('change', () => debouncedApplySchoolFilters(250));
   });
 
   // Modal chi tiết trường: backdrop click và phím ESC
@@ -2026,7 +2241,7 @@ function initSchoolSearchEngine() {
   // Cập nhật gợi ý hồ sơ
   updateProfileHint();
 
-  // Bắt đầu tải dữ liệu trường học
+  // Bắt đầu tải dữ liệu trường học (chỉ tải danh mục trường VN trước)
   loadAllSchoolData();
 }
 
@@ -2046,6 +2261,11 @@ window.clearSchoolCompareSelection = clearSchoolCompareSelection;
 window.openSchoolCompareModal = openSchoolCompareModal;
 window.closeSchoolCompareModal = closeSchoolCompareModal;
 window.renderComparisonDock = renderComparisonDock;
+window.ensureGlobalSchoolDataLoaded = ensureGlobalSchoolDataLoaded;
+window.loadMoreSchools = loadMoreSchools;
+window.goToSchoolPage = goToSchoolPage;
+window.debouncedApplySchoolFilters = debouncedApplySchoolFilters;
+window.renderSchoolCardHtml = renderSchoolCardHtml;
 
 // Tự động khởi chạy khi DOM sẵn sàng
 if (document.readyState === 'loading') {

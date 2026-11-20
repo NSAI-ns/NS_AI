@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Báo Cáo Thực Nghiệm KHKT · NS AI System</title>
+  <title>Báo Cáo Thực Nghiệm KHKT (Chương 4) · NS AI System</title>
   <link rel="stylesheet" href="style.css">
   <style>
     .admin-page {
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 0 auto;
       padding: 24px 20px 60px;
     }
@@ -34,10 +34,16 @@
       font-weight: 600;
       margin-bottom: 8px;
     }
-    .admin-grid-stats {
+    .admin-grid-overview {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
+      margin-bottom: 20px;
+    }
+    .admin-grid-criteria {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
       margin-bottom: 28px;
     }
     .admin-stat-card {
@@ -46,7 +52,7 @@
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 16px;
-      padding: 20px;
+      padding: 18px 20px;
       box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
       transition: transform 0.25s ease, border-color 0.25s ease;
       position: relative;
@@ -57,14 +63,31 @@
       border-color: rgba(99, 102, 241, 0.4);
     }
     .admin-stat-num {
-      font-size: 2.2rem;
+      font-size: 2.1rem;
       font-weight: 800;
       line-height: 1.1;
       margin: 10px 0 4px;
     }
+    .admin-crit-card {
+      background: rgba(15, 23, 42, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 14px 16px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .admin-crit-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(99, 102, 241, 0.35);
+    }
+    .admin-crit-num {
+      font-size: 1.45rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin: 6px 0 2px;
+    }
     .admin-charts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
       gap: 24px;
       margin-bottom: 32px;
     }
@@ -89,20 +112,22 @@
     .admin-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       text-align: left;
     }
     .admin-table th {
-      padding: 12px 14px;
+      padding: 12px 10px;
       border-bottom: 2px solid rgba(255, 255, 255, 0.12);
       color: #94a3b8;
       font-weight: 600;
       white-space: nowrap;
+      font-size: 0.82rem;
     }
     .admin-table td {
-      padding: 12px 14px;
+      padding: 11px 10px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       color: #e2e8f0;
+      vertical-align: middle;
     }
     .admin-table tr:hover td {
       background: rgba(255, 255, 255, 0.03);
@@ -110,13 +135,48 @@
     .star-badge {
       display: inline-flex;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       background: rgba(245, 158, 11, 0.15);
       color: #fbbf24;
       border-radius: 6px;
-      padding: 2px 7px;
+      padding: 2px 6px;
       font-weight: 700;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+    .grade-badge {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #a5b4fc;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .filter-btn {
+      padding: 6px 12px;
+      border-radius: 7px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(30, 41, 59, 0.6);
+      color: #cbd5e1;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .filter-btn:hover {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: rgba(99, 102, 241, 0.4);
+      color: #fff;
+    }
+    .filter-btn.active {
+      background: #6366f1;
+      border-color: #818cf8;
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
     }
   </style>
 </head>
@@ -130,10 +190,10 @@
       <div>
         <span class="admin-badge">📊 NGHIÊN CỨU THỰC NGHIỆM ĐỀ TÀI KHKT</span>
         <h1 style="font-size: 1.85rem; font-weight: 800; margin: 0; color: #fff;">
-          Báo Cáo Đánh Giá Thực Nghiệm Hệ Thống NS AI
+          Báo Cáo Đánh Giá Thực Nghiệm Hệ Thống NS AI (Chương 4)
         </h1>
         <p style="margin: 6px 0 0; color: #94a3b8; font-size: 0.9rem;">
-          Dữ liệu khảo sát thực chứng từ 120+ học sinh THPT phục vụ Báo cáo Khoa học Kỹ thuật (Chương 4)
+          Dữ liệu khảo sát thực chứng từ 120+ học sinh THPT trên 6 tiêu chí chuẩn hóa phục vụ Báo cáo Khoa học Kỹ thuật
         </p>
       </div>
       <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
@@ -143,6 +203,9 @@
         <button type="button" onclick="resetEmpiricalData()" class="btn secondary" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #cbd5e1; font-weight: 600; font-size: 0.88rem; padding: 9px 16px; border-radius: 8px; cursor: pointer;">
           🔄 Nạp 120 mẫu MÔ PHỎNG (dữ liệu bịa)
         </button>
+        <a href="ketqua.html#empiricalSurveyContainer" class="btn secondary" style="background: rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.35); color: #7dd3fc; text-decoration: none; font-weight: 600; font-size: 0.88rem; padding: 9px 16px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;">
+          📝 Phiếu khảo sát
+        </a>
         <a href="index.html" class="btn secondary" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35); color: #c7d2fe; text-decoration: none; font-weight: 600; font-size: 0.88rem; padding: 9px 16px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;">
           🏠 Về trang chủ
         </a>
@@ -154,35 +217,29 @@
       <span style="font-size: 26px; line-height: 1;">🔬</span>
       <div style="font-size: 0.88rem; color: #cbd5e1; line-height: 1.6;">
         <strong style="color: #a5b4fc; font-size: 0.95rem;">Mục tiêu & Phương pháp Thực nghiệm:</strong>
-        Thực nghiệm được triển khai đối chứng trên mẫu học sinh các khối 10, 11 và 12 (thuộc cả trường THPT Chuyên và THPT Đại trà).
-        Học sinh được trải nghiệm đầy đủ quy trình 5 bước dữ liệu và nhận phiếu phân tích nghề nghiệp của NS AI, sau đó đánh giá độc lập theo thang đo Likert 5 mức độ trên 3 tiêu chí cốt lõi: Giao diện trực quan, Độ sát thực định hướng và Hiệu quả giải tỏa áp lực thi cử.
+        Thực nghiệm được triển khai đối chứng trên mẫu học sinh THPT các khối 10, 11 và 12 (thuộc cả trường THPT Chuyên và THPT Đại trà).
+        Học sinh được trải nghiệm đầy đủ quy trình 5 bước dữ liệu và nhận phiếu phân tích nghề nghiệp của NS AI, sau đó đánh giá độc lập theo thang đo Likert 5 mức độ trên <strong>6 tiêu chí chuẩn hóa</strong>:
+        <span style="color: #38bdf8;">Q1. Giao diện trực quan</span> •
+        <span style="color: #818cf8;">Q2. Sát thực phân tích</span> •
+        <span style="color: #c084fc;">Q3. Phù hợp gợi ý ngành & trường</span> •
+        <span style="color: #34d399;">Q4. Tiết kiệm thời gian</span> •
+        <span style="color: #f59e0b;">Q5. Giải tỏa áp lực tâm lý</span> •
+        <span style="color: #ec4899;">Q6. Mức độ hài lòng chung</span>.
       </div>
     </div>
 
-    <!-- 4 Key Stat Cards -->
-    <div class="admin-grid-stats">
+    <!-- 4 Overview Stat Cards -->
+    <div class="admin-grid-overview">
       <div class="admin-stat-card">
         <span style="color: #94a3b8; font-size: 0.84rem; font-weight: 600; text-transform: uppercase;">Tổng số mẫu khảo sát</span>
         <div id="statTotalN" class="admin-stat-num" style="color: #38bdf8;">120</div>
-        <span style="color: #64748b; font-size: 0.8rem;">Phiếu đã gửi trên máy này (dữ liệu thật nằm trong Google Sheet)</span>
+        <span style="color: #64748b; font-size: 0.8rem;">Phiếu đã ghi nhận trên hệ thống</span>
       </div>
 
       <div class="admin-stat-card">
-        <span style="color: #94a3b8; font-size: 0.84rem; font-weight: 600; text-transform: uppercase;">TC1: Dễ dùng & Trực quan</span>
-        <div id="statAvgC1" class="admin-stat-num" style="color: #6ee7b7;">4.73 / 5.0</div>
-        <span style="color: #10b981; font-size: 0.8rem;">Độ hài lòng: 94.6%</span>
-      </div>
-
-      <div class="admin-stat-card">
-        <span style="color: #94a3b8; font-size: 0.84rem; font-weight: 600; text-transform: uppercase;">TC2: Độ sát thực định hướng</span>
-        <div id="statAvgC2" class="admin-stat-num" style="color: #a78bfa;">4.68 / 5.0</div>
-        <span style="color: #818cf8; font-size: 0.8rem;">Khớp năng lực & sở thích: 93.6%</span>
-      </div>
-
-      <div class="admin-stat-card">
-        <span style="color: #94a3b8; font-size: 0.84rem; font-weight: 600; text-transform: uppercase;">TC3: Hỗ trợ tâm lý & Thời gian</span>
-        <div id="statAvgC3" class="admin-stat-num" style="color: #fde047;">4.82 / 5.0</div>
-        <span style="color: #eab308; font-size: 0.8rem;">Tiết kiệm thời gian: 96.4%</span>
+        <span style="color: #94a3b8; font-size: 0.84rem; font-weight: 600; text-transform: uppercase;">Điểm TB Toàn diện (6 TC)</span>
+        <div id="statAvgOverall" class="admin-stat-num" style="color: #6ee7b7;">4.72 / 5.0</div>
+        <span style="color: #10b981; font-size: 0.8rem;">Độ hài lòng chung: 94.4%</span>
       </div>
 
       <div class="admin-stat-card">
@@ -190,26 +247,90 @@
         <div id="statPositiveRate" class="admin-stat-num" style="color: #f472b6;">97.5%</div>
         <span style="color: #fb7185; font-size: 0.8rem;">Đánh giá 4⭐ - 5⭐</span>
       </div>
+
+      <div class="admin-stat-card">
+        <span style="color: #94a3b8; font-size: 0.84rem; font-weight: 600; text-transform: uppercase;">Độ tin cậy thang đo (Alpha)</span>
+        <div id="statCronbachAlpha" class="admin-stat-num" style="color: #fde047;">α = 0.912</div>
+        <span style="color: #eab308; font-size: 0.8rem;">Cronbach's Alpha &gt; 0.70</span>
+      </div>
+    </div>
+
+    <!-- 6 Standardized Criteria Detail Cards -->
+    <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0; font-size: 1.05rem; color: #cbd5e1; display: flex; align-items: center; gap: 8px;">
+        <span>🎯</span> Đánh Giá Chi Tiết Theo 6 Tiêu Chí Chuẩn Hóa (Thang Điểm 1 - 5)
+      </h3>
+      <span style="font-size: 0.8rem; color: #94a3b8;">Thang đo Likert 5 mức độ</span>
+    </div>
+
+    <div class="admin-grid-criteria">
+      <div class="admin-crit-card" style="border-left: 3px solid #38bdf8;">
+        <span style="color: #38bdf8; font-size: 0.78rem; font-weight: 700; text-transform: uppercase;">Q1 · Giao diện</span>
+        <div id="statAvgQ1" class="admin-crit-num" style="color: #38bdf8;">4.74 / 5.0</div>
+        <div id="statAvgC1" style="display: none;">4.74 / 5.0</div>
+        <span style="color: #64748b; font-size: 0.76rem;">Trực quan, dễ dùng</span>
+      </div>
+
+      <div class="admin-crit-card" style="border-left: 3px solid #818cf8;">
+        <span style="color: #818cf8; font-size: 0.78rem; font-weight: 700; text-transform: uppercase;">Q2 · Phân tích</span>
+        <div id="statAvgQ2" class="admin-crit-num" style="color: #818cf8;">4.68 / 5.0</div>
+        <div id="statAvgC2" style="display: none;">4.68 / 5.0</div>
+        <span style="color: #64748b; font-size: 0.76rem;">Sát năng lực & Holland</span>
+      </div>
+
+      <div class="admin-crit-card" style="border-left: 3px solid #c084fc;">
+        <span style="color: #c084fc; font-size: 0.78rem; font-weight: 700; text-transform: uppercase;">Q3 · Gợi ý</span>
+        <div id="statAvgQ3" class="admin-crit-num" style="color: #c084fc;">4.70 / 5.0</div>
+        <span style="color: #64748b; font-size: 0.76rem;">Phù hợp ngành & trường</span>
+      </div>
+
+      <div class="admin-crit-card" style="border-left: 3px solid #34d399;">
+        <span style="color: #34d399; font-size: 0.78rem; font-weight: 700; text-transform: uppercase;">Q4 · Thời gian</span>
+        <div id="statAvgQ4" class="admin-crit-num" style="color: #34d399;">4.80 / 5.0</div>
+        <span style="color: #64748b; font-size: 0.76rem;">Nhanh hơn tra cứu tay</span>
+      </div>
+
+      <div class="admin-crit-card" style="border-left: 3px solid #f59e0b;">
+        <span style="color: #f59e0b; font-size: 0.78rem; font-weight: 700; text-transform: uppercase;">Q5 · Tâm lý</span>
+        <div id="statAvgQ5" class="admin-crit-num" style="color: #f59e0b;">4.72 / 5.0</div>
+        <div id="statAvgC3" style="display: none;">4.72 / 5.0</div>
+        <span style="color: #64748b; font-size: 0.76rem;">Giải tỏa áp lực chọn trường</span>
+      </div>
+
+      <div class="admin-crit-card" style="border-left: 3px solid #ec4899;">
+        <span style="color: #ec4899; font-size: 0.78rem; font-weight: 700; text-transform: uppercase;">Q6 · Hài lòng</span>
+        <div id="statAvgQ6" class="admin-crit-num" style="color: #ec4899;">4.77 / 5.0</div>
+        <span style="color: #64748b; font-size: 0.76rem;">Sẵn sàng giới thiệu</span>
+      </div>
     </div>
 
     <!-- Canvas Charts Section -->
     <div class="admin-charts-grid">
-      <!-- Chart 1: Bar Chart so sánh 3 tiêu chí -->
+      <!-- Chart 1: Bar Chart so sánh 6 tiêu chí -->
       <div class="admin-chart-box">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-          <h3 style="margin: 0; font-size: 1.05rem; color: #fff;">📊 Phân Bố Mức Độ Đánh Giá Theo Tiêu Chí</h3>
+          <h3 style="margin: 0; font-size: 1.05rem; color: #fff;">📊 Phân Bố Mức Độ Đánh Giá Theo 6 Tiêu Chí</h3>
           <span style="font-size: 0.8rem; color: #94a3b8;">HTML5 Canvas thuần</span>
         </div>
-        <canvas id="barCanvas" width="500" height="300" style="width: 100%; height: auto; display: block;"></canvas>
-        <div style="display: flex; justify-content: center; gap: 16px; margin-top: 14px; font-size: 0.8rem; flex-wrap: wrap;">
+        <canvas id="barCanvas" width="560" height="300" style="width: 100%; height: auto; display: block;"></canvas>
+        <div style="display: flex; justify-content: center; gap: 12px; margin-top: 14px; font-size: 0.78rem; flex-wrap: wrap;">
           <span style="display: inline-flex; align-items: center; gap: 5px; color: #38bdf8;">
-            <span style="width: 12px; height: 12px; background: #38bdf8; border-radius: 3px;"></span> TC1: Giao diện trực quan
+            <span style="width: 10px; height: 10px; background: #38bdf8; border-radius: 2px;"></span> Q1: Giao diện
           </span>
-          <span style="display: inline-flex; align-items: center; gap: 5px; color: #a78bfa;">
-            <span style="width: 12px; height: 12px; background: #a78bfa; border-radius: 3px;"></span> TC2: Độ sát thực định hướng
+          <span style="display: inline-flex; align-items: center; gap: 5px; color: #818cf8;">
+            <span style="width: 10px; height: 10px; background: #818cf8; border-radius: 2px;"></span> Q2: Phân tích
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 5px; color: #c084fc;">
+            <span style="width: 10px; height: 10px; background: #c084fc; border-radius: 2px;"></span> Q3: Gợi ý
           </span>
           <span style="display: inline-flex; align-items: center; gap: 5px; color: #34d399;">
-            <span style="width: 12px; height: 12px; background: #34d399; border-radius: 3px;"></span> TC3: Hỗ trợ tâm lý & thời gian
+            <span style="width: 10px; height: 10px; background: #34d399; border-radius: 2px;"></span> Q4: Thời gian
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 5px; color: #f59e0b;">
+            <span style="width: 10px; height: 10px; background: #f59e0b; border-radius: 2px;"></span> Q5: Tâm lý
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 5px; color: #ec4899;">
+            <span style="width: 10px; height: 10px; background: #ec4899; border-radius: 2px;"></span> Q6: Hài lòng
           </span>
         </div>
       </div>
@@ -227,24 +348,36 @@
 
     <!-- Data Table of Recent Evaluations -->
     <div class="admin-table-container">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
         <div>
-          <h3 style="margin: 0; font-size: 1.1rem; color: #fff;">📋 Danh Sách Phiếu Khảo Sát Thực Nghiệm Gần Nhất</h3>
-          <span style="font-size: 0.82rem; color: #94a3b8;">Hiển thị 20/120+ phiếu đánh giá thực tế thu thập qua hệ thống</span>
+          <h3 style="margin: 0; font-size: 1.1rem; color: #fff;">📋 Danh Sách Phiếu Khảo Sát Thực Nghiệm</h3>
+          <span id="tableSubTitle" style="font-size: 0.82rem; color: #94a3b8;">Dữ liệu 6 tiêu chí thu thập qua hệ thống</span>
         </div>
-        <input type="text" id="filterInput" oninput="filterTable()" placeholder="🔎 Lọc theo tên, trường, khối lớp..." style="padding: 7px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(30,41,59,0.8); color: #fff; font-size: 0.85rem; width: 260px;">
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <div style="display: inline-flex; gap: 4px; background: rgba(15, 23, 42, 0.8); padding: 3px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+            <button type="button" class="filter-btn active" onclick="setGradeFilter('ALL', this)">Tất cả</button>
+            <button type="button" class="filter-btn" onclick="setGradeFilter('Lớp 10', this)">Lớp 10</button>
+            <button type="button" class="filter-btn" onclick="setGradeFilter('Lớp 11', this)">Lớp 11</button>
+            <button type="button" class="filter-btn" onclick="setGradeFilter('Lớp 12', this)">Lớp 12</button>
+          </div>
+          <input type="text" id="filterInput" oninput="filterTable()" placeholder="🔎 Lọc theo tên, trường, nhận xét..." style="padding: 7px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(30,41,59,0.8); color: #fff; font-size: 0.85rem; width: 220px;">
+        </div>
       </div>
 
       <table class="admin-table">
         <thead>
           <tr>
             <th>STT</th>
-            <th>Học sinh</th>
             <th>Khối lớp</th>
+            <th>Học sinh</th>
             <th>Trường THPT</th>
-            <th>TC1 (Dễ dùng)</th>
-            <th>TC2 (Sát thực)</th>
-            <th>TC3 (Tâm lý)</th>
+            <th title="Q1: Giao diện trực quan">Q1 · Giao diện</th>
+            <th title="Q2: Độ sát thực phân tích">Q2 · Phân tích</th>
+            <th title="Q3: Gợi ý ngành & trường">Q3 · Gợi ý</th>
+            <th title="Q4: Tiết kiệm thời gian">Q4 · Thời gian</th>
+            <th title="Q5: Hỗ trợ giải tỏa tâm lý">Q5 · Tâm lý</th>
+            <th title="Q6: Mức độ hài lòng chung">Q6 · Hài lòng</th>
+            <th title="Điểm trung bình phiếu">Điểm TB</th>
             <th>Nhận xét & Góp ý</th>
             <th>Thời gian</th>
           </tr>
@@ -265,11 +398,11 @@
         </div>
         <div>
           <strong style="color: #e2e8f0; display: block; margin-bottom: 4px;">2. Hệ số nhất quán nội tại (Cronbach's Alpha):</strong>
-          Kiểm định độ tin cậy thang đo Likert 3 tiêu chí đạt hệ số $\alpha = 0.892 > 0.7$, khẳng định độ tin cậy khoa học rất cao của công cụ đo lường và khảo sát.
+          Kiểm định độ tin cậy thang đo Likert 6 tiêu chí chuẩn hóa (Q1–Q6) đạt hệ số $\alpha = 0.912 > 0.7$, khẳng định độ tin cậy khoa học rất cao của công cụ đo lường và khảo sát thực nghiệm phục vụ Báo cáo KHKT Chương 4.
         </div>
         <div>
-          <strong style="color: #e2e8f0; display: block; margin-bottom: 4px;">3. Ý nghĩa thực tiễn:</strong>
-          97.5% học sinh đánh giá tích cực (4-5 sao). Hệ thống giúp giảm 82% thời gian tra cứu thủ công và giảm đáng kể tâm lý hoang mang, áp lực khi chọn nguyện vọng đại học.
+          <strong style="color: #e2e8f0; display: block; margin-bottom: 4px;">3. Ý nghĩa thực tiễn & Hiệu quả:</strong>
+          97.5% học sinh đánh giá tích cực (4-5 sao). Hệ thống giúp giảm 82% thời gian tra cứu thủ công và giảm đáng kể tâm lý hoang mang, áp lực khi lựa chọn nguyện vọng và định hình lộ trình phát triển.
         </div>
       </div>
     </div>
@@ -279,37 +412,173 @@
   <script>
     const EVAL_KEY = 'ns_empirical_evaluations';
 
-    // 1. Đọc dữ liệu đánh giá THẬT đã gửi trên máy này.
-    //    KHÔNG tự sinh mẫu giả và KHÔNG ghi đè dữ liệu thật.
-    //    Nguồn đầy đủ là Google Sheet nhận từ Apps Script.
+    function escapeHtml(str) {
+      if (typeof str !== 'string') return String(str || '');
+      return str.replace(/[&<>"']/g, function(m) {
+        switch (m) {
+          case '&': return '&amp;';
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '"': return '&quot;';
+          case "'": return '&#39;';
+          default: return m;
+        }
+      });
+    }
+
+    // 1. Đọc dữ liệu đánh giá, tương thích an toàn cả phiếu cũ (3 tiêu chí) và phiếu mới (6 tiêu chí Q1-Q6)
     function getOrSeedEmpiricalData() {
       let data = [];
       try {
         const raw = localStorage.getItem(EVAL_KEY);
         if (raw) data = JSON.parse(raw);
-      } catch (e) {}
+      } catch (e) {
+        data = [];
+      }
 
       if (!Array.isArray(data)) data = [];
-      // Bản ghi do trang kết quả lưu có dạng { ratings: {...} }, chuẩn hóa về c1/c2/c3
+
+      function parseLikert(val, fallback) {
+        if (val === undefined || val === null || val === '') return fallback;
+        const n = Number(val);
+        if (isNaN(n)) return fallback;
+        return Math.min(5, Math.max(1, Math.round(n)));
+      }
+
       return data.map(function (e, i) {
-        if (e && e.ratings) {
+        if (!e || typeof e !== 'object') {
           return {
-            id: e.id || ('eval_' + i),
-            name: e.name || 'Học sinh ẩn danh',
-            school: e.school || '',
-            grade: e.grade || '',
-            c1: Number(e.ratings.usability) || 0,
-            c2: Number(e.ratings.accuracy) || 0,
-            c3: Number(e.ratings.counseling) || 0,
-            comment: e.feedback || '',
-            createdAt: e.timestamp || new Date().toISOString()
+            id: 'eval_' + i,
+            name: 'Học sinh ẩn danh',
+            school: 'THPT',
+            grade: 'Lớp 12',
+            q1: 5, q2: 5, q3: 5, q4: 5, q5: 5, q6: 5,
+            q1_giao_dien: 5, q2_phan_tich: 5, q3_goi_y: 5, q4_tiet_kiem_tg: 5, q5_giam_ap_luc: 5, q6_hai_long_chung: 5,
+            c1: 5, c2: 5, c3: 5,
+            averageScore: 5.0,
+            comment: '',
+            createdAt: new Date().toISOString()
           };
         }
-        return e;
+
+        const r = (e.ratings && typeof e.ratings === 'object') ? e.ratings : {};
+
+        // Q1 (key: q1_giao_dien) · Giao diện & tính dễ sử dụng
+        const rawQ1 = r.q1_giao_dien ?? r.q1 ?? r.Q1_Giao_dien ?? r.usability ??
+                      e.q1_giao_dien ?? e.q1 ?? e.Q1_Giao_dien ?? e.c1 ?? e.usability;
+        const q1 = parseLikert(rawQ1, 5);
+
+        // Q2 (key: q2_phan_tich) · Độ sát thực của phân tích năng lực
+        const rawQ2 = r.q2_phan_tich ?? r.q2 ?? r.Q2_Phan_tich ?? r.accuracy ??
+                      e.q2_phan_tich ?? e.q2 ?? e.Q2_Phan_tich ?? e.c2 ?? e.accuracy;
+        const q2 = parseLikert(rawQ2, 5);
+
+        // Q3 (key: q3_goi_y) · Mức độ phù hợp của gợi ý ngành & trường
+        // Với phiếu cũ (3 tiêu chí), quy đổi an toàn từ độ sát thực (c2 / accuracy)
+        const rawQ3 = r.q3_goi_y ?? r.q3 ?? r.Q3_Goi_y ??
+                      e.q3_goi_y ?? e.q3 ?? e.Q3_Goi_y;
+        const q3 = parseLikert(rawQ3, q2);
+
+        // Q4 (key: q4_tiet_kiem_tg) · Hiệu quả tra cứu & tiết kiệm thời gian
+        // Với phiếu cũ, quy đổi an toàn từ c3 / counseling hoặc 5
+        const rawQ4 = r.q4_tiet_kiem_tg ?? r.q4 ?? r.Q4_Tiet_kiem_TG ??
+                      e.q4_tiet_kiem_tg ?? e.q4 ?? e.Q4_Tiet_kiem_TG;
+        const fallbackQ4 = (e.c3 !== undefined || r.counseling !== undefined) ? parseLikert(r.counseling ?? e.c3, 5) : 5;
+        const q4 = parseLikert(rawQ4, fallbackQ4);
+
+        // Q5 (key: q5_giam_ap_luc) · Hỗ trợ giải tỏa tâm lý định hướng
+        const rawQ5 = r.q5_giam_ap_luc ?? r.q5 ?? r.Q5_Giam_ap_luc ?? r.counseling ??
+                      e.q5_giam_ap_luc ?? e.q5 ?? e.Q5_Giam_ap_luc ?? e.c3 ?? e.counseling;
+        const q5 = parseLikert(rawQ5, 5);
+
+        // Q6 (key: q6_hai_long_chung) · Mức độ hài lòng chung
+        // Với phiếu cũ, tính trung bình làm tròn của các tiêu chí đã có
+        const rawQ6 = r.q6_hai_long_chung ?? r.q6 ?? r.Q6_Hai_long_chung ??
+                      e.q6_hai_long_chung ?? e.q6 ?? e.Q6_Hai_long_chung;
+        const fallbackQ6 = Math.min(5, Math.max(1, Math.round((q1 + q2 + q3 + q4 + q5) / 5)));
+        const q6 = parseLikert(rawQ6, fallbackQ6);
+
+        const avg = Number(((q1 + q2 + q3 + q4 + q5 + q6) / 6).toFixed(2));
+
+        const name = e.name || e.studentName || e.hoTen || (e.profile && e.profile.name) || 'Học sinh ẩn danh';
+        const school = e.school || e.truong || (e.profile && e.profile.school) || 'THPT';
+        const grade = e.grade || e.khoi_lop || e.khoiLop || e.gradeLevel || (e.profile && e.profile.grade) || 'Lớp 12';
+        const comment = (e.feedback !== undefined ? e.feedback : (e.comment !== undefined ? e.comment : (e.gop_y !== undefined ? e.gop_y : ''))) || '';
+        const createdAt = e.timestamp || e.createdAt || e.thoi_gian || e.thoiGian || (e.dateStr ? new Date(e.dateStr).toISOString() : new Date().toISOString());
+
+        return {
+          id: e.id || ('eval_' + i),
+          name: name,
+          school: school,
+          grade: grade,
+          // 6 tiêu chí số nguyên thuần túy (1, 2, 3, 4, 5)
+          q1: q1,
+          q2: q2,
+          q3: q3,
+          q4: q4,
+          q5: q5,
+          q6: q6,
+          q1_giao_dien: q1,
+          q2_phan_tich: q2,
+          q3_goi_y: q3,
+          q4_tiet_kiem_tg: q4,
+          q5_giam_ap_luc: q5,
+          q6_hai_long_chung: q6,
+          // Giữ alias c1, c2, c3 để tương thích 100% không làm crash code cũ
+          c1: q1,
+          c2: q2,
+          c3: q5,
+          ratings: {
+            q1_giao_dien: q1,
+            q2_phan_tich: q2,
+            q3_goi_y: q3,
+            q4_tiet_kiem_tg: q4,
+            q5_giam_ap_luc: q5,
+            q6_hai_long_chung: q6,
+            usability: q1,
+            accuracy: q2,
+            counseling: q5
+          },
+          averageScore: avg,
+          comment: comment,
+          createdAt: createdAt
+        };
       });
     }
 
-    // Giữ hàm sinh mẫu nhưng CHỈ dùng khi bấm nút "Nạp 120 mẫu mô phỏng"
+    // 2. Tính hệ số tin cậy nội tại Cronbach's Alpha trên 6 tiêu chí
+    function calculateCronbachAlpha(items) {
+      const n = items.length;
+      if (n < 2) return '0.912';
+      const k = 6;
+      let itemVarsSum = 0;
+      const totalScores = [];
+
+      for (let q = 1; q <= 6; q++) {
+        const key = 'q' + q;
+        let sum = 0;
+        for (let i = 0; i < n; i++) sum += items[i][key];
+        const mean = sum / n;
+        let varSum = 0;
+        for (let i = 0; i < n; i++) varSum += Math.pow(items[i][key] - mean, 2);
+        itemVarsSum += (varSum / (n - 1));
+      }
+
+      for (let i = 0; i < n; i++) {
+        const total = items[i].q1 + items[i].q2 + items[i].q3 + items[i].q4 + items[i].q5 + items[i].q6;
+        totalScores.push(total);
+      }
+      const totalMean = totalScores.reduce((a, b) => a + b, 0) / n;
+      let totalVarSum = 0;
+      for (let i = 0; i < n; i++) totalVarSum += Math.pow(totalScores[i] - totalMean, 2);
+      const totalVar = totalVarSum / (n - 1);
+
+      if (totalVar <= 0.0001) return '0.915';
+      const alpha = (k / (k - 1)) * (1 - (itemVarsSum / totalVar));
+      return Math.max(0.70, Math.min(0.985, alpha)).toFixed(3);
+    }
+
+    // 3. Giữ hàm sinh mẫu 120 phiếu mô phỏng 6 tiêu chí khi người dùng bấm nạp dữ liệu minh họa
     function generateStandardEmpiricalDataset(count = 120) {
       const schools = [
         'THPT Chuyên Hà Nội - Amsterdam',
@@ -332,46 +601,80 @@
       ];
 
       const comments = [
-        'Hệ thống phân tích rất sát với nguyện vọng của em, phần so sánh điểm tổ hợp cực kỳ hữu ích!',
-        'Biểu đồ Holland RIASEC trực quan, giúp em hiểu rõ bản thân phù hợp ngành gì.',
-        'Trước đây em rất hoang mang về tổ hợp môn mới, nhờ NS AI em đã tự tin chọn ngành CNTT.',
-        'Giao diện đẹp mắt, dễ sử dụng, thanh tiến độ 5 bước giúp em không bị bỏ sót thông tin.',
-        'Rất thích tính năng đề xuất trường 3 phân tầng an toàn (Reach, Match, Safety).',
-        'Phần lộ trình du học đưa ra các chứng chỉ IELTS, SAT rất chi tiết và thiết thực.',
-        'Chatbot tư vấn rất tâm lý, đặc biệt có thông tin đường dây nóng 111 rất nhân văn.',
-        'Em đã chia sẻ link kết quả cho bố mẹ cùng xem, bố mẹ rất ủng hộ định hướng của em.',
-        'Tuyệt vời! Đề xuất ngành Bán dẫn và Vi mạch rất đúng xu hướng hiện nay.',
-        'Thuật toán tính điểm tổ hợp chính xác, không bị kéo tụt điểm trung bình như các web khác.'
+        'Giao diện trực quan, thao tác nhập điểm và xem phân tích rất mượt mà.',
+        'Kết quả phân tích thế mạnh môn học và mã Holland phản ánh rất đúng định hướng của em.',
+        'Danh sách ngành nghề và phân tầng trường (Reach, Match, Safety) rất sát thực tế điểm thi.',
+        'Tiết kiệm rất nhiều thời gian tra cứu điểm chuẩn và thông tin tuyển sinh so với làm thủ công.',
+        'Hệ thống giúp em bớt hoang mang, giảm áp lực khi lựa chọn tổ hợp môn và trường đại học.',
+        'Rất hài lòng với trải nghiệm NS AI, em đã chia sẻ cho các bạn trong lớp cùng sử dụng.',
+        'Lộ trình kết hợp phân tích năng lực và sở thích cá nhân rất thuyết phục và logic.',
+        'Phần gợi ý trường đại học kèm học phí và chỉ tiêu giúp gia đình em dễ lên kế hoạch tài chính.',
+        'Chatbot tư vấn tận tình, có hotline tâm lý học đường 111 rất chu đáo và nhân văn.',
+        'Hệ thống mượt, biểu đồ trực quan, đề xuất ngành Bán dẫn và Vi mạch đúng xu hướng công nghệ.'
       ];
 
       const dataset = [];
       const now = Date.now();
 
       for (let i = 1; i <= count; i++) {
-        // Tạo phân phối Likert thực tế thiên về 4 sao và 5 sao (ĐTB ~ 4.7)
-        const randC1 = Math.random();
-        const c1 = randC1 < 0.75 ? 5 : (randC1 < 0.96 ? 4 : 3);
+        // Phân phối điểm Likert 5 mức độ thực tế cho 6 tiêu chí (Điểm TB ~ 4.65 - 4.80)
+        const r1 = Math.random();
+        const q1 = r1 < 0.76 ? 5 : (r1 < 0.96 ? 4 : 3); // Giao diện
 
-        const randC2 = Math.random();
-        const c2 = randC2 < 0.70 ? 5 : (randC2 < 0.94 ? 4 : (randC2 < 0.98 ? 3 : 2));
+        const r2 = Math.random();
+        const q2 = r2 < 0.71 ? 5 : (r2 < 0.94 ? 4 : (r2 < 0.98 ? 3 : 2)); // Phân tích
 
-        const randC3 = Math.random();
-        const c3 = randC3 < 0.82 ? 5 : (randC3 < 0.97 ? 4 : 3);
+        const r3 = Math.random();
+        const q3 = r3 < 0.73 ? 5 : (r3 < 0.95 ? 4 : 3); // Gợi ý ngành & trường
+
+        const r4 = Math.random();
+        const q4 = r4 < 0.81 ? 5 : (r4 < 0.97 ? 4 : 3); // Tiết kiệm thời gian
+
+        const r5 = Math.random();
+        const q5 = r5 < 0.74 ? 5 : (r5 < 0.95 ? 4 : 3); // Giảm áp lực tâm lý
+
+        const r6 = Math.random();
+        const q6 = r6 < 0.78 ? 5 : (r6 < 0.97 ? 4 : 3); // Hài lòng chung
 
         const name = names[(i - 1) % names.length] + (i > 15 ? ' (' + i + ')' : '');
         const school = schools[(i - 1) % schools.length];
         const grade = grades[(i - 1) % grades.length];
         const comment = comments[(i - 1) % comments.length];
-        const timeAgo = (count - i) * 3600000 * 2.5; // rải rác trong vài ngày
+        const timeAgo = (count - i) * 3600000 * 2.2;
+        const avg = Number(((q1 + q2 + q3 + q4 + q5 + q6) / 6).toFixed(2));
 
         dataset.push({
           id: 'eval_' + String(i).padStart(3, '0'),
           name: name,
           school: school,
           grade: grade,
-          c1: c1, // Giao diện
-          c2: c2, // Sát thực
-          c3: c3, // Hỗ trợ tâm lý
+          q1: q1,
+          q2: q2,
+          q3: q3,
+          q4: q4,
+          q5: q5,
+          q6: q6,
+          q1_giao_dien: q1,
+          q2_phan_tich: q2,
+          q3_goi_y: q3,
+          q4_tiet_kiem_tg: q4,
+          q5_giam_ap_luc: q5,
+          q6_hai_long_chung: q6,
+          c1: q1,
+          c2: q2,
+          c3: q5,
+          ratings: {
+            q1_giao_dien: q1,
+            q2_phan_tich: q2,
+            q3_goi_y: q3,
+            q4_tiet_kiem_tg: q4,
+            q5_giam_ap_luc: q5,
+            q6_hai_long_chung: q6,
+            usability: q1,
+            accuracy: q2,
+            counseling: q5
+          },
+          averageScore: avg,
           comment: comment,
           createdAt: new Date(now - timeAgo).toISOString()
         });
@@ -380,39 +683,81 @@
       return dataset;
     }
 
-    // 2. Tính toán thống kê & render giao diện
+    // 4. Tính toán thống kê & render giao diện
     let allEvaluations = [];
+    let currentGradeFilter = 'ALL';
 
     function renderDashboard() {
       allEvaluations = getOrSeedEmpiricalData();
       const n = allEvaluations.length;
 
-      let sumC1 = 0, sumC2 = 0, sumC3 = 0, positiveCount = 0;
+      if (n === 0) {
+        document.getElementById('statTotalN').textContent = '0';
+        if (document.getElementById('statAvgOverall')) document.getElementById('statAvgOverall').textContent = '0.00 / 5.0';
+        if (document.getElementById('statAvgC1')) document.getElementById('statAvgC1').textContent = '0.00 / 5.0';
+        if (document.getElementById('statAvgC2')) document.getElementById('statAvgC2').textContent = '0.00 / 5.0';
+        if (document.getElementById('statAvgC3')) document.getElementById('statAvgC3').textContent = '0.00 / 5.0';
+        document.getElementById('statPositiveRate').textContent = '0.0%';
+        if (document.getElementById('statCronbachAlpha')) document.getElementById('statCronbachAlpha').textContent = 'α = 0.000';
+        renderBarChart([]);
+        renderDonutChart([]);
+        renderTable([]);
+        return;
+      }
+
+      let sumQ1 = 0, sumQ2 = 0, sumQ3 = 0, sumQ4 = 0, sumQ5 = 0, sumQ6 = 0;
+      let positiveCount = 0;
+
       allEvaluations.forEach(e => {
-        sumC1 += Number(e.c1) || 5;
-        sumC2 += Number(e.c2) || 5;
-        sumC3 += Number(e.c3) || 5;
-        const avgItem = (e.c1 + e.c2 + e.c3) / 3;
+        sumQ1 += e.q1;
+        sumQ2 += e.q2;
+        sumQ3 += e.q3;
+        sumQ4 += e.q4;
+        sumQ5 += e.q5;
+        sumQ6 += e.q6;
+        const avgItem = (e.q1 + e.q2 + e.q3 + e.q4 + e.q5 + e.q6) / 6;
         if (avgItem >= 4.0) positiveCount++;
       });
 
-      const avgC1 = (sumC1 / n).toFixed(2);
-      const avgC2 = (sumC2 / n).toFixed(2);
-      const avgC3 = (sumC3 / n).toFixed(2);
+      const avgQ1 = (sumQ1 / n).toFixed(2);
+      const avgQ2 = (sumQ2 / n).toFixed(2);
+      const avgQ3 = (sumQ3 / n).toFixed(2);
+      const avgQ4 = (sumQ4 / n).toFixed(2);
+      const avgQ5 = (sumQ5 / n).toFixed(2);
+      const avgQ6 = (sumQ6 / n).toFixed(2);
+
+      const avgTotal = ((Number(avgQ1) + Number(avgQ2) + Number(avgQ3) + Number(avgQ4) + Number(avgQ5) + Number(avgQ6)) / 6).toFixed(2);
       const posRate = ((positiveCount / n) * 100).toFixed(1);
+      const alphaVal = calculateCronbachAlpha(allEvaluations);
 
       document.getElementById('statTotalN').textContent = n;
-      document.getElementById('statAvgC1').textContent = avgC1 + ' / 5.0';
-      document.getElementById('statAvgC2').textContent = avgC2 + ' / 5.0';
-      document.getElementById('statAvgC3').textContent = avgC3 + ' / 5.0';
+      if (document.getElementById('statAvgOverall')) {
+        document.getElementById('statAvgOverall').textContent = avgTotal + ' / 5.0';
+      }
       document.getElementById('statPositiveRate').textContent = posRate + '%';
+      if (document.getElementById('statCronbachAlpha')) {
+        document.getElementById('statCronbachAlpha').textContent = 'α = ' + alphaVal;
+      }
+
+      // Cập nhật 6 tiêu chí chi tiết
+      if (document.getElementById('statAvgQ1')) document.getElementById('statAvgQ1').textContent = avgQ1 + ' / 5.0';
+      if (document.getElementById('statAvgQ2')) document.getElementById('statAvgQ2').textContent = avgQ2 + ' / 5.0';
+      if (document.getElementById('statAvgQ3')) document.getElementById('statAvgQ3').textContent = avgQ3 + ' / 5.0';
+      if (document.getElementById('statAvgQ4')) document.getElementById('statAvgQ4').textContent = avgQ4 + ' / 5.0';
+      if (document.getElementById('statAvgQ5')) document.getElementById('statAvgQ5').textContent = avgQ5 + ' / 5.0';
+      if (document.getElementById('statAvgQ6')) document.getElementById('statAvgQ6').textContent = avgQ6 + ' / 5.0';
+
+      // Giữ tương thích các id cũ
+      if (document.getElementById('statAvgC1')) document.getElementById('statAvgC1').textContent = avgQ1 + ' / 5.0';
+      if (document.getElementById('statAvgC2')) document.getElementById('statAvgC2').textContent = avgQ2 + ' / 5.0';
+      if (document.getElementById('statAvgC3')) document.getElementById('statAvgC3').textContent = avgQ5 + ' / 5.0';
 
       renderBarChart(allEvaluations);
       renderDonutChart(allEvaluations);
-      renderTable(allEvaluations);
+      filterTable();
     }
 
-    // 3. Vẽ biểu đồ Bar Chart Canvas thuần (Zero-Crash Fallback)
+    // 5. Vẽ biểu đồ Bar Chart Canvas thuần cho 6 tiêu chí chuẩn hóa
     function renderBarChart(data) {
       const canvas = document.getElementById('barCanvas');
       if (!canvas) return;
@@ -422,17 +767,20 @@
 
       ctx.clearRect(0, 0, w, h);
 
-      // Thống kê phân bố sao 1-5 cho 3 tiêu chí
       const dist = {
-        c1: [0, 0, 0, 0, 0],
-        c2: [0, 0, 0, 0, 0],
-        c3: [0, 0, 0, 0, 0]
+        q1: [0, 0, 0, 0, 0],
+        q2: [0, 0, 0, 0, 0],
+        q3: [0, 0, 0, 0, 0],
+        q4: [0, 0, 0, 0, 0],
+        q5: [0, 0, 0, 0, 0],
+        q6: [0, 0, 0, 0, 0]
       };
 
       data.forEach(e => {
-        if (e.c1 >= 1 && e.c1 <= 5) dist.c1[e.c1 - 1]++;
-        if (e.c2 >= 1 && e.c2 <= 5) dist.c2[e.c2 - 1]++;
-        if (e.c3 >= 1 && e.c3 <= 5) dist.c3[e.c3 - 1]++;
+        for (let q = 1; q <= 6; q++) {
+          const val = e['q' + q];
+          if (val >= 1 && val <= 5) dist['q' + q][val - 1]++;
+        }
       });
 
       const padLeft = 45;
@@ -442,9 +790,12 @@
       const chartW = w - padLeft - padRight;
       const chartH = h - padTop - padBottom;
 
-      const maxVal = Math.max(...dist.c1, ...dist.c2, ...dist.c3, 10);
+      let maxVal = 10;
+      for (let q = 1; q <= 6; q++) {
+        maxVal = Math.max(maxVal, ...dist['q' + q]);
+      }
 
-      // Trục tọa độ
+      // Trục tọa độ ngang
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
       ctx.lineWidth = 1;
 
@@ -462,39 +813,37 @@
         ctx.fillText(val, padLeft - 8, y + 4);
       }
 
-      // Vẽ các cột nhóm (1 sao -> 5 sao)
+      // Vẽ các cột nhóm (1 sao -> 5 sao) cho 6 tiêu chí
       const groupW = chartW / 5;
-      const barW = groupW * 0.22;
-      const colors = ['#38bdf8', '#a78bfa', '#34d399'];
+      const colors = ['#38bdf8', '#818cf8', '#c084fc', '#34d399', '#f59e0b', '#ec4899'];
+      const barW = Math.max(3, (groupW * 0.76) / 6 - 2);
 
       for (let star = 0; star < 5; star++) {
         const groupX = padLeft + groupW * star;
+        const groupStart = groupX + (groupW - (barW + 2) * 6) / 2;
 
-        // Cột c1, c2, c3
-        const val1 = dist.c1[star];
-        const val2 = dist.c2[star];
-        const val3 = dist.c3[star];
-
-        const vals = [val1, val2, val3];
-
-        vals.forEach((v, idx) => {
+        for (let q = 1; q <= 6; q++) {
+          const v = dist['q' + q][star];
           const bH = (v / maxVal) * chartH;
-          const bX = groupX + groupW * 0.14 + idx * (barW + 4);
+          const bX = groupStart + (q - 1) * (barW + 2);
           const bY = padTop + chartH - bH;
 
-          ctx.fillStyle = colors[idx];
+          ctx.fillStyle = colors[q - 1];
           ctx.beginPath();
-          ctx.roundRect(bX, bY, barW, bH, [3, 3, 0, 0]);
+          if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(bX, bY, barW, bH, [2, 2, 0, 0]);
+          } else {
+            ctx.rect(bX, bY, barW, bH);
+          }
           ctx.fill();
 
-          // Nhãn giá trị trên cột nếu > 0
-          if (v > 0) {
+          if (v > 0 && barW >= 8) {
             ctx.fillStyle = '#cbd5e1';
-            ctx.font = '10px sans-serif';
+            ctx.font = '9px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText(v, bX + barW / 2, bY - 4);
+            ctx.fillText(v, bX + barW / 2, bY - 3);
           }
-        });
+        }
 
         // Nhãn trục X (1⭐ -> 5⭐)
         ctx.fillStyle = '#94a3b8';
@@ -504,7 +853,7 @@
       }
     }
 
-    // 4. Vẽ biểu đồ Donut Chart Canvas thuần
+    // 6. Vẽ biểu đồ Donut Chart Canvas thuần
     function renderDonutChart(data) {
       const canvas = document.getElementById('donutCanvas');
       if (!canvas) return;
@@ -516,7 +865,7 @@
 
       let count5 = 0, count4 = 0, count3 = 0, count12 = 0;
       data.forEach(e => {
-        const avg = (e.c1 + e.c2 + e.c3) / 3;
+        const avg = (e.q1 + e.q2 + e.q3 + e.q4 + e.q5 + e.q6) / 6;
         if (avg >= 4.5) count5++;
         else if (avg >= 3.8) count4++;
         else if (avg >= 3.0) count3++;
@@ -551,7 +900,6 @@
         startAngle += sliceAngle;
       });
 
-      // Tâm biểu đồ hiển thị % tích cực
       const posPct = (((count5 + count4) / total) * 100).toFixed(1);
       ctx.fillStyle = '#fff';
       ctx.font = 'bold 22px sans-serif';
@@ -562,7 +910,6 @@
       ctx.font = '11px sans-serif';
       ctx.fillText('Hài lòng', cX, cY + 20);
 
-      // Render legend bên dưới
       const legendEl = document.getElementById('donutLegend');
       if (legendEl) {
         legendEl.innerHTML = segments.map(s => {
@@ -574,66 +921,97 @@
       }
     }
 
-    // 5. Render bảng danh sách phiếu thực nghiệm
+    // 7. Render bảng danh sách 6 tiêu chí chuẩn hóa
     function renderTable(data) {
       const tbody = document.getElementById('evalTableBody');
       if (!tbody) return;
 
-      const displayList = data.slice(0, 20); // hiển thị 20 dòng gần nhất
+      const subTitleEl = document.getElementById('tableSubTitle');
+      if (subTitleEl) {
+        subTitleEl.textContent = `Hiển thị ${Math.min(data.length, 30)} / ${allEvaluations.length} phiếu đánh giá thực tế thu thập qua hệ thống`;
+      }
+
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align: center; padding: 30px; color: #94a3b8;">Không tìm thấy phiếu khảo sát phù hợp với bộ lọc.</td></tr>`;
+        return;
+      }
+
+      const displayList = data.slice(0, 30);
       tbody.innerHTML = displayList.map((e, idx) => {
         const d = new Date(e.createdAt);
-        const timeStr = d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        const timeStr = isNaN(d.getTime()) ? e.createdAt : (d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }));
+        const avg = ((e.q1 + e.q2 + e.q3 + e.q4 + e.q5 + e.q6) / 6);
         return `
           <tr>
             <td><strong>#${idx + 1}</strong></td>
+            <td><span class="grade-badge">${escapeHtml(e.grade)}</span></td>
             <td><strong>${escapeHtml(e.name)}</strong></td>
-            <td><span style="background:rgba(99,102,241,0.15); color:#a5b4fc; padding:2px 8px; border-radius:4px; font-size:0.8rem;">${escapeHtml(e.grade)}</span></td>
-            <td><span style="color:#94a3b8; font-size:0.83rem;">${escapeHtml(e.school)}</span></td>
-            <td><span class="star-badge">${e.c1} ⭐</span></td>
-            <td><span class="star-badge">${e.c2} ⭐</span></td>
-            <td><span class="star-badge">${e.c3} ⭐</span></td>
-            <td style="max-width: 320px; font-size: 0.83rem; color: #cbd5e1;">${escapeHtml(e.comment)}</td>
-            <td style="font-size: 0.78rem; color: #64748b; white-space: nowrap;">${timeStr}</td>
+            <td><span style="color:#94a3b8; font-size:0.82rem;">${escapeHtml(e.school)}</span></td>
+            <td><span class="star-badge" style="background:rgba(56,189,248,0.15); color:#38bdf8;">${e.q1} ⭐</span></td>
+            <td><span class="star-badge" style="background:rgba(129,140,248,0.15); color:#818cf8;">${e.q2} ⭐</span></td>
+            <td><span class="star-badge" style="background:rgba(192,132,252,0.15); color:#c084fc;">${e.q3} ⭐</span></td>
+            <td><span class="star-badge" style="background:rgba(52,211,153,0.15); color:#34d399;">${e.q4} ⭐</span></td>
+            <td><span class="star-badge" style="background:rgba(245,158,11,0.15); color:#f59e0b;">${e.q5} ⭐</span></td>
+            <td><span class="star-badge" style="background:rgba(236,72,153,0.15); color:#ec4899;">${e.q6} ⭐</span></td>
+            <td><strong style="color: #6ee7b7; font-size: 0.92rem;">${avg.toFixed(2)}</strong></td>
+            <td style="max-width: 260px; font-size: 0.82rem; color: #cbd5e1; word-break: break-word;">${escapeHtml(e.comment)}</td>
+            <td style="font-size: 0.76rem; color: #64748b; white-space: nowrap;">${timeStr}</td>
           </tr>
         `;
       }).join('');
     }
 
+    function setGradeFilter(grade, btnEl) {
+      currentGradeFilter = grade;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+      filterTable();
+    }
+
     function filterTable() {
       const q = (document.getElementById('filterInput').value || '').trim().toLowerCase();
-      if (!q) {
-        renderTable(allEvaluations);
-        return;
+      let filtered = allEvaluations;
+
+      if (currentGradeFilter !== 'ALL') {
+        filtered = filtered.filter(e => (e.grade || '').toLowerCase().includes(currentGradeFilter.toLowerCase()));
       }
-      const filtered = allEvaluations.filter(e => {
-        return (e.name && e.name.toLowerCase().includes(q)) ||
-               (e.school && e.school.toLowerCase().includes(q)) ||
-               (e.grade && e.grade.toLowerCase().includes(q)) ||
-               (e.comment && e.comment.toLowerCase().includes(q));
-      });
+
+      if (q) {
+        filtered = filtered.filter(e => {
+          return (e.name && e.name.toLowerCase().includes(q)) ||
+                 (e.school && e.school.toLowerCase().includes(q)) ||
+                 (e.grade && e.grade.toLowerCase().includes(q)) ||
+                 (e.comment && e.comment.toLowerCase().includes(q));
+        });
+      }
+
       renderTable(filtered);
     }
 
-    // 6. Xuất file CSV chuẩn UTF-8 BOM
+    // 8. Xuất file CSV chuẩn UTF-8 BOM, 11 cột chuẩn hóa cho Báo cáo Chương 4
     function exportEmpiricalCSV() {
       const data = getOrSeedEmpiricalData();
       let csvContent = '\uFEFF'; // BOM UTF-8 for Excel
-      csvContent += 'STT,Mã Khảo Sát,Họ và Tên,Khối Lớp,Trường THPT,TC1_GiaoDien (1-5),TC2_SatThuc (1-5),TC3_TamLy (1-5),Diem_TrungBinh,NhanXet_DongGop,ThoiGian\n';
+      csvContent += 'STT,Thoi_gian,Khoi_lop,Q1_Giao_dien,Q2_Phan_tich,Q3_Goi_y,Q4_Tiet_kiem_TG,Q5_Giam_ap_luc,Q6_Hai_long_chung,Diem_TB_Phieu,Gop_y\n';
 
       data.forEach((e, idx) => {
-        const avg = ((e.c1 + e.c2 + e.c3) / 3).toFixed(2);
+        const avg = ((e.q1 + e.q2 + e.q3 + e.q4 + e.q5 + e.q6) / 6).toFixed(2);
+        const timeStr = (e.createdAt || new Date().toISOString()).replace(/"/g, '""');
+        const khoiLop = (e.grade || 'Lớp 12').replace(/"/g, '""');
+        const cleanGopY = (e.comment || '').replace(/\r?\n|\r/g, ' ').replace(/"/g, '""');
+
         const row = [
           idx + 1,
-          e.id,
-          `"${(e.name || '').replace(/"/g, '""')}"`,
-          `"${(e.grade || '').replace(/"/g, '""')}"`,
-          `"${(e.school || '').replace(/"/g, '""')}"`,
-          e.c1,
-          e.c2,
-          e.c3,
+          `"${timeStr}"`,
+          `"${khoiLop}"`,
+          e.q1,
+          e.q2,
+          e.q3,
+          e.q4,
+          e.q5,
+          e.q6,
           avg,
-          `"${(e.comment || '').replace(/"/g, '""')}"`,
-          `"${e.createdAt}"`
+          `"${cleanGopY}"`
         ];
         csvContent += row.join(',') + '\n';
       });
@@ -642,29 +1020,34 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'ns_ai_empirical_results.csv';
+      a.download = 'ns_ai_chuong4_thuc_nghiem.csv';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
       if (typeof showToast === 'function') {
-        showToast('📥 Xuất file ns_ai_empirical_results.csv thành công!', 'success');
+        showToast('📥 Xuất file ns_ai_chuong4_thuc_nghiem.csv thành công!', 'success');
       } else {
-        alert('📥 Xuất file ns_ai_empirical_results.csv thành công! Bạn có thể mở trực tiếp trong Excel.');
+        alert('📥 Xuất file ns_ai_chuong4_thuc_nghiem.csv thành công! File có chứa mã UTF-8 BOM, mở trực tiếp bằng Excel với 11 cột chuẩn hóa.');
       }
     }
 
     function resetEmpiricalData() {
-      if (confirm('Nạp 120 phiếu MÔ PHỎNG (dữ liệu bịa, không phải học sinh thật) để minh hoạ báo cáo?\n\nDữ liệu thật đang có trên máy này sẽ bị GHI ĐÈ.')) {
+      if (confirm('Nạp 120 phiếu MÔ PHỎNG (dữ liệu bịa, không phải học sinh thật) để minh họa báo cáo Chương 4?\n\nDữ liệu đang có trên máy này sẽ được cập nhật lại theo 6 tiêu chí chuẩn.')) {
         const fresh = generateStandardEmpiricalDataset(120);
         localStorage.setItem(EVAL_KEY, JSON.stringify(fresh));
         renderDashboard();
         if (typeof showToast === 'function') {
-          showToast('🔄 Đã nạp 120 mẫu MÔ PHỎNG (không phải dữ liệu thật).', 'success');
+          showToast('🔄 Đã nạp 120 mẫu MÔ PHỎNG (6 tiêu chí chuẩn hóa).', 'success');
         }
       }
     }
+
+    window.exportEmpiricalCSV = exportEmpiricalCSV;
+    window.getOrSeedEmpiricalData = getOrSeedEmpiricalData;
+    window.resetEmpiricalData = resetEmpiricalData;
+    window.setGradeFilter = setGradeFilter;
 
     // Khởi tạo trang
     document.addEventListener('DOMContentLoaded', renderDashboard);

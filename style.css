@@ -5870,17 +5870,55 @@ a.feature:hover,
   transform: translateY(-3px) translate3d(0, 0, 0) !important;
 }
 
-/* Tôn trọng lựa chọn giảm chuyển động của người dùng */
+/* Tôn trọng lựa chọn giảm chuyển động của người dùng (Accessibility & Low GPU) */
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
   body:before,
   body:after,
   .bg-grid,
   .stars,
   .bg-beam,
-  .advice-card {
+  .advice-card,
+  #mouseSpotlightOverlay {
     animation: none !important;
+    display: none !important;
   }
   .bg-grid { opacity: 0.18; }
+
+  /* Tắt backdrop-filter & giảm box-shadow trên reduced-motion */
+  header,
+  header.topbar,
+  .topbar,
+  .navbar,
+  .card,
+  .glass-card,
+  .form-card,
+  .stat-card,
+  .riasec-q-card,
+  .school-card,
+  .result-card,
+  .career-card,
+  .modal,
+  .modal-overlay,
+  .modal-content,
+  .school-compare-modal-content,
+  .school-compare-dock,
+  .ns-share-modal-card,
+  .home-auth-toolbar,
+  .advice-card {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background-color: rgba(15, 23, 42, 0.94) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+  }
 }
 
 /* Khi in phiếu: nền trắng sạch, không hiệu ứng */
@@ -6570,7 +6608,43 @@ a.feature:hover,
 
 
 /* ========================================================
-   MOBILE POLISH & CHATBOT FLOATING BUTTON NON-CONFLICT
+   FAST TOUCH ACTION & ZERO 300MS CLICK DELAY
+   ======================================================== */
+button,
+.btn,
+a.btn,
+.scale-pill-btn,
+.school-compare-btn,
+.dock-btn,
+.tab-btn,
+.filter-btn,
+.custom-chip-delete,
+.workstyle-pill-card,
+.topbar-nav-toggle,
+.floating-chat-btn,
+.input-chip,
+.tag-btn,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  touch-action: manipulation;
+}
+
+/* ========================================================
+   OFF-SCREEN RENDERING OPTIMIZATION (CONTENT VISIBILITY)
+   ======================================================== */
+.school-card,
+.result-card,
+.riasec-q-card,
+.bench-row,
+.career-card,
+.school-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
+}
+
+/* ========================================================
+   MOBILE PERFORMANCE OVERHAUL & GPU OPTIMIZATION (@media (max-width: 768px))
    ======================================================== */
 @media (max-width: 768px) {
   html, body {
@@ -6578,7 +6652,94 @@ a.feature:hover,
     max-width: 100vw !important;
   }
 
-  /* Nút nổi Chatbot thu gọn nhẹ nhàng, co giãn z-index: 99 */
+  /* 1. Tắt/giảm tối đa backdrop-filter: blur(...) trên card, modal, navbar, toolbar;
+        thay bằng nền đặc bán trong suốt rgba(15, 23, 42, 0.94) để giải phóng GPU điện thoại khi vuốt cuộn */
+  header,
+  header.topbar,
+  .topbar,
+  .navbar,
+  .card,
+  .glass-card,
+  .form-card,
+  .stat-card,
+  .admin-stat-card,
+  .admin-chart-box,
+  .admin-table-container,
+  .riasec-q-card,
+  .school-card,
+  .result-card,
+  .career-card,
+  .modal,
+  .modal-overlay,
+  .modal-content,
+  .school-compare-modal-content,
+  .school-compare-dock,
+  .ns-share-modal-card,
+  .home-auth-toolbar,
+  .home-auth-card,
+  .advice-card,
+  .workstyle-section,
+  .passion-map-container,
+  .custom-hobbies-section,
+  .top3-passions-panel,
+  .quick-summary-card,
+  .floating-chat-btn {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background-color: rgba(15, 23, 42, 0.94) !important;
+  }
+
+  /* 2. Giảm box-shadow nhiều lớp/lan rộng để tối ưu tốc độ rasterization trên mobile */
+  .card,
+  .glass-card,
+  .form-card,
+  .stat-card,
+  .riasec-q-card,
+  .school-card,
+  .result-card,
+  .career-card,
+  .school-compare-dock,
+  .school-compare-modal-content,
+  .ns-share-modal-card,
+  .home-auth-toolbar,
+  .topbar,
+  .modal-content {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+  }
+
+  /* 3. Tắt background animation, glow, floating blur trên mobile để giải phóng GPU và chống tụt FPS */
+  body:before,
+  body:after,
+  .bg-grid,
+  .bg-beam,
+  .stars,
+  .mouse-spotlight-overlay,
+  #mouseSpotlightOverlay {
+    animation: none !important;
+    display: none !important;
+  }
+
+  /* 4. Đảm bảo các transition/animation chỉ tác động trên transform và opacity
+        (loại bỏ animate width, height, top, left, box-shadow gây reflow/relayout nặng) */
+  .card,
+  .glass-card,
+  .btn,
+  button,
+  .scale-pill-btn,
+  .school-card,
+  .result-card,
+  .riasec-q-card,
+  .workstyle-pill-card,
+  .floating-chat-btn,
+  .school-compare-dock,
+  .school-compare-btn,
+  .dock-btn,
+  .tab-btn,
+  .filter-btn {
+    transition-property: transform, opacity, background-color, border-color, color !important;
+  }
+
+  /* 5. Nút nổi Chatbot thu gọn nhẹ nhàng, co giãn z-index: 99 */
   .floating-chat-btn {
     bottom: 16px !important;
     right: 16px !important;
@@ -6590,7 +6751,7 @@ a.feature:hover,
     transform: scale(0.95) !important;
   }
 
-  /* Đảm bảo tất cả các khối .actions, thanh công cụ và nút bấm "Lưu & Tiếp tục" ở cuối các trang có khoảng đệm an toàn padding-bottom: 75px */
+  /* 6. Khoảng đệm an toàn padding-bottom: 75px cho các khối actions */
   .actions,
   .form-card .actions,
   .result-toolbar,
@@ -6600,7 +6761,7 @@ a.feature:hover,
     margin-bottom: 20px !important;
   }
 
-  /* Tránh tràn khung bảng và container trên mobile */
+  /* 7. Tránh tràn khung bảng và container trên mobile */
   .compare-table-wrap,
   .table-responsive,
   .score-table-wrap,

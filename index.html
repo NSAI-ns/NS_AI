@@ -48,6 +48,7 @@
       <div class="actions">
         <a class="btn primary" href="thongtin.html">🚀 Bắt đầu định hướng</a>
         <a class="btn secondary" href="truonghoc.html">🔎 Tìm trường</a>
+        <button type="button" class="btn secondary" onclick="openShareProfileModal()" title="Tạo link chia sẻ nhanh kết quả">🔗 Tạo link chia sẻ nhanh kết quả</button>
         <a class="btn secondary" href="#homeAuthSection">🔑 Đăng nhập / Tài khoản</a>
         <button class="btn secondary" onclick="resetAllData()">↻ Làm mới toàn bộ dữ liệu</button>
       </div>
@@ -84,7 +85,11 @@
 
         <!-- Right: Action Buttons (Save backup, Restore profile, Reset, Manage Account) -->
         <div class="home-auth-right" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          
+          <button type="button" onclick="openShareProfileModal()" class="home-auth-btn share-profile-btn"
+            style="height: 38px; padding: 0 14px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; background: linear-gradient(135deg, #0284c7, #6366f1); border: 1px solid rgba(56, 189, 248, 0.5); color: #fff; cursor: pointer; white-space: nowrap; transition: 0.2s; gap: 6px; box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);"
+            title="Tạo link chia sẻ nhanh kết quả">
+            🔗 Tạo link chia sẻ nhanh kết quả
+          </button>
           <button type="button" onclick="exportProfile()" class="home-auth-btn"
             style="height: 38px; padding: 0 14px; font-size: 0.85rem; font-weight: 600; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #e2e8f0; cursor: pointer; white-space: nowrap; transition: 0.2s; gap: 6px;"
             title="Xuất file JSON sao lưu hồ sơ">
